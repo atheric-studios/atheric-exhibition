@@ -1,0 +1,762 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#efece4" />
+<title>Atheric — a small studio for digital work</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<!-- shared SVG sprite — the studio mark, used in the loader and the nav.
+     gradient lives at top level so <use> instances resolve correctly. -->
+<svg width="0" height="0" style="position:absolute;pointer-events:none" aria-hidden="true">
+  <defs>
+    <radialGradient id="atheric-grad" cx="38%" cy="32%" r="68%">
+      <stop offset="0%"   stop-color="#ffffff"/>
+      <stop offset="32%"  stop-color="#d3cec3"/>
+      <stop offset="72%"  stop-color="#3a3a3a"/>
+      <stop offset="100%" stop-color="#0a0a0a"/>
+    </radialGradient>
+    <symbol id="atheric-mark-symbol" viewBox="0 0 32 32">
+      <circle cx="16" cy="16" r="14" fill="url(#atheric-grad)"/>
+      <circle cx="11" cy="10" r="2.4" fill="#ffffff" opacity="0.85"/>
+      <circle cx="16" cy="16" r="14" fill="none" stroke="rgba(10,10,10,0.18)" stroke-width="0.5"/>
+    </symbol>
+  </defs>
+</svg>
+
+<!-- ============================================================
+     Loader — a quiet waiting room. one chrome marble, the studio
+     name, a thin progress thread, one atmospheric line. nothing else.
+     ============================================================ -->
+<div id="loader" aria-hidden="true">
+  <div class="loader-glow"></div>
+  <div class="loader-room">
+    <svg class="atheric-mark loader-marble" aria-hidden="true">
+      <use href="#atheric-mark-symbol"/>
+    </svg>
+    <div class="loader-name">Atheric<em>.</em></div>
+    <div class="loader-thread" id="loaderStrip">
+      <div class="loader-thread-fill"></div>
+    </div>
+    <div class="loader-task" id="loaderTask">— preparing the room</div>
+  </div>
+  <div class="loader-edition">
+    <span>liquid chrome edition</span>
+    <span class="dot-sep">·</span>
+    <span>26</span>
+  </div>
+</div>
+
+<!-- Custom cursor -->
+<div id="cursor-dot"></div>
+<div id="cursor-ring"></div>
+
+<!-- WebGL chrome canvas -->
+<canvas id="chrome"></canvas>
+
+<!-- Paper grain + scroll progress -->
+<div class="grain"></div>
+<div class="progress" id="progress"></div>
+
+<!-- ============================================================
+     Nav
+     ============================================================ -->
+<nav class="nav" role="navigation" aria-label="primary">
+  <!-- mark cluster: studio name + book sibling that fades in on hover.
+       click Atheric → home (internal navigation, launch gesture).
+       click Under the Code → opens under.atheric.eu in a new tab. -->
+  <div class="mark-cluster">
+    <a href="#" class="mark" data-magnetic data-nav-to="home">
+      <svg class="atheric-mark mark-glyph" aria-hidden="true"><use href="#atheric-mark-symbol"/></svg>
+      <span>Atheric<em>.</em></span>
+    </a>
+    <a href="https://under.atheric.eu" class="mark mark-secondary" target="_blank" rel="noopener" aria-label="Under the Code, opens in a new tab">
+      <span>Under the Code<em>.</em></span>
+      <span class="ext-arrow" aria-hidden="true">↗</span>
+    </a>
+  </div>
+  <ul>
+    <li><a href="#" class="link" data-nav-to="library">library</a></li>
+    <li><a href="#" class="link" data-nav-to="author">author</a></li>
+    <li><a href="#" class="link" data-pref-open>preferences</a></li>
+  </ul>
+  <div class="right">
+    <span class="clock" id="navClock"><b>HEL</b> · 00:00:00</span>
+    <button class="audio-toggle" id="audio" aria-pressed="false" aria-label="toggle audio">
+      <span class="bars"><i></i><i></i><i></i></span>
+      <span>Sound</span>
+    </button>
+  </div>
+</nav>
+
+<!-- ============================================================
+     Main — multiple views, one is visible at a time. the launch
+     animation handles the visual continuity between them.
+     ============================================================ -->
+<main id="top" data-view="home">
+
+  <!-- ====================== HERO ====================== -->
+  <section class="hero" id="hero">
+    <div class="hero-grid"></div>
+
+    <header class="hero-top" data-reveal>
+      <div class="col-meta">
+        <span>STUDIO ATHERIC</span><br>
+        Finland<br>
+        <span class="arrow">↳</span> est. 2026
+      </div>
+      <div class="col-meta" style="text-align:center">
+        2026 — <span>Liquid Chrome</span><br>
+        Edition № 1<br>
+        <span class="arrow">∞</span> ongoing
+      </div>
+      <div class="col-meta" style="text-align:right">
+        Accepting first commissions<br>
+        <span>Conversations</span> · by appointment<br>
+        <span class="arrow">→</span> write to us
+      </div>
+    </header>
+
+    <div class="hero-headline">
+      <span class="kicker">— a small studio for digital matter</span>
+      <h1 data-split data-hero-headline>we sculpt <em>weightless</em> objects, in code, in light, in the small hours.</h1>
+    </div>
+
+    <div class="hero-bottom">
+      <p class="hero-lede" data-reveal data-reveal-delay="1">
+        Atheric is a small studio for premium digital work — websites and interfaces
+        for clients who care about the <em>difference</em>. We take on two to three projects
+        at a time. That is the point.
+      </p>
+      <div class="hero-actions" data-reveal data-reveal-delay="2">
+        <a href="#contact" class="cta" data-magnetic>
+          Start a commission
+          <span class="arrow">→</span>
+        </a>
+        <a href="#cabinet" class="cta-ghost">View the cabinet</a>
+      </div>
+    </div>
+
+    <div class="hero-ground">
+      <span><span class="dot-live"></span>Open · accepting first commissions</span>
+      <span>atheric.eu</span>
+      <span class="scroll-hint">
+        Scroll
+        <svg width="10" height="14" viewBox="0 0 10 14" fill="none">
+          <path d="M5 1V13M5 13L1 9M5 13L9 9" stroke="currentColor" stroke-width="1"/>
+        </svg>
+      </span>
+    </div>
+  </section>
+
+  <!-- ====================== WORLD HUB ====================== -->
+  <!-- a single thin band, everything rolling continuously: cities,
+       live times (HH:MM), weather glyphs, temperatures, coordinates,
+       and small italic-serif fragments. nothing anchored, nothing
+       declarative. just an ambient stream the studio passes through. -->
+  <section class="hub" aria-label="world hub">
+    <div class="hub-stream">
+      <div class="hub-stream-track">
+        <span class="hub-stream-pass">
+          <span class="hs-city" data-city="helsinki">
+            <span class="hs-name">Helsinki</span>
+            <span class="hs-tag">home</span>
+            <span class="hs-time">--:--</span>
+            <span class="hs-glyph" aria-hidden="true"></span>
+            <span class="hs-temp">—</span>
+          </span>
+          <span class="hs-sep">·</span>
+          <span class="hs-coord">60.17°N 24.94°E</span>
+          <span class="hs-sep">·</span>
+          <span class="hs-frag">in code, in light</span>
+          <span class="hs-sep">·</span>
+          <span class="hs-city" data-city="london">
+            <span class="hs-name">London</span>
+            <span class="hs-time">--:--</span>
+            <span class="hs-glyph" aria-hidden="true"></span>
+            <span class="hs-temp">—</span>
+          </span>
+          <span class="hs-sep">·</span>
+          <span class="hs-coord">51.51°N 0.13°W</span>
+          <span class="hs-sep">·</span>
+          <span class="hs-frag">the small hours</span>
+          <span class="hs-sep">·</span>
+          <span class="hs-city" data-city="newyork">
+            <span class="hs-name">New York</span>
+            <span class="hs-time">--:--</span>
+            <span class="hs-glyph" aria-hidden="true"></span>
+            <span class="hs-temp">—</span>
+          </span>
+          <span class="hs-sep">·</span>
+          <span class="hs-coord">40.71°N 74.01°W</span>
+          <span class="hs-sep">·</span>
+          <span class="hs-frag">made slowly</span>
+          <span class="hs-sep">·</span>
+          <span class="hs-city" data-city="tokyo">
+            <span class="hs-name">Tokyo</span>
+            <span class="hs-time">--:--</span>
+            <span class="hs-glyph" aria-hidden="true"></span>
+            <span class="hs-temp">—</span>
+          </span>
+          <span class="hs-sep">·</span>
+          <span class="hs-coord">35.69°N 139.69°E</span>
+          <span class="hs-sep">·</span>
+          <span class="hs-frag">matter, weightless</span>
+          <span class="hs-sep">·</span>
+        </span>
+        <span class="hub-stream-pass" aria-hidden="true">
+          <span class="hs-city" data-city="helsinki">
+            <span class="hs-name">Helsinki</span>
+            <span class="hs-tag">home</span>
+            <span class="hs-time">--:--</span>
+            <span class="hs-glyph"></span>
+            <span class="hs-temp">—</span>
+          </span>
+          <span class="hs-sep">·</span>
+          <span class="hs-coord">60.17°N 24.94°E</span>
+          <span class="hs-sep">·</span>
+          <span class="hs-frag">in code, in light</span>
+          <span class="hs-sep">·</span>
+          <span class="hs-city" data-city="london">
+            <span class="hs-name">London</span>
+            <span class="hs-time">--:--</span>
+            <span class="hs-glyph"></span>
+            <span class="hs-temp">—</span>
+          </span>
+          <span class="hs-sep">·</span>
+          <span class="hs-coord">51.51°N 0.13°W</span>
+          <span class="hs-sep">·</span>
+          <span class="hs-frag">the small hours</span>
+          <span class="hs-sep">·</span>
+          <span class="hs-city" data-city="newyork">
+            <span class="hs-name">New York</span>
+            <span class="hs-time">--:--</span>
+            <span class="hs-glyph"></span>
+            <span class="hs-temp">—</span>
+          </span>
+          <span class="hs-sep">·</span>
+          <span class="hs-coord">40.71°N 74.01°W</span>
+          <span class="hs-sep">·</span>
+          <span class="hs-frag">made slowly</span>
+          <span class="hs-sep">·</span>
+          <span class="hs-city" data-city="tokyo">
+            <span class="hs-name">Tokyo</span>
+            <span class="hs-time">--:--</span>
+            <span class="hs-glyph"></span>
+            <span class="hs-temp">—</span>
+          </span>
+          <span class="hs-sep">·</span>
+          <span class="hs-coord">35.69°N 139.69°E</span>
+          <span class="hs-sep">·</span>
+          <span class="hs-frag">matter, weightless</span>
+          <span class="hs-sep">·</span>
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================== TRIPTYCH (process) ====================== -->
+  <section class="triptych" id="process">
+    <header class="triptych-head">
+      <div data-reveal>
+        <span class="kicker signal">— index № 01 / how we work</span>
+        <h2>three movements; one <em>object</em>.</h2>
+      </div>
+      <p data-reveal data-reveal-delay="1">
+        Every commission moves through the same <em>three rooms</em>. We resist the start-up
+        choreography of sprints and ceremonies. Instead, we work like a small workshop:
+        slowly, in private, until the thing has a <em>weight of its own</em>.
+      </p>
+    </header>
+
+    <div class="triptych-grid">
+      <article class="panel" data-tilt data-reveal data-reveal-delay="1">
+        <div class="step">— I / sculpt</div>
+        <h3>We <em>listen</em>, then we draw the silhouette.</h3>
+        <p>
+          Two weeks in the same room as your team. We take notes on butcher paper, sketch
+          in pencil, never in Figma. The deliverable is a shape — a north star with
+          edges, not a deck.
+        </p>
+        <div class="glyph-art">
+          <svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
+            <defs>
+              <radialGradient id="gA" cx="50%" cy="40%">
+                <stop offset="0%" stop-color="#fff" stop-opacity="0.95"/>
+                <stop offset="60%" stop-color="#bbb" stop-opacity="0.5"/>
+                <stop offset="100%" stop-color="#000" stop-opacity="0.4"/>
+              </radialGradient>
+            </defs>
+            <rect width="400" height="300" fill="#1a1a1a"/>
+            <circle cx="200" cy="150" r="105" fill="url(#gA)"/>
+            <circle cx="200" cy="150" r="105" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="0.5"/>
+            <circle cx="200" cy="150" r="80" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="0.5"/>
+            <circle cx="200" cy="150" r="55" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="0.5"/>
+            <line x1="0" y1="150" x2="400" y2="150" stroke="rgba(255,255,255,0.18)" stroke-dasharray="2 4"/>
+            <line x1="200" y1="0" x2="200" y2="300" stroke="rgba(255,255,255,0.18)" stroke-dasharray="2 4"/>
+            <text x="20" y="285" fill="rgba(255,255,255,0.55)" font-family="JetBrains Mono" font-size="9" letter-spacing="2">FIG. 01 — SILHOUETTE STUDY</text>
+          </svg>
+        </div>
+        <div class="meta-row">
+          <span>2 weeks</span>
+          <span>pencil + paper</span>
+          <span>fig. 01</span>
+        </div>
+      </article>
+
+      <article class="panel" data-tilt data-reveal data-reveal-delay="2">
+        <div class="step">— II / forge</div>
+        <h3>We make <em>one</em> version, well, before another.</h3>
+        <p>
+          Six to twelve weeks at the bench. Code, type, motion, copy — built in the
+          right order, by the same small team. No handoff. Each iteration ships into
+          a private staging room you can visit any morning.
+        </p>
+        <div class="glyph-art">
+          <svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
+            <defs>
+              <linearGradient id="gB" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#fff" stop-opacity="0.92"/>
+                <stop offset="55%" stop-color="#888" stop-opacity="0.5"/>
+                <stop offset="100%" stop-color="#000" stop-opacity="0.6"/>
+              </linearGradient>
+            </defs>
+            <rect width="400" height="300" fill="#1a1a1a"/>
+            <rect x="60" y="60" width="280" height="180" rx="8" fill="url(#gB)"/>
+            <rect x="60" y="60" width="280" height="180" rx="8" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="0.5"/>
+            <line x1="60" y1="100" x2="340" y2="100" stroke="rgba(255,255,255,0.25)" stroke-width="0.5"/>
+            <line x1="60" y1="140" x2="340" y2="140" stroke="rgba(255,255,255,0.18)" stroke-width="0.5"/>
+            <line x1="60" y1="180" x2="340" y2="180" stroke="rgba(255,255,255,0.12)" stroke-width="0.5"/>
+            <circle cx="200" cy="150" r="38" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1"/>
+            <text x="20" y="285" fill="rgba(255,255,255,0.55)" font-family="JetBrains Mono" font-size="9" letter-spacing="2">FIG. 02 — FORGING DIAGRAM</text>
+          </svg>
+        </div>
+        <div class="meta-row">
+          <span>6 – 12 weeks</span>
+          <span>build phase</span>
+          <span>fig. 02</span>
+        </div>
+      </article>
+
+      <article class="panel" data-tilt data-reveal data-reveal-delay="3">
+        <div class="step">— III / polish</div>
+        <h3>We refuse to ship until it <em>feels</em> still.</h3>
+        <p>
+          Two weeks of nothing but small things — kerning, easing curves, copy weights,
+          the loading screen, the empty states. The work either has a <em>quiet hum</em>
+          to it or it doesn't. We wait for the hum.
+        </p>
+        <div class="glyph-art">
+          <svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
+            <defs>
+              <radialGradient id="gC" cx="65%" cy="35%">
+                <stop offset="0%" stop-color="#fff" stop-opacity="1"/>
+                <stop offset="40%" stop-color="#ddd" stop-opacity="0.6"/>
+                <stop offset="100%" stop-color="#1a1a1a" stop-opacity="0.7"/>
+              </radialGradient>
+            </defs>
+            <rect width="400" height="300" fill="#1a1a1a"/>
+            <ellipse cx="200" cy="155" rx="125" ry="95" fill="url(#gC)"/>
+            <ellipse cx="200" cy="155" rx="125" ry="95" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="0.5"/>
+            <ellipse cx="200" cy="155" rx="95" ry="70" fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="0.5"/>
+            <ellipse cx="200" cy="155" rx="60" ry="45" fill="none" stroke="rgba(255,255,255,0.14)" stroke-width="0.5"/>
+            <circle cx="240" cy="125" r="3" fill="rgba(255,255,255,0.95)"/>
+            <text x="20" y="285" fill="rgba(255,255,255,0.55)" font-family="JetBrains Mono" font-size="9" letter-spacing="2">FIG. 03 — POLISHING PASS</text>
+          </svg>
+        </div>
+        <div class="meta-row">
+          <span>2 weeks</span>
+          <span>waiting for the hum</span>
+          <span>fig. 03</span>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ====================== MANIFESTO ====================== -->
+  <section class="manifesto" id="manifesto">
+    <span class="kicker">— Atheric / a small manifesto</span>
+    <blockquote data-split>a website should feel like a <em>room</em> you are willing to come back to, twice.</blockquote>
+    <cite>
+      <b>— Atheric</b>
+      <span class="rule"></span>
+      <span>Studio note, 2026</span>
+    </cite>
+  </section>
+
+  <!-- ====================== CABINET (specimen grid) ====================== -->
+  <section id="cabinet">
+    <header class="cabinet-head">
+      <div data-reveal>
+        <span class="kicker">— index № 02 / cabinet</span>
+        <h2>concept studies, <em>before</em> the cabinet fills.</h2>
+      </div>
+      <div class="filter" data-reveal data-reveal-delay="1">
+        <button class="on" data-filter="all">All</button>
+        <button data-filter="identity">Identity</button>
+        <button data-filter="editorial">Editorial</button>
+        <button data-filter="packaging">Packaging</button>
+      </div>
+    </header>
+
+    <div class="cabinet-grid" id="cabinetGrid" data-reveal data-reveal-delay="2">
+
+      <article class="specimen span-5" data-cat="identity">
+        <div class="art">
+          <svg viewBox="0 0 500 600" preserveAspectRatio="xMidYMid slice">
+            <defs>
+              <linearGradient id="m1bg" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#bfa99b"/>
+                <stop offset="100%" stop-color="#8a7666"/>
+              </linearGradient>
+            </defs>
+            <rect width="500" height="600" fill="url(#m1bg)"/>
+            <text x="40" y="60" fill="rgba(255,250,243,0.7)" font-family="JetBrains Mono" font-size="9" letter-spacing="3">AW · 26 — COLLECTION 04</text>
+            <line x1="40" y1="78" x2="120" y2="78" stroke="rgba(255,250,243,0.5)" stroke-width="0.5"/>
+            <text x="250" y="320" text-anchor="middle" fill="#fff8ee" font-family="Instrument Serif" font-style="italic" font-size="106" letter-spacing="-1">Marais</text>
+            <text x="250" y="360" text-anchor="middle" fill="rgba(255,248,238,0.7)" font-family="JetBrains Mono" font-size="9" letter-spacing="6">ATELIER · PARIS</text>
+            <line x1="40" y1="540" x2="460" y2="540" stroke="rgba(255,248,238,0.3)" stroke-width="0.5"/>
+            <text x="40" y="565" fill="rgba(255,248,238,0.65)" font-family="JetBrains Mono" font-size="8" letter-spacing="3">EST · MAISON № 04</text>
+            <text x="460" y="565" text-anchor="end" fill="rgba(255,248,238,0.65)" font-family="JetBrains Mono" font-size="8" letter-spacing="3">FIG. 01 / IDENTITY</text>
+          </svg>
+        </div>
+        <div class="label">
+          <span class="name">Marais — atelier</span>
+          <span class="meta">Concept · Identity</span>
+        </div>
+      </article>
+
+      <article class="specimen span-4 tall" data-cat="packaging">
+        <div class="art">
+          <svg viewBox="0 0 400 600" preserveAspectRatio="xMidYMid slice">
+            <rect width="400" height="600" fill="#0e2418"/>
+            <path d="M 170 60 L 170 150 Q 170 170 175 175 L 175 220 Q 130 240 130 290 L 130 540 L 270 540 L 270 290 Q 270 240 225 220 L 225 175 Q 230 170 230 150 L 230 60 Z" fill="#0a1c12" stroke="rgba(220,200,160,0.2)" stroke-width="1"/>
+            <circle cx="200" cy="270" r="22" fill="#8a3a2a"/>
+            <circle cx="200" cy="270" r="22" fill="none" stroke="rgba(255,235,200,0.3)" stroke-width="0.5"/>
+            <text x="200" y="275" text-anchor="middle" fill="#dcc8a0" font-family="Instrument Serif" font-style="italic" font-size="13">DSC</text>
+            <rect x="135" y="320" width="130" height="170" fill="#dcc8a0"/>
+            <text x="200" y="350" text-anchor="middle" fill="#0e2418" font-family="JetBrains Mono" font-size="7" letter-spacing="3">DOMAINE</text>
+            <line x1="170" y1="358" x2="230" y2="358" stroke="#0e2418" stroke-width="0.5"/>
+            <text x="200" y="395" text-anchor="middle" fill="#0e2418" font-family="Instrument Serif" font-style="italic" font-size="22">Saint</text>
+            <text x="200" y="420" text-anchor="middle" fill="#0e2418" font-family="Instrument Serif" font-style="italic" font-size="22">Clair</text>
+            <line x1="170" y1="438" x2="230" y2="438" stroke="#0e2418" stroke-width="0.5"/>
+            <text x="200" y="458" text-anchor="middle" fill="#0e2418" font-family="JetBrains Mono" font-size="6" letter-spacing="2">CÔTES DE BORDEAUX</text>
+            <text x="200" y="476" text-anchor="middle" fill="#0e2418" font-family="JetBrains Mono" font-size="6" letter-spacing="2">VINTAGE 2024</text>
+            <text x="40" y="580" fill="rgba(220,200,160,0.55)" font-family="JetBrains Mono" font-size="8" letter-spacing="3">FIG. 02 / PACKAGING</text>
+          </svg>
+        </div>
+        <div class="label">
+          <span class="name">Domaine Saint-Clair</span>
+          <span class="meta">Concept · Packaging</span>
+        </div>
+      </article>
+
+      <article class="specimen span-3" data-cat="identity">
+        <div class="art">
+          <svg viewBox="0 0 400 500" preserveAspectRatio="xMidYMid slice">
+            <rect width="400" height="500" fill="#e8e2d4"/>
+            <text x="40" y="55" fill="rgba(20,20,20,0.55)" font-family="JetBrains Mono" font-size="8" letter-spacing="3">STUDIO · IDENTITY 2026</text>
+            <g transform="translate(200, 215)">
+              <line x1="-60" y1="-72" x2="60" y2="-72" stroke="#1a1a1a" stroke-width="0.5" stroke-dasharray="2 3"/>
+              <rect x="-60" y="-60" width="120" height="20" fill="#1a1a1a"/>
+              <rect x="-10" y="-40" width="20" height="100" fill="#1a1a1a"/>
+              <line x1="-60" y1="80" x2="60" y2="80" stroke="#1a1a1a" stroke-width="0.5"/>
+            </g>
+            <text x="200" y="370" text-anchor="middle" fill="#1a1a1a" font-family="Archivo" font-weight="800" font-size="32" letter-spacing="2">TENET</text>
+            <text x="200" y="395" text-anchor="middle" fill="rgba(20,20,20,0.55)" font-family="JetBrains Mono" font-size="9" letter-spacing="4">ARCHITECTURE</text>
+            <line x1="40" y1="450" x2="360" y2="450" stroke="rgba(20,20,20,0.3)" stroke-width="0.5"/>
+            <text x="40" y="475" fill="rgba(20,20,20,0.5)" font-family="JetBrains Mono" font-size="8" letter-spacing="3">FIG. 03 — MARK + WORDMARK</text>
+          </svg>
+        </div>
+        <div class="label">
+          <span class="name">Studio Tenet</span>
+          <span class="meta">Concept · Identity</span>
+        </div>
+      </article>
+
+      <article class="specimen span-3 short" data-cat="editorial">
+        <div class="art">
+          <svg viewBox="0 0 500 300" preserveAspectRatio="xMidYMid slice">
+            <rect width="500" height="300" fill="#0a0a0a"/>
+            <text x="40" y="38" fill="rgba(238,234,222,0.6)" font-family="JetBrains Mono" font-size="9" letter-spacing="3">DITONE · TYPE FOUNDRY</text>
+            <text x="460" y="38" text-anchor="end" fill="rgba(238,234,222,0.6)" font-family="JetBrains Mono" font-size="9" letter-spacing="3">SPECIMEN № 01</text>
+            <line x1="40" y1="52" x2="460" y2="52" stroke="rgba(238,234,222,0.18)" stroke-width="0.5"/>
+            <text x="250" y="240" text-anchor="middle" fill="#eeeade" font-family="Instrument Serif" font-style="italic" font-size="220">Æ</text>
+            <text x="40" y="282" fill="rgba(238,234,222,0.55)" font-family="JetBrains Mono" font-size="8" letter-spacing="3">LIGATURE — A &amp; E</text>
+            <text x="460" y="282" text-anchor="end" fill="rgba(238,234,222,0.55)" font-family="JetBrains Mono" font-size="8" letter-spacing="3">FIG. 04 / TYPE</text>
+          </svg>
+        </div>
+        <div class="label">
+          <span class="name">Ditone — type specimen</span>
+          <span class="meta">Concept · Editorial</span>
+        </div>
+      </article>
+
+      <article class="specimen span-6 short" data-cat="editorial">
+        <div class="art">
+          <svg viewBox="0 0 600 360" preserveAspectRatio="xMidYMid slice">
+            <rect width="600" height="360" fill="#f4efe5"/>
+            <text x="40" y="55" fill="#1a1a1a" font-family="Archivo" font-weight="800" font-size="22" letter-spacing="-0.5">SYSTEM 04</text>
+            <text x="40" y="80" fill="rgba(20,20,20,0.6)" font-family="Instrument Serif" font-style="italic" font-size="20">— a winter palette</text>
+            <line x1="40" y1="98" x2="200" y2="98" stroke="rgba(20,20,20,0.4)" stroke-width="0.5"/>
+            <g transform="translate(40, 130)">
+              <rect x="0" y="0" width="80" height="100" fill="#1f2624"/>
+              <text x="0" y="120" fill="#1a1a1a" font-family="JetBrains Mono" font-size="8" letter-spacing="2">SLATE</text>
+              <text x="0" y="135" fill="rgba(20,20,20,0.5)" font-family="JetBrains Mono" font-size="7" letter-spacing="1">#1F2624</text>
+              <rect x="90" y="0" width="80" height="100" fill="#5e4f3e"/>
+              <text x="90" y="120" fill="#1a1a1a" font-family="JetBrains Mono" font-size="8" letter-spacing="2">UMBER</text>
+              <text x="90" y="135" fill="rgba(20,20,20,0.5)" font-family="JetBrains Mono" font-size="7" letter-spacing="1">#5E4F3E</text>
+              <rect x="180" y="0" width="80" height="100" fill="#a89e8c"/>
+              <text x="180" y="120" fill="#1a1a1a" font-family="JetBrains Mono" font-size="8" letter-spacing="2">ASH</text>
+              <text x="180" y="135" fill="rgba(20,20,20,0.5)" font-family="JetBrains Mono" font-size="7" letter-spacing="1">#A89E8C</text>
+              <rect x="270" y="0" width="80" height="100" fill="#d9cfb9"/>
+              <text x="270" y="120" fill="#1a1a1a" font-family="JetBrains Mono" font-size="8" letter-spacing="2">LINEN</text>
+              <text x="270" y="135" fill="rgba(20,20,20,0.5)" font-family="JetBrains Mono" font-size="7" letter-spacing="1">#D9CFB9</text>
+              <rect x="360" y="0" width="80" height="100" fill="#c95b3e"/>
+              <text x="360" y="120" fill="#1a1a1a" font-family="JetBrains Mono" font-size="8" letter-spacing="2">RUST</text>
+              <text x="360" y="135" fill="rgba(20,20,20,0.5)" font-family="JetBrains Mono" font-size="7" letter-spacing="1">#C95B3E</text>
+              <rect x="450" y="0" width="80" height="100" fill="#1a3a3a"/>
+              <text x="450" y="120" fill="#1a1a1a" font-family="JetBrains Mono" font-size="8" letter-spacing="2">PINE</text>
+              <text x="450" y="135" fill="rgba(20,20,20,0.5)" font-family="JetBrains Mono" font-size="7" letter-spacing="1">#1A3A3A</text>
+            </g>
+            <line x1="40" y1="320" x2="560" y2="320" stroke="rgba(20,20,20,0.25)" stroke-width="0.5"/>
+            <text x="40" y="343" fill="rgba(20,20,20,0.55)" font-family="JetBrains Mono" font-size="8" letter-spacing="3">FIG. 05 — COLOUR SYSTEM · 6 STEPS</text>
+          </svg>
+        </div>
+        <div class="label">
+          <span class="name">System 04 — winter palette</span>
+          <span class="meta">Concept · Editorial</span>
+        </div>
+      </article>
+
+      <article class="specimen span-3 square" data-cat="identity">
+        <div class="art">
+          <svg viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice">
+            <rect width="400" height="400" fill="#0d3530"/>
+            <text x="40" y="50" fill="rgba(214,184,124,0.65)" font-family="JetBrains Mono" font-size="8" letter-spacing="3">HOSPITALITY · IDENTITY</text>
+            <g transform="translate(200, 195)">
+              <circle r="78" fill="none" stroke="#d6b87c" stroke-width="1"/>
+              <circle r="68" fill="none" stroke="rgba(214,184,124,0.4)" stroke-width="0.5"/>
+              <text x="0" y="14" text-anchor="middle" fill="#d6b87c" font-family="Instrument Serif" font-style="italic" font-size="56">HL</text>
+              <text x="0" y="-50" text-anchor="middle" fill="rgba(214,184,124,0.7)" font-family="JetBrains Mono" font-size="7" letter-spacing="2">★ ★ ★ ★ ★</text>
+              <text x="0" y="55" text-anchor="middle" fill="rgba(214,184,124,0.65)" font-family="JetBrains Mono" font-size="6" letter-spacing="2">EST · 1904</text>
+            </g>
+            <text x="200" y="335" text-anchor="middle" fill="#d6b87c" font-family="Instrument Serif" font-style="italic" font-size="26">Hôtel de Launay</text>
+            <text x="200" y="358" text-anchor="middle" fill="rgba(214,184,124,0.55)" font-family="JetBrains Mono" font-size="8" letter-spacing="4">BORDEAUX</text>
+            <text x="40" y="385" fill="rgba(214,184,124,0.45)" font-family="JetBrains Mono" font-size="7" letter-spacing="2">FIG. 06 — HERITAGE MARK</text>
+          </svg>
+        </div>
+        <div class="label">
+          <span class="name">Hôtel de Launay</span>
+          <span class="meta">Concept · Identity</span>
+        </div>
+      </article>
+
+      <article class="specimen span-3 square" data-cat="identity">
+        <div class="art">
+          <svg viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice">
+            <rect width="400" height="400" fill="#ffffff"/>
+            <text x="40" y="50" fill="rgba(20,20,20,0.55)" font-family="JetBrains Mono" font-size="8" letter-spacing="3">GALLERY · IDENTITY 2026</text>
+            <text x="40" y="180" fill="#0a0a0a" font-family="Archivo" font-weight="900" font-size="76" letter-spacing="-3">GALERIE</text>
+            <text x="40" y="270" fill="#c43020" font-family="Archivo" font-weight="900" font-size="76" letter-spacing="-3">NOIR</text>
+            <line x1="40" y1="295" x2="360" y2="295" stroke="#0a0a0a" stroke-width="0.5"/>
+            <text x="40" y="320" fill="#0a0a0a" font-family="JetBrains Mono" font-size="8" letter-spacing="3">CONTEMPORARY · MARSEILLE</text>
+            <text x="40" y="338" fill="rgba(20,20,20,0.55)" font-family="JetBrains Mono" font-size="8" letter-spacing="3">EXHIBITIONS · 2026 — 2027</text>
+            <text x="40" y="385" fill="rgba(20,20,20,0.5)" font-family="JetBrains Mono" font-size="7" letter-spacing="2">FIG. 07 / WORDMARK</text>
+          </svg>
+        </div>
+        <div class="label">
+          <span class="name">Galerie Noir</span>
+          <span class="meta">Concept · Identity</span>
+        </div>
+      </article>
+
+      <article class="specimen span-6" data-cat="editorial">
+        <div class="art">
+          <svg viewBox="0 0 600 720" preserveAspectRatio="xMidYMid slice">
+            <rect width="600" height="720" fill="#0a1428"/>
+            <text x="40" y="50" fill="rgba(244,238,221,0.65)" font-family="JetBrains Mono" font-size="9" letter-spacing="3">CIPHER · A QUARTERLY</text>
+            <text x="560" y="50" text-anchor="end" fill="rgba(244,238,221,0.65)" font-family="JetBrains Mono" font-size="9" letter-spacing="3">№ 07 · SPRING 26</text>
+            <line x1="40" y1="65" x2="560" y2="65" stroke="rgba(244,238,221,0.25)" stroke-width="0.5"/>
+            <text x="40" y="180" fill="#f4eedd" font-family="Archivo" font-weight="900" font-size="130" letter-spacing="-5">CIPHER</text>
+            <text x="40" y="240" fill="#c89a3c" font-family="Instrument Serif" font-style="italic" font-size="42">a journal of</text>
+            <text x="40" y="285" fill="#c89a3c" font-family="Instrument Serif" font-style="italic" font-size="42">slow technology</text>
+            <line x1="40" y1="320" x2="560" y2="320" stroke="rgba(244,238,221,0.25)" stroke-width="0.5"/>
+            <text x="40" y="360" fill="rgba(244,238,221,0.6)" font-family="JetBrains Mono" font-size="9" letter-spacing="3">FEATURED — ESSAY № 03</text>
+            <text x="40" y="430" fill="#f4eedd" font-family="Instrument Serif" font-style="italic" font-size="34">"a slow tool</text>
+            <text x="40" y="475" fill="#f4eedd" font-family="Instrument Serif" font-style="italic" font-size="34">outlives a</text>
+            <text x="40" y="520" fill="#c89a3c" font-family="Instrument Serif" font-style="italic" font-size="34">fast one."</text>
+            <text x="40" y="570" fill="rgba(244,238,221,0.6)" font-family="JetBrains Mono" font-size="9" letter-spacing="3">— A NOTE FROM THE BENCH</text>
+            <line x1="40" y1="660" x2="560" y2="660" stroke="rgba(244,238,221,0.25)" stroke-width="0.5"/>
+            <text x="40" y="685" fill="rgba(244,238,221,0.55)" font-family="JetBrains Mono" font-size="8" letter-spacing="3">PRINTED IN HELSINKI · CIPHER PRESS · 2026</text>
+            <text x="560" y="685" text-anchor="end" fill="rgba(244,238,221,0.55)" font-family="JetBrains Mono" font-size="8" letter-spacing="3">FIG. 08 / EDITORIAL</text>
+          </svg>
+        </div>
+        <div class="label">
+          <span class="name">CIPHER — issue 07</span>
+          <span class="meta">Concept · Editorial</span>
+        </div>
+      </article>
+
+      <article class="specimen span-3" data-cat="packaging">
+        <div class="art">
+          <svg viewBox="0 0 400 500" preserveAspectRatio="xMidYMid slice">
+            <rect width="400" height="500" fill="#d8c5be"/>
+            <text x="40" y="50" fill="rgba(20,15,10,0.55)" font-family="JetBrains Mono" font-size="8" letter-spacing="3">FRAGRANCE · IDENTITY</text>
+            <g transform="translate(200, 245)">
+              <rect x="-30" y="-130" width="60" height="20" fill="#1a1410"/>
+              <rect x="-15" y="-110" width="30" height="20" fill="#1a1410"/>
+              <rect x="-65" y="-90" width="130" height="160" fill="#fff5ee" stroke="rgba(20,15,10,0.18)" stroke-width="0.5"/>
+              <text x="0" y="-60" text-anchor="middle" fill="#1a1410" font-family="JetBrains Mono" font-size="6" letter-spacing="3">BLANC</text>
+              <line x1="-22" y1="-52" x2="22" y2="-52" stroke="#1a1410" stroke-width="0.4"/>
+              <text x="0" y="-15" text-anchor="middle" fill="#1a1410" font-family="Instrument Serif" font-style="italic" font-size="32">Nº 7</text>
+              <line x1="-22" y1="0" x2="22" y2="0" stroke="#1a1410" stroke-width="0.4"/>
+              <text x="0" y="18" text-anchor="middle" fill="#1a1410" font-family="JetBrains Mono" font-size="5" letter-spacing="2">EAU DE PARFUM</text>
+              <text x="0" y="34" text-anchor="middle" fill="rgba(20,15,10,0.6)" font-family="JetBrains Mono" font-size="5" letter-spacing="2">100 ML · 3.4 FL OZ</text>
+            </g>
+            <text x="200" y="395" text-anchor="middle" fill="#1a1410" font-family="Instrument Serif" font-style="italic" font-size="22">Blanc</text>
+            <text x="200" y="418" text-anchor="middle" fill="rgba(20,15,10,0.55)" font-family="JetBrains Mono" font-size="8" letter-spacing="5">PARFUMERIE · LYON</text>
+            <text x="40" y="475" fill="rgba(20,15,10,0.45)" font-family="JetBrains Mono" font-size="7" letter-spacing="2">FIG. 09 / PACKAGING</text>
+          </svg>
+        </div>
+        <div class="label">
+          <span class="name">Blanc Nº 7</span>
+          <span class="meta">Concept · Packaging</span>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- ====================== CONTACT / FOOTER ====================== -->
+  <section class="contact" id="contact">
+    <span class="kicker">— index № 03 / contact</span>
+    <h2 data-reveal>let's <em>begin</em> a small thing,<br>and finish it well.</h2>
+
+    <a href="mailto:hello@atheric.eu" class="mail" data-magnetic data-reveal data-reveal-delay="1">
+      hello@atheric.eu
+      <span class="arrow">↗</span>
+    </a>
+
+    <div class="contact-grid">
+      <div class="contact-col" data-reveal data-reveal-delay="1">
+        <h4>Studio — Finland</h4>
+        <ul>
+          <li>Atheric</li>
+          <li>YTD Holdings Oy</li>
+          <li class="muted">Conversations by appointment</li>
+          <li><a href="mailto:hello@atheric.eu">hello@atheric.eu ↗</a></li>
+        </ul>
+      </div>
+
+      <div class="contact-col" data-reveal data-reveal-delay="2">
+        <h4>How we work</h4>
+        <ul>
+          <li>Project-based pricing</li>
+          <li>Two to three projects at a time</li>
+          <li class="muted">No retainers, no hourly billing</li>
+          <li class="muted">A single number, a clear scope</li>
+        </ul>
+      </div>
+
+      <div class="contact-col" data-reveal data-reveal-delay="3">
+        <h4>Now</h4>
+        <div class="city-clocks">
+          <div class="city-clock"><span class="city">Helsinki</span><span class="time" data-tz="Europe/Helsinki">—</span></div>
+        </div>
+      </div>
+
+      <div class="contact-col" data-reveal data-reveal-delay="4">
+        <h4>Elsewhere</h4>
+        <ul>
+          <li class="muted">Quiet, on purpose.</li>
+          <li class="muted">No social handles yet.</li>
+          <li class="muted">No LinkedIn, on principle.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-marquee">
+      <div class="footer-marquee-track">
+        <span>Atheric · liquid chrome edition <span class="glyph"></span> a small studio · Finland <span class="glyph"></span> accepting first commissions <span class="glyph"></span> conversations by appointment <span class="glyph"></span> hello@atheric.eu <span class="glyph"></span></span>
+        <span>Atheric · liquid chrome edition <span class="glyph"></span> a small studio · Finland <span class="glyph"></span> accepting first commissions <span class="glyph"></span> conversations by appointment <span class="glyph"></span> hello@atheric.eu <span class="glyph"></span></span>
+      </div>
+    </div>
+
+    <div class="footer-end">
+      <span>© Atheric · MMXXVI</span>
+      <span class="seal">
+        <svg viewBox="0 0 70 70">
+          <defs>
+            <path id="circ" d="M35,35 m-26,0 a26,26 0 1,1 52,0 a26,26 0 1,1 -52,0"/>
+          </defs>
+          <text font-family="JetBrains Mono" font-size="6" letter-spacing="3" fill="rgba(244,241,236,0.55)">
+            <textPath href="#circ">ATHERIC · LIQUID · CHROME · EDITION · 26 · </textPath>
+          </text>
+        </svg>
+      </span>
+      <span class="colophon">Built by hand, in Finland</span>
+    </div>
+  </section>
+
+</main>
+
+<!-- ============================================================
+     Author view — studio voice, factual, visual. portrait slot
+     on the left, short paragraph + details on the right.
+     ============================================================ -->
+<main data-view="author" hidden>
+  <header class="page-header">
+    <h1 class="page-title">author</h1>
+    <p class="page-kicker">— Atheric, by hand</p>
+  </header>
+  <section class="author-body">
+    <div class="author-portrait" aria-hidden="true">
+      <span class="portrait-placeholder">portrait</span>
+    </div>
+    <div class="author-content">
+      <p class="author-prose">
+        Atheric is a small studio in Helsinki, founded in 2026 by
+        <em>Yki Lähteenmäki</em>. Two to three commissions a year. No
+        retainers, no hourly billing — a single number, a clear scope.
+        Conversations <em>by appointment</em>.
+      </p>
+      <dl class="author-details">
+        <dt>Founder</dt>      <dd>Yki Lähteenmäki</dd>
+        <dt>Established</dt>  <dd>2026</dd>
+        <dt>Email</dt>        <dd><a href="mailto:hello@atheric.eu">hello@atheric.eu</a></dd>
+        <dt>GitHub</dt>       <dd><a href="https://github.com/Lawyki" target="_blank" rel="noopener">github.com/Lawyki <span class="ext-arrow" aria-hidden="true">↗</span></a></dd>
+        <dt>Twitter</dt>      <dd><a href="https://x.com/lawyk1" target="_blank" rel="noopener">x.com/lawyk1 <span class="ext-arrow" aria-hidden="true">↗</span></a></dd>
+      </dl>
+    </div>
+  </section>
+</main>
+
+<!-- ============================================================
+     Library view — the page header pattern. "library" + the two
+     chrome dots that act as its typographic period. content is
+     placeholder for now; phase 4 fills in case studies.
+     ============================================================ -->
+<main data-view="library" hidden>
+  <header class="page-header">
+    <h1 class="page-title">library</h1>
+    <p class="page-kicker">— concept studies, ongoing</p>
+  </header>
+  <section class="page-body">
+    <p class="page-prose">
+      The library is being curated. Three case studies are in
+      preparation — identity, editorial, and a digital product
+      study. <em>Soon.</em>
+    </p>
+  </section>
+</main>
+
+<script type="module" src="/src/main.js"></script>
+
+</body>
+</html>

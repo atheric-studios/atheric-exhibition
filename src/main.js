@@ -1,0 +1,31 @@
+import './css/styles.css';
+
+import { initSplitText } from './js/split-text.js';
+import { initLoader } from './js/loader.js';
+import { initInteractions } from './js/interactions.js';
+import { initReveal } from './js/reveal.js';
+import { initScrollProgress } from './js/scroll-progress.js';
+import { initClocks } from './js/clocks.js';
+import { initAudio } from './js/audio.js';
+import { initCabinetFilter } from './js/cabinet-filter.js';
+import { initChromeBlob } from './js/chrome-blob.js';
+import { initSmoothAnchor } from './js/smooth-anchor.js';
+import { initInspect } from './js/inspect.js';
+import { initWorldHub } from './js/world-hub.js';
+import { initPageTransitions } from './js/page-transitions.js';
+import { initPreferences } from './js/preferences.js';
+
+initSplitText();
+initLoader();
+initInteractions();
+initReveal();
+initScrollProgress();
+initClocks();
+initAudio();
+initCabinetFilter();
+initChromeBlob();
+initSmoothAnchor();
+initInspect();
+initWorldHub();
+initPreferences();
+initPageTransitions();
