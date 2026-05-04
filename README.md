@@ -5,7 +5,7 @@ work, based in Helsinki.
 
 This repository is published for transparency and inspection, not for
 redistribution. You may read it. You may not copy, modify, or republish
-it. For commission and licensing inquiries: **hello@atheric.eu**
+it. For commission and licensing inquiries: **contact@atheric.eu**
 
 See [LICENSE](./LICENSE) for the full terms.
 
