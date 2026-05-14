@@ -1,11 +1,11 @@
-# Atheric — liquid chrome edition
+# Atheric.
 
 Source for [atheric.eu](https://atheric.eu) — a small studio for digital
 work, based in Helsinki.
 
 This repository is published for transparency and inspection, not for
 redistribution. You may read it. You may not copy, modify, or republish
-it. For commission and licensing inquiries: **contact@atheric.eu** or **ykilah@icloud.com**
+it. For commission and licensing inquiries: **contact@atheric.eu**.
 
 See [LICENSE](./LICENSE) for the full terms.
 
@@ -15,12 +15,11 @@ A single static-deploy site with no external runtime dependencies.
 
 - A WebGL chrome blob in the hero — raymarched metaballs with chrome
   material, fresnel, environment lighting, scroll-driven dispersion,
-  and a cinematic launch animation that drives navigation between
-  pages.
+  and a launch animation that drives navigation between pages.
 - An *inspect mode* that teaches how the blob is built. The camera
   flies to surface points and annotations explain raymarching, smin,
   fresnel, environment lighting, and motion — with code excerpts in
-  a stylised macOS window.
+  a stylised editor window.
 - A world hub band — Helsinki, London, New York, Tokyo — with live
   per-timezone clocks and simulated weather drifting through state
   machines, plus a slow-rolling ticker of coordinates and studio
