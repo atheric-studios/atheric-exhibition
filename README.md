@@ -7,6 +7,8 @@ This repository is published for transparency and inspection, not for
 redistribution. You may read it. You may not copy, modify, or republish
 it. For commission and licensing inquiries: **contact@atheric.eu**.
 
+Author: **ykilah@icloud.com**.
+
 See [LICENSE](./LICENSE) for the full terms.
 
 ## What's in here
