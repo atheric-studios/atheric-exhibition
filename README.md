@@ -78,3 +78,7 @@ src/
 ```
 
 — Atheric · MMXXVI
+
+## Status
+
+Active — last updated 2026-05-19.
