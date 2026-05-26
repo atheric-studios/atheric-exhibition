@@ -5,9 +5,7 @@ work, based in Helsinki.
 
 This repository is published for transparency and inspection, not for
 redistribution. You may read it. You may not copy, modify, or republish
-it. For commission and licensing inquiries: **contact@atheric.eu**.
-
-Author: **ykilah@icloud.com**.
+it. For commission and licensing inquiries: **hello@atheric.eu**.
 
 See [LICENSE](./LICENSE) for the full terms.
 
@@ -16,22 +14,22 @@ See [LICENSE](./LICENSE) for the full terms.
 A single static-deploy site with no external runtime dependencies.
 
 - A WebGL chrome blob in the hero — raymarched metaballs with chrome
-  material, fresnel, environment lighting, scroll-driven dispersion,
-  and a launch animation that drives navigation between pages.
+material, fresnel, environment lighting, scroll-driven dispersion,
+and a launch animation that drives navigation between pages.
 - An *inspect mode* that teaches how the blob is built. The camera
-  flies to surface points and annotations explain raymarching, smin,
-  fresnel, environment lighting, and motion — with code excerpts in
-  a stylised editor window.
+flies to surface points and annotations explain raymarching, smin,
+fresnel, environment lighting, and motion — with code excerpts in
+a stylised editor window.
 - A world hub band — Helsinki, London, New York, Tokyo — with live
-  per-timezone clocks and simulated weather drifting through state
-  machines, plus a slow-rolling ticker of coordinates and studio
-  fragments.
+per-timezone clocks and simulated weather drifting through state
+machines, plus a slow-rolling ticker of coordinates and studio
+fragments.
 - A page-transition system using the History API. Routes: `/`,
-  `/library`, `/author`. Hover-anticipation on nav links. The chrome
-  blob compresses, lifts off-frame, and arrives in the new mode as
-  a tiny two-sphere mark next to the page header.
+`/library`, `/author`. Hover-anticipation on nav links. The chrome
+blob compresses, lifts off-frame, and arrives in the new mode as
+a tiny two-sphere mark next to the page header.
 - A preferences sheet (slide-out panel) with motion, sound, and
-  inspect-marker visibility toggles, persisted to localStorage.
+inspect-marker visibility toggles, persisted to localStorage.
 
 ## Stack
 
