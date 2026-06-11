@@ -112,7 +112,7 @@ function buildShell() {
 
       <section class="pref-section">
         <h3 class="pref-section-title">— studio</h3>
-        <a class="pref-link" href="https://github.com/Lawyki/atheric-public" target="_blank" rel="noopener">
+        <a class="pref-link" href="https://github.com/atheric-studios/atheric-exhibition" target="_blank" rel="noopener">
           <span>View source on GitHub</span>
           <span class="ext-arrow" aria-hidden="true">↗</span>
         </a>
