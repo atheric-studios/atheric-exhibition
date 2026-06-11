@@ -1,4 +1,5 @@
 import { cameraState } from './chrome-blob.js';
+import { exitInspect } from './inspect.js';
 
 // page-transitions: the chrome blob's grammar for moving between pages.
 //
@@ -41,6 +42,14 @@ export function launchBlob(onComplete) {
     if (cameraState.compressCurrent >= ARRIVE_AT || elapsed > MAX_WAIT) {
       isLaunching = false;
       if (typeof onComplete === 'function') onComplete();
+      // drain any navigation queued during this launch. navigateTo's own
+      // arrival callback drains first; anything still here was stranded by
+      // a launch that didn't come through the router.
+      if (pendingNav) {
+        const next = pendingNav;
+        pendingNav = null;
+        navigateTo(next.view, next.options);
+      }
     } else {
       setTimeout(check, 30);
     }
@@ -70,13 +79,27 @@ export function setPageMode(mode) {
 // --------------------------------------------------------------------------
 
 const ROUTES = [
-  { view: 'home',    path: '/' },
-  { view: 'library', path: '/library' },
-  { view: 'author',  path: '/author' },
+  { view: 'home',      path: '/',          title: 'Atheric — a small studio for digital work' },
+  { view: 'library',   path: '/library',   title: 'library — Atheric' },
+  { view: 'author',    path: '/author',    title: 'author — Atheric' },
+  // privacy notice — its own URL so it stays stable when cited in
+  // contracts, email footers, or DPA controller-register entries.
+  { view: 'privacy',   path: '/privacy',   title: 'privacy — Atheric' },
+  // case studies — three "alive" projects under /library
+  { view: 'library-1', path: '/library/1', title: 'aevum — Atheric' },     // spa
+  { view: 'library-2', path: '/library/2', title: 'forma — Atheric' },     // architecture
+  { view: 'library-3', path: '/library/3', title: 'codon — Atheric' },     // genetics
 ];
 
+// case-study views: the chrome blob is replaced by a project-specific
+// scene (its own canvas, its own material). the main blob hides; page
+// mode is irrelevant.
+const CASE_STUDY_VIEWS = new Set(['library-1', 'library-2', 'library-3']);
+
 function viewFromPath(path) {
-  const r = ROUTES.find(x => x.path === path);
+  // treat /library/ as /library — hosts serve both spellings
+  const clean = path.length > 1 && path.endsWith('/') ? path.slice(0, -1) : path;
+  const r = ROUTES.find(x => x.path === clean);
   return r ? r.view : 'home';
 }
 function pathFromView(view) {
@@ -92,11 +115,25 @@ function showView(name) {
   });
   currentView = name;
   document.body.dataset.view = name;
+  const route = ROUTES.find(r => r.view === name);
+  if (route && route.title) document.title = route.title;
 }
 
+// a navigation requested mid-launch (e.g. back/forward pressed during the
+// animation) is remembered and replayed on arrival instead of dropped —
+// otherwise the URL and the visible view desync until the next click.
+let pendingNav = null;
+
 export function navigateTo(view, options = {}) {
+  if (isLaunching) {
+    pendingNav = { view, options };
+    return;
+  }
   if (view === currentView) return;
-  if (isLaunching) return;
+
+  // an open inspect lab must not survive a view swap — it holds
+  // overflow:hidden, scrollOverride, and the inspect-active recede.
+  exitInspect();
 
   const pushHistory = options.pushHistory !== false;
   if (pushHistory) {
@@ -105,22 +142,40 @@ export function navigateTo(view, options = {}) {
 
   // 1. launch the current blob (compress + lift)
   launchBlob(() => {
-    // 2. while the blob is offscreen, swap views and flip pageMode
+    // 2. while the blob is offscreen, swap views and flip pageMode.
+    // case studies replace the blob with their own scene — keep the
+    // chrome blob compressed (offscreen) so it doesn't render behind
+    // the case-study material.
     showView(view);
+    const isCaseStudy = CASE_STUDY_VIEWS.has(view);
     setPageMode(view === 'home' ? 0 : 1);
     window.scrollTo({ top: 0, behavior: 'instant' });
-    // 3. spring the blob back from above (in the new mode's resting pose)
-    resetBlob();
+    // 3. for non-case-study views, spring the blob back. for case
+    // studies, keep it lifted off-frame.
+    if (!isCaseStudy) resetBlob();
     // 4. play the assemble animation on the arriving view
     document.body.classList.add('view-arriving');
     setTimeout(() => document.body.classList.remove('view-arriving'), 600);
+    // 5. hand focus to the arriving view's heading so keyboard and
+    // screen-reader users land where the page did. preventScroll —
+    // we just scrolled to top ourselves.
+    const heading = document.querySelector(`main[data-view="${view}"] h1`);
+    if (heading) {
+      heading.setAttribute('tabindex', '-1');
+      heading.focus({ preventScroll: true });
+    }
   });
 }
 
 function attachNavRoutes() {
-  // intercept all [data-nav-to] clicks
-  document.querySelectorAll('[data-nav-to]').forEach(el => {
+  // intercept plain left-clicks on [data-nav-to] links. modified clicks
+  // (cmd/ctrl/shift/middle) fall through to the browser — the hrefs are
+  // real paths, so open-in-new-tab works. menu-sheet links are owned by
+  // nav-menu.js (close the sheet first, then navigate) — skip them here
+  // so they don't get a second, immediate handler.
+  document.querySelectorAll('[data-nav-to]:not([data-menu-link])').forEach(el => {
     el.addEventListener('click', (e) => {
+      if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
       e.preventDefault();
       navigateTo(el.dataset.navTo);
     });
@@ -137,11 +192,18 @@ function attachNavRoutes() {
 // momentary mismatch (chrome blob defaults to home mode for one frame).
 function applyInitialRoute() {
   const view = viewFromPath(location.pathname);
-  // record current state so back/forward can return to it correctly
-  history.replaceState({ view }, '', location.pathname);
+  // record current state so back/forward can return to it correctly.
+  // keep query + hash — campaign params and #anchors must survive load.
+  history.replaceState({ view }, '', location.pathname + location.search + location.hash);
   if (view !== 'home') {
     showView(view);
     setPageMode(1);
+    // case studies bring their own scene; pin the studio chrome blob
+    // off-frame so it doesn't render through the case-study material.
+    if (CASE_STUDY_VIEWS.has(view)) {
+      cameraState.compressTarget = 1.0;
+      cameraState.compressCurrent = 1.0;
+    }
   }
 }
 
@@ -199,6 +261,7 @@ export function initPageTransitions() {
   document.body.dataset.view = currentView;
   attachHoverAnticipation();
   attachNavRoutes();
-  attachDevTriggers();
+  // dev-only — stray 'l'/'p' keypresses must not desync production
+  if (import.meta.env.DEV) attachDevTriggers();
   applyInitialRoute();
 }

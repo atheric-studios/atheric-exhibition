@@ -130,14 +130,15 @@ function projectToScreen(world, camPos, camLook, fov, viewW, viewH) {
   const fLen = Math.hypot(fx, fy, fz) || 1;
   const fwd = [fx / fLen, fy / fLen, fz / fLen];
   const worldUp = Math.abs(fwd[1]) > 0.97 ? [0, 0, 1] : [0, 1, 0];
-  let rx = fwd[1] * worldUp[2] - fwd[2] * worldUp[1];
-  let ry = fwd[2] * worldUp[0] - fwd[0] * worldUp[2];
-  let rz = fwd[0] * worldUp[1] - fwd[1] * worldUp[0];
+  // mirror the shader's basis exactly: right = up × forward, camUp = forward × right
+  let rx = worldUp[1] * fwd[2] - worldUp[2] * fwd[1];
+  let ry = worldUp[2] * fwd[0] - worldUp[0] * fwd[2];
+  let rz = worldUp[0] * fwd[1] - worldUp[1] * fwd[0];
   const rLen = Math.hypot(rx, ry, rz) || 1;
   rx /= rLen; ry /= rLen; rz /= rLen;
-  const ux = ry * fwd[2] - rz * fwd[1];
-  const uy = rz * fwd[0] - rx * fwd[2];
-  const uz = rx * fwd[1] - ry * fwd[0];
+  const ux = fwd[1] * rz - fwd[2] * ry;
+  const uy = fwd[2] * rx - fwd[0] * rz;
+  const uz = fwd[0] * ry - fwd[1] * rx;
   const dx = world[0] - camPos[0];
   const dy = world[1] - camPos[1];
   const dz = world[2] - camPos[2];
@@ -474,8 +475,11 @@ function hideCard() {
 // ---------------------------------------------------------------------------
 // enter / exit
 // ---------------------------------------------------------------------------
+let prevFocusEl = null;
+
 function enter() {
   if (state.active) return;
+  prevFocusEl = document.activeElement;
   // defensive: if the user clicks inspect before the charIn cascade has
   // finished (loader adds .complete at +2.2s), force it now. without
   // .complete, the headline's transform/opacity sit in the CSS animations
@@ -502,6 +506,9 @@ function enter() {
   counterEl.textContent = '—';
   hideCard();
   if (!rafId) rafId = requestAnimationFrame(tick);
+  // hand focus into the overlay so keyboard users aren't left tabbing
+  // through the invisible receded page (mirrors the sheets' pattern)
+  setTimeout(() => shellEl.querySelector('.inspect-close')?.focus(), 60);
   playEnter();
 }
 
@@ -522,6 +529,15 @@ function exit() {
   counterEl.textContent = '—';
   hideCard();
   if (state.arrivalTimer) { clearTimeout(state.arrivalTimer); state.arrivalTimer = null; }
+  if (prevFocusEl && prevFocusEl.isConnected) prevFocusEl.focus({ preventScroll: true });
+  prevFocusEl = null;
+}
+
+// the router calls this before navigating — a view swap under an open lab
+// would leak overflow:hidden, scrollOverride, and the inspect-active class
+// onto the destination view. no-op when the lab is closed.
+export function exitInspect() {
+  exit();
 }
 
 // ---------------------------------------------------------------------------
@@ -558,6 +574,10 @@ export function initInspect() {
     else if (e.key >= '1' && e.key <= '5') selectFeature(parseInt(e.key, 10) - 1);
   });
 
-  // keep hint positions correct on resize
-  addEventListener('resize', () => { if (state.active) tick(); });
+  // keep hint positions correct on resize. schedule rather than calling
+  // tick() directly — a direct call alongside the already-pending rAF
+  // forked a second perpetual loop per resize event.
+  addEventListener('resize', () => {
+    if (state.active && !rafId) rafId = requestAnimationFrame(tick);
+  });
 }

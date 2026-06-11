@@ -33,8 +33,17 @@ export function initChromeBlob() {
   const canvas = document.getElementById('chrome');
   const gl = canvas.getContext('webgl', { alpha: true, antialias: false, premultipliedAlpha: false });
   if (!gl) {
+    console.warn('[chrome-blob] no WebGL context — hiding canvas');
     canvas.style.display = 'none';
   } else {
+    // detect fragment-shader high-float precision support. some mobile GPUs
+    // (older iOS, mid-range Android) report 0 precision for highp, which
+    // means the shader will silently fail to compile if we keep highp.
+    // fall back to mediump in that case — small visual difference, full
+    // compatibility.
+    const fragHighp = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT);
+    const usePrecision = (fragHighp && fragHighp.precision > 0) ? 'highp' : 'mediump';
+
     const vsrc = `
       attribute vec2 aPos;
       void main() {
@@ -42,7 +51,7 @@ export function initChromeBlob() {
       }
     `;
     const fsrc = `
-      precision highp float;
+      precision ${usePrecision} float;
       uniform vec2 uRes;
       uniform float uTime;
       uniform vec2 uMouse;
@@ -63,23 +72,39 @@ export function initChromeBlob() {
       }
 
       float scene(vec3 p) {
-        // page mode — a tiny two-sphere mark, fixed top-left, calmer orbits.
-        // serves as the typographic "dot" of the page header word. no cursor,
-        // no scroll. participates in launch (uCompress) so navigating away
-        // from a page also lifts these marbles up out of frame.
+        // page mode — a tiny two-sphere mark, calmer orbits, acting as the
+        // typographic "dot" of the page-header word. position is computed
+        // from viewport aspect so the blobs stay on screen on portrait
+        // (mobile) and landscape (desktop) alike. participates in launch.
         if (uPageMode > 0.5) {
           float pt = uTime * 0.30;
           float pComp = uCompress;
           float pRadiusScale = 1.0 - pComp * 0.55;
           vec3 pLift = vec3(0.0, pComp * pComp * 5.5, 0.0);
-          vec3 pc1 = vec3(-2.40, 1.45, 0.0)
+
+          // viewport-aware position — keeps the blob aligned with the
+          // page-header text on portrait and landscape. on landscape we
+          // sit further left in world space (since uv.x range is wide);
+          // on portrait we pull in toward centre. uses step()+mix() rather
+          // than a bool-ternary on vec3 because Safari's GLSL compiler has
+          // historically rejected the bool-conditional-on-vec3 pattern.
+          float portraitFactor = step(uRes.x, uRes.y);
+          // right side, aligned with the page-header text vertically.
+          // y differs sharply between landscape and portrait because uv.y
+          // scales by min(uRes.x, uRes.y) — a portrait viewport's small
+          // min dimension means the same world Y projects to a much shorter
+          // screen distance, so portrait needs a much higher Y.
+          vec3 base1 = mix(vec3(1.95, 1.10, 0.0), vec3(0.95, 2.30, 0.0), portraitFactor);
+          vec3 base2 = mix(vec3(2.18, 1.10, 0.0), vec3(1.18, 2.30, 0.0), portraitFactor);
+
+          vec3 pc1 = base1
                    + vec3(cos(pt) * 0.10, sin(pt * 1.2) * 0.06, 0.0)
                    + pLift;
-          float pd1 = sphere(p, pc1, 0.14 * pRadiusScale);
-          vec3 pc2 = vec3(-2.16, 1.45, 0.0)
+          float pd1 = sphere(p, pc1, 0.20 * pRadiusScale);
+          vec3 pc2 = base2
                    + vec3(cos(pt * 0.7 + 1.5) * 0.08, sin(pt * 0.9) * 0.05, 0.0)
                    + pLift;
-          float pd2 = sphere(p, pc2, 0.10 * pRadiusScale);
+          float pd2 = sphere(p, pc2, 0.14 * pRadiusScale);
           return smin(pd1, pd2, 0.07);
         }
 
@@ -94,7 +119,13 @@ export function initChromeBlob() {
         float mouseW = 0.55 * (1.0 - clamp(uScroll * 1.4, 0.0, 1.0)) * (1.0 - comp);
         float mergeBonus = comp * 0.45;
 
+        // ambient drift — lissajous on c1 so the dominant sphere drifts
+        // continuously even when the cursor is still. paired with the
+        // orbital satellites (c2..c4) below, this keeps the silhouette
+        // morphing at all times.
+        vec3 drift = vec3(cos(uTime * 0.42) * 0.55, sin(uTime * 0.31) * 0.38, 0.0);
         vec3 c1 = vec3(uMouse * mouseW, 0.0)
+                + drift
                 + vec3(0.0, 1.6, 0.0) * disp * 3.2
                 + lift;
         float d1 = sphere(p, c1, 0.78 * radiusScale);
@@ -167,8 +198,12 @@ export function initChromeBlob() {
         // fly the lens around the chrome surface
         vec3 forward = normalize(uCamLook - uCamPos);
         vec3 worldUp = abs(forward.y) > 0.97 ? vec3(0.0, 0.0, 1.0) : vec3(0.0, 1.0, 0.0);
-        vec3 right = normalize(cross(forward, worldUp));
-        vec3 camUp = cross(right, forward);
+        // standard right-handed: right = up × forward, camUp = forward × right.
+        // earlier order (forward × up) produced right = -x for a +z-facing
+        // camera, which mirrored the entire scene horizontally — making the
+        // cursor-tracked sphere drift opposite to the cursor.
+        vec3 right = normalize(cross(worldUp, forward));
+        vec3 camUp = cross(forward, right);
         vec3 ro = uCamPos;
         vec3 rd = normalize(forward * uCamFOV + right * uv.x + camUp * uv.y);
 
@@ -211,7 +246,8 @@ export function initChromeBlob() {
       gl.shaderSource(sh, src);
       gl.compileShader(sh);
       if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) {
-        console.error(gl.getShaderInfoLog(sh));
+        const label = type === gl.VERTEX_SHADER ? 'vertex' : 'fragment';
+        console.error(`[chrome-blob] ${label} shader compile failed:`, gl.getShaderInfoLog(sh));
         return null;
       }
       return sh;
@@ -219,13 +255,20 @@ export function initChromeBlob() {
 
     const vs = compile(gl.VERTEX_SHADER, vsrc);
     const fs = compile(gl.FRAGMENT_SHADER, fsrc);
+    if (!vs || !fs) {
+      console.warn('[chrome-blob] shader compile failed — hiding canvas (precision=' + usePrecision + ')');
+      canvas.style.display = 'none';
+      return;
+    }
     const prog = gl.createProgram();
     gl.attachShader(prog, vs);
     gl.attachShader(prog, fs);
     gl.linkProgram(prog);
 
     if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
-      console.error(gl.getProgramInfoLog(prog));
+      console.error('[chrome-blob] program link failed:', gl.getProgramInfoLog(prog));
+      canvas.style.display = 'none';
+      return;
     }
 
     gl.useProgram(prog);
@@ -278,10 +321,22 @@ export function initChromeBlob() {
       return Math.max(0, scrollY / Math.max(1, h));
     };
 
+    // context loss (GPU reset, mobile tab eviction): the program and
+    // buffers are gone — hide the canvas and stop the loop instead of
+    // issuing dead GL calls forever. recovery is a page reload; the page
+    // is fully usable without the blob.
+    let contextLost = false;
+    canvas.addEventListener('webglcontextlost', () => {
+      contextLost = true;
+      canvas.style.display = 'none';
+      console.warn('[chrome-blob] webgl context lost — hiding canvas');
+    });
+
     const start = performance.now();
     let frozenT = 0;
     let lastNow = performance.now();
     const render = () => {
+      if (contextLost) return;
       const now = performance.now();
       // when motion-quiet is on, freeze time advancement — the blob holds
       // whatever shape it had. uMouse and uScroll still respond if quiet

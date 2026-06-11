@@ -4,7 +4,10 @@ export function initClocks() {
   const fmt = (n) => String(n).padStart(2, '0');
   const tickClock = () => {
     const d = new Date();
-    const z = new Intl.DateTimeFormat('en-FI', {
+    // en-GB, not en-FI — the FI region formats time with periods
+    // (20.34.33), clashing with the markup's 00:00:00 placeholder and
+    // every other clock on the page.
+    const z = new Intl.DateTimeFormat('en-GB', {
       timeZone: 'Europe/Helsinki', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
     }).format(d);
     navClock.innerHTML = `<b>HEL</b> · ${z}`;

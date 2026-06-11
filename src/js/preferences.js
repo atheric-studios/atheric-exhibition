@@ -61,6 +61,7 @@ function applyAll() {
 // --------------------------------------------------------------------------
 let shellEl, panelEl, overlayEl;
 let isOpen = false;
+let openerEl = null;
 
 function buildShell() {
   shellEl = document.createElement('div');
@@ -68,7 +69,7 @@ function buildShell() {
   shellEl.setAttribute('aria-hidden', 'true');
   shellEl.innerHTML = `
     <div class="pref-overlay"></div>
-    <aside class="pref-panel" role="dialog" aria-label="preferences" tabindex="-1">
+    <aside class="pref-panel" role="dialog" aria-modal="true" aria-label="preferences" tabindex="-1">
       <header class="pref-header">
         <h2 class="pref-title">Preferences</h2>
         <button class="pref-close" type="button" aria-label="close preferences">
@@ -116,14 +117,25 @@ function buildShell() {
           <span class="ext-arrow" aria-hidden="true">↗</span>
         </a>
         <button class="pref-link pref-expandable" type="button" aria-expanded="false">
-          <span>Legal &amp; licence</span>
+          <span>Imprint &amp; licence</span>
           <span class="pref-chevron" aria-hidden="true">+</span>
         </button>
         <div class="pref-detail" hidden>
-          <p>© 2026 Atheric. All rights reserved.</p>
-          <p>This source is published for transparency, not for redistribution. Reading is welcome; copying, modifying, and republishing are not.</p>
-          <p>For commission and licensing inquiries: <a href="mailto:hello@atheric.eu">hello@atheric.eu</a></p>
+          <p class="pref-detail-block">
+            <strong>Operator</strong><br>
+            YDT Holdings Oy · Y-tunnus 3608568-3 · Finland<br>
+            Atheric is the studio name, planned as an aputoiminimi of YDT Holdings Oy. Atheric is not yet trading. A postal address will be published before any commercial activity begins under this name. Not VAT-registered.<br>
+            Contact: <a href="mailto:hello@atheric.eu">hello@atheric.eu</a>
+          </p>
+          <p class="pref-detail-block">
+            <strong>Licence</strong><br>
+            © 2026 Atheric. All rights reserved. This source is published for transparency, not for redistribution. Reading is welcome; copying, modifying, and republishing are not.
+          </p>
         </div>
+        <a class="pref-link" href="/privacy" data-nav-to="privacy">
+          <span>Privacy notice</span>
+          <span class="ext-arrow" aria-hidden="true">↗</span>
+        </a>
         <p class="pref-colophon">Atheric · MMXXVI · liquid chrome edition</p>
       </section>
     </aside>
@@ -135,6 +147,14 @@ function buildShell() {
   // close affordances
   shellEl.querySelector('.pref-close').addEventListener('click', close);
   overlayEl.addEventListener('click', close);
+  // close the panel when an in-app nav link inside it is clicked, so
+  // the panel doesn't sit on top of the destination view. The actual
+  // navigation is handled by page-transitions (which adds its own
+  // listener on every [data-nav-to]); this close fires first because
+  // it's registered before page-transitions' listeners are attached.
+  shellEl.querySelectorAll('[data-nav-to]').forEach(el => {
+    el.addEventListener('click', close);
+  });
 
   // toggle handlers — each button flips its preference
   shellEl.querySelectorAll('[data-pref-toggle]').forEach(btn => {
@@ -189,6 +209,7 @@ function syncToggleUI() {
 function open() {
   if (isOpen) return;
   isOpen = true;
+  openerEl = document.activeElement;
   syncToggleUI();
   shellEl.setAttribute('aria-hidden', 'false');
   document.body.classList.add('preferences-open');
@@ -201,6 +222,9 @@ function close() {
   isOpen = false;
   shellEl.setAttribute('aria-hidden', 'true');
   document.body.classList.remove('preferences-open');
+  // hand focus back to whatever opened the sheet
+  if (openerEl && openerEl.isConnected) openerEl.focus({ preventScroll: true });
+  openerEl = null;
 }
 
 // --------------------------------------------------------------------------

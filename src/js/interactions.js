@@ -22,6 +22,10 @@ export function initInteractions() {
 
     addEventListener('pointerdown', () => document.body.classList.add('cursor-press'));
     addEventListener('pointerup', () => document.body.classList.remove('cursor-press'));
+    // releases outside the window never fire pointerup — clear on the
+    // signals we do get, so the cursor doesn't stay compressed.
+    addEventListener('pointercancel', () => document.body.classList.remove('cursor-press'));
+    addEventListener('blur', () => document.body.classList.remove('cursor-press'));
 
     const hoverables = 'a,button,[data-magnetic],.card,.panel,.index-row,.specimen,.audio-toggle';
     document.addEventListener('pointerover', e => {
@@ -29,6 +33,22 @@ export function initInteractions() {
     });
     document.addEventListener('pointerout', e => {
       if (e.target.closest(hoverables)) document.body.classList.remove('cursor-hover');
+    });
+
+    // Tone-aware cursor: when the pointer enters a section marked
+    // data-tone="dark", switch the cursor to its luminous variant so
+    // it stays visible against ink. relatedTarget check prevents
+    // flicker when crossing between nested children of the same zone.
+    const inDark = (node) => !!(node && node.closest && node.closest('[data-tone="dark"]'));
+    document.addEventListener('pointerover', e => {
+      if (inDark(e.target) && !inDark(e.relatedTarget)) {
+        document.body.classList.add('cursor-on-dark');
+      }
+    });
+    document.addEventListener('pointerout', e => {
+      if (inDark(e.target) && !inDark(e.relatedTarget)) {
+        document.body.classList.remove('cursor-on-dark');
+      }
     });
 
     const ringLoop = () => {

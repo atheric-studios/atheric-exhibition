@@ -1,5 +1,5 @@
 // the studio's window onto the world.
-// four cells: helsinki (home), london, new york, tokyo.
+// four cells: helsinki, london, new york, tokyo.
 // - clocks: real, ticking every second (Intl.DateTimeFormat per timezone).
 // - weather: simulated. each city has its own state machine + temp drift.
 // the ticker beneath the cells (coordinates + studio fragments) is pure
@@ -40,7 +40,9 @@ const TRANSITIONS = {
   clear:    { clear: 0.50, partly: 0.40, overcast: 0.05, rain: 0.00, snow: 0.00 },
   partly:   { clear: 0.30, partly: 0.35, overcast: 0.30, rain: 0.05, snow: 0.00 },
   overcast: { clear: 0.05, partly: 0.25, overcast: 0.40, rain: 0.30, snow: 0.00 },
-  rain:     { clear: 0.00, partly: 0.10, overcast: 0.40, rain: 0.50, snow: 0.05 },
+  // rows must sum to 1.0 — a 1.05 rain row once made snow unreachable
+  // (the accumulator returned at rain before snow's slice was ever hit)
+  rain:     { clear: 0.00, partly: 0.10, overcast: 0.40, rain: 0.45, snow: 0.05 },
   snow:     { clear: 0.05, partly: 0.15, overcast: 0.40, rain: 0.00, snow: 0.40 },
 };
 
@@ -199,7 +201,8 @@ export function initWorldHub() {
   CITIES.forEach(initCity);
   // initial paint
   CITIES.forEach(c => { renderTime(c); renderWeather(c); });
-  // clocks tick every minute (no seconds shown — ambient, not declarative)
+  // clocks re-render every second; only HH:MM is shown, so the visible
+  // change is at most once a minute (ambient, not declarative)
   setInterval(() => CITIES.forEach(renderTime), 1000);
   // weather drifts every 8 seconds (state transitions every 2–5 min internally)
   setInterval(() => {

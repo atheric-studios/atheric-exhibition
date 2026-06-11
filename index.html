@@ -5,13 +5,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="theme-color" content="#efece4" />
 <title>Atheric — a small studio for digital work</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<meta name="description" content="Atheric is a small Finnish studio for premium digital work — websites and interfaces, two to three commissions at a time." />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<!-- social cards — og:title stays the studio-level line; per-view
+     document.title is handled by the router (page-transitions.js). -->
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Atheric" />
+<meta property="og:title" content="Atheric — a small studio for digital work" />
+<meta property="og:description" content="A small Finnish studio for premium digital work — websites and interfaces, two to three commissions at a time." />
+<meta property="og:url" content="https://atheric.eu/" />
+<meta name="twitter:card" content="summary" />
+<!-- Fonts are self-hosted (see public/fonts/ + @font-face block in
+     styles.css). No external font requests, no IP leak to Google. -->
 </head>
 <body>
 
-<!-- shared SVG sprite — the studio mark, used in the loader and the nav.
+<!-- shared SVG sprite — the studio mark, used in the nav.
      gradient lives at top level so <use> instances resolve correctly. -->
 <svg width="0" height="0" style="position:absolute;pointer-events:none" aria-hidden="true">
   <defs>
@@ -30,15 +39,12 @@
 </svg>
 
 <!-- ============================================================
-     Loader — a quiet waiting room. one chrome marble, the studio
-     name, a thin progress thread, one atmospheric line. nothing else.
+     Loader — a quiet waiting room. the studio name, a thin
+     progress thread, one atmospheric line. nothing else.
      ============================================================ -->
-<div id="loader" aria-hidden="true">
+<div id="loader" role="status" aria-label="loading">
   <div class="loader-glow"></div>
   <div class="loader-room">
-    <svg class="atheric-mark loader-marble" aria-hidden="true">
-      <use href="#atheric-mark-symbol"/>
-    </svg>
     <div class="loader-name">Atheric<em>.</em></div>
     <div class="loader-thread" id="loaderStrip">
       <div class="loader-thread-fill"></div>
@@ -71,7 +77,7 @@
        click Atheric → home (internal navigation, launch gesture).
        click Under the Code → opens under.atheric.eu in a new tab. -->
   <div class="mark-cluster">
-    <a href="#" class="mark" data-magnetic data-nav-to="home">
+    <a href="/" class="mark" data-magnetic data-nav-to="home">
       <svg class="atheric-mark mark-glyph" aria-hidden="true"><use href="#atheric-mark-symbol"/></svg>
       <span>Atheric<em>.</em></span>
     </a>
@@ -81,8 +87,8 @@
     </a>
   </div>
   <ul>
-    <li><a href="#" class="link" data-nav-to="library">library</a></li>
-    <li><a href="#" class="link" data-nav-to="author">author</a></li>
+    <li><a href="/library" class="link" data-nav-to="library">library</a></li>
+    <li><a href="/author" class="link" data-nav-to="author">author</a></li>
     <li><a href="#" class="link" data-pref-open>preferences</a></li>
   </ul>
   <div class="right">
@@ -91,8 +97,44 @@
       <span class="bars"><i></i><i></i><i></i></span>
       <span>Sound</span>
     </button>
+    <!-- mobile / touch / narrow-viewport menu trigger.
+         hidden on wide desktop with fine pointer; visible elsewhere. -->
+    <button class="nav-burger" type="button" aria-label="open menu" aria-expanded="false" data-menu-open>
+      <span class="burger-bar"></span>
+      <span class="burger-bar"></span>
+      <span class="burger-bar"></span>
+    </button>
   </div>
 </nav>
+
+<!-- ============================================================
+     Mobile / touch nav menu — slide-out sheet mirroring the
+     preferences-sheet pattern. opens via the hamburger button.
+     ============================================================ -->
+<div id="nav-menu-shell" aria-hidden="true">
+  <div class="nav-menu-overlay"></div>
+  <aside class="nav-menu-panel" role="dialog" aria-modal="true" aria-label="navigation menu" tabindex="-1">
+    <header class="nav-menu-header">
+      <span class="nav-menu-eyebrow">— menu</span>
+      <button class="nav-menu-close" type="button" aria-label="close menu">
+        <span aria-hidden="true">✕</span>
+      </button>
+    </header>
+    <nav class="nav-menu-list" aria-label="primary mobile">
+      <a href="/" class="nav-menu-item" data-nav-to="home" data-menu-link>home</a>
+      <a href="/library" class="nav-menu-item" data-nav-to="library" data-menu-link>library</a>
+      <a href="/author" class="nav-menu-item" data-nav-to="author" data-menu-link>author</a>
+      <a href="#" class="nav-menu-item" data-pref-open data-menu-link>preferences</a>
+    </nav>
+    <div class="nav-menu-foot">
+      <a href="https://under.atheric.eu" class="nav-menu-secondary" target="_blank" rel="noopener">
+        <span>Under the Code<em>.</em></span>
+        <span class="ext-arrow" aria-hidden="true">↗</span>
+      </a>
+      <p class="nav-menu-colophon">Atheric · MMXXVI</p>
+    </div>
+  </aside>
+</div>
 
 <!-- ============================================================
      Main — multiple views, one is visible at a time. the launch
@@ -138,7 +180,7 @@
           Start a commission
           <span class="arrow">→</span>
         </a>
-        <a href="#cabinet" class="cta-ghost">View the cabinet</a>
+        <a href="/library" data-nav-to="library" class="cta-ghost">View the library</a>
       </div>
     </div>
 
@@ -159,13 +201,12 @@
        live times (HH:MM), weather glyphs, temperatures, coordinates,
        and small italic-serif fragments. nothing anchored, nothing
        declarative. just an ambient stream the studio passes through. -->
-  <section class="hub" aria-label="world hub">
+  <section class="hub" aria-label="world hub" data-tone="dark">
     <div class="hub-stream">
       <div class="hub-stream-track">
         <span class="hub-stream-pass">
           <span class="hs-city" data-city="helsinki">
             <span class="hs-name">Helsinki</span>
-            <span class="hs-tag">home</span>
             <span class="hs-time">--:--</span>
             <span class="hs-glyph" aria-hidden="true"></span>
             <span class="hs-temp">—</span>
@@ -212,7 +253,6 @@
         <span class="hub-stream-pass" aria-hidden="true">
           <span class="hs-city" data-city="helsinki">
             <span class="hs-name">Helsinki</span>
-            <span class="hs-tag">home</span>
             <span class="hs-time">--:--</span>
             <span class="hs-glyph"></span>
             <span class="hs-temp">—</span>
@@ -273,6 +313,32 @@
         slowly, in private, until the thing has a <em>weight of its own</em>.
       </p>
     </header>
+
+    <!-- pin runway: the figure inside is sticky and scales toward full-bleed
+         as the user scrolls. The .triptych-grid that follows uses negative
+         margin to slide up over the still-pinned figure on exit. -->
+    <div class="triptych-pin" data-pin-stage>
+      <div class="triptych-pin__hold">
+        <figure class="motion-frame motion-frame--triptych motion-frame--pinned"
+                data-motion-embed
+                data-pin-target>
+          <div class="motion-frame__shell">
+            <iframe
+              src="/motion/01-process-v1/Code%20to%20Site.html"
+              loading="lazy"
+              title="motion study — code to site"
+              aria-label="motion study, code to site"
+              tabindex="-1"
+              referrerpolicy="no-referrer"
+              scrolling="no"></iframe>
+            <span class="motion-vignette" aria-hidden="true"></span>
+            <span class="motion-bevel" aria-hidden="true"></span>
+            <span class="motion-progress" aria-hidden="true"></span>
+            <span class="motion-cue" aria-hidden="true">— in view</span>
+          </div>
+        </figure>
+      </div>
+    </div>
 
     <div class="triptych-grid">
       <article class="panel" data-tilt data-reveal data-reveal-delay="1">
@@ -375,11 +441,28 @@
           <span>fig. 03</span>
         </div>
       </article>
+
+      <!-- closing coda — ties off the three movements with a slow note +
+           the studio dot mark. Also fills the grid past 100vh so the
+           rising cover panel fully covers the figure beneath at lock-end
+           (otherwise the ink manifesto bg shows below the cards and
+           reads as the figure leaking through). -->
+      <footer class="triptych-coda">
+        <span class="coda-kicker">— atelier note · 2026</span>
+        <p class="coda-line">
+          made slowly, in private, until the website has weight of its own<span class="coda-period">.</span>
+        </p>
+        <div class="coda-mark" aria-hidden="true">
+          <span class="coda-mark-line"></span>
+          <span class="coda-mark-dot"></span>
+          <span class="coda-mark-line"></span>
+        </div>
+      </footer>
     </div>
   </section>
 
   <!-- ====================== MANIFESTO ====================== -->
-  <section class="manifesto" id="manifesto">
+  <section class="manifesto" id="manifesto" data-tone="dark">
     <span class="kicker">— Atheric / a small manifesto</span>
     <blockquote data-split>a website should feel like a <em>room</em> you are willing to come back to, twice.</blockquote>
     <cite>
@@ -397,10 +480,10 @@
         <h2>concept studies, <em>before</em> the cabinet fills.</h2>
       </div>
       <div class="filter" data-reveal data-reveal-delay="1">
-        <button class="on" data-filter="all">All</button>
-        <button data-filter="identity">Identity</button>
-        <button data-filter="editorial">Editorial</button>
-        <button data-filter="packaging">Packaging</button>
+        <button class="on" data-filter="all" aria-pressed="true">All</button>
+        <button data-filter="identity" aria-pressed="false">Identity</button>
+        <button data-filter="editorial" aria-pressed="false">Editorial</button>
+        <button data-filter="packaging" aria-pressed="false">Packaging</button>
       </div>
     </header>
 
@@ -593,7 +676,7 @@
             <text x="40" y="520" fill="#c89a3c" font-family="Instrument Serif" font-style="italic" font-size="34">fast one."</text>
             <text x="40" y="570" fill="rgba(244,238,221,0.6)" font-family="JetBrains Mono" font-size="9" letter-spacing="3">— A NOTE FROM THE BENCH</text>
             <line x1="40" y1="660" x2="560" y2="660" stroke="rgba(244,238,221,0.25)" stroke-width="0.5"/>
-            <text x="40" y="685" fill="rgba(244,238,221,0.55)" font-family="JetBrains Mono" font-size="8" letter-spacing="3">PRINTED IN HELSINKI · CIPHER PRESS · 2026</text>
+            <text x="40" y="685" fill="rgba(244,238,221,0.55)" font-family="JetBrains Mono" font-size="8" letter-spacing="3">PRINTED IN FINLAND · CIPHER PRESS · 2026</text>
             <text x="560" y="685" text-anchor="end" fill="rgba(244,238,221,0.55)" font-family="JetBrains Mono" font-size="8" letter-spacing="3">FIG. 08 / EDITORIAL</text>
           </svg>
         </div>
@@ -634,21 +717,43 @@
   </section>
 
   <!-- ====================== CONTACT / FOOTER ====================== -->
-  <section class="contact" id="contact">
-    <span class="kicker">— index № 03 / contact</span>
-    <h2 data-reveal>let's <em>begin</em> a small thing,<br>and finish it well.</h2>
+  <section class="contact" id="contact" data-tone="dark">
+    <!-- motion graphic gets its own dedicated slot at the top of the
+         section: 200vh of runway with a 100vh sticky pin, so the
+         figure fills the viewport for one full screen of scroll.
+         Section content then flows in below, no overlap. -->
+    <div class="contact-bg-stage" data-motion-bg-stage aria-hidden="true">
+      <div class="contact-bg-sticky">
+        <figure class="motion-frame motion-frame--contact motion-frame--bg" data-motion-bg-target>
+          <div class="motion-frame__shell">
+            <iframe
+              src="/motion/02-contact-v1/Inquiry.html"
+              loading="lazy"
+              title="motion study — inquiry"
+              aria-label="motion study, inquiry"
+              tabindex="-1"
+              referrerpolicy="no-referrer"
+              scrolling="no"></iframe>
+            <span class="motion-vignette" aria-hidden="true"></span>
+          </div>
+        </figure>
+      </div>
+    </div>
 
-    <a href="mailto:hello@atheric.eu" class="mail" data-magnetic data-reveal data-reveal-delay="1">
-      hello@atheric.eu
-      <span class="arrow">↗</span>
-    </a>
+    <div class="contact-content">
+      <span class="kicker">— index № 03 / contact</span>
+
+      <a href="mailto:hello@atheric.eu" class="mail" data-magnetic data-reveal data-reveal-delay="1">
+        hello@atheric.eu
+        <span class="arrow">↗</span>
+      </a>
 
     <div class="contact-grid">
       <div class="contact-col" data-reveal data-reveal-delay="1">
         <h4>Studio — Finland</h4>
         <ul>
           <li>Atheric</li>
-          <li>YTD Holdings Oy</li>
+          <li>YDT Holdings Oy</li>
           <li class="muted">Conversations by appointment</li>
           <li><a href="mailto:hello@atheric.eu">hello@atheric.eu ↗</a></li>
         </ul>
@@ -702,6 +807,7 @@
       </span>
       <span class="colophon">Built by hand, in Finland</span>
     </div>
+    </div><!-- /.contact-content -->
   </section>
 
 </main>
@@ -721,7 +827,7 @@
     </div>
     <div class="author-content">
       <p class="author-prose">
-        Atheric is a small studio in Helsinki, founded in 2026 by
+        Atheric is a small studio in Finland, founded in 2026 by
         <em>Yki Lähteenmäki</em>. Two to three commissions a year. No
         retainers, no hourly billing — a single number, a clear scope.
         Conversations <em>by appointment</em>.
@@ -738,6 +844,101 @@
 </main>
 
 <!-- ============================================================
+     Privacy view — its own URL (/privacy) so it stays stable when
+     cited in contracts, email footers, the Finnish DPA controller
+     register, and Article 13 disclosure replies. Page-header pattern
+     mirrors /author and /library; content is plain restrained prose
+     with dl/ul lists where structure helps. Imprint stays in the
+     preferences panel (compliance-at-a-glance); this is the long
+     form notice.
+     ============================================================ -->
+<main data-view="privacy" hidden>
+  <header class="page-header">
+    <h1 class="page-title">privacy</h1>
+    <p class="page-kicker">— what we collect, what we don't, what we do with it</p>
+  </header>
+
+  <section class="privacy-body">
+    <p class="privacy-lede">
+      Short version — we collect only what you send us. No analytics,
+      no tracking, no advertising. Fonts are self-hosted. You can ask
+      for a copy or a deletion at any time.
+    </p>
+
+    <h2>— controller</h2>
+    <dl>
+      <dt>Operator</dt>
+      <dd>YDT Holdings Oy · Y-tunnus 3608568-3 · Finland</dd>
+      <dt>Trade name</dt>
+      <dd>Atheric — planned aputoiminimi of YDT Holdings Oy. Atheric is not yet trading. A postal address will be published before any commercial activity begins under this name.</dd>
+      <dt>VAT</dt>
+      <dd>Not VAT-registered.</dd>
+      <dt>Contact</dt>
+      <dd><a href="mailto:hello@atheric.eu">hello@atheric.eu</a></dd>
+    </dl>
+
+    <h2>— what we collect</h2>
+    <dl>
+      <dt>Email correspondence</dt>
+      <dd>If you write to <a href="mailto:hello@atheric.eu">hello@atheric.eu</a>, we receive your message and your sending address. That is the only direct channel.</dd>
+      <dt>Server logs</dt>
+      <dd>Our host (Vercel) records standard HTTP request data — IP address, timestamp, user agent — for routing, abuse prevention, and HTTPS. Retained per the host's policy.</dd>
+      <dt>Local preferences</dt>
+      <dd>The site stores your motion, sound, and lab choices in your browser's <code>localStorage</code>. Not transmitted, not personal data — they live on your machine and never reach us. Cleared when you clear browser data.</dd>
+    </dl>
+
+    <h2>— what we don't collect</h2>
+    <ul>
+      <li>No analytics — no Google Analytics, Plausible, Fathom, Umami, or similar.</li>
+      <li>No advertising or marketing pixels.</li>
+      <li>No tracking cookies. The site sets no cookies of its own.</li>
+      <li>No third-party fonts — Archivo, Instrument Serif, and JetBrains Mono are self-hosted under <code>/fonts/</code>.</li>
+      <li>No third-party iframes. The motion-graphic embeds are local to the site.</li>
+    </ul>
+
+    <h2>— lawful basis</h2>
+    <p>
+      Processing your email correspondence rests on Article 6(1)(f) GDPR — legitimate interest in replying to people who write to us. If correspondence becomes part of a commission inquiry, the basis shifts to Article 6(1)(b) — pre-contractual steps at your request.
+    </p>
+
+    <h2>— how long we keep things</h2>
+    <p>
+      Inquiry emails are retained until the conversation has been resolved and a reasonable correspondence-record period has passed (typically twelve months). If you ask us to delete earlier, we will. Server logs are retained per the host's standard policy. Browser-local preferences are not held by us.
+    </p>
+
+    <h2>— international transfers</h2>
+    <p>
+      Our host, Vercel, is based in the United States. Transfer protections rest on the EU-US Data Privacy Framework adequacy decision (July 2023). Email transit may pass through similar infrastructure; the contents are encrypted in transit (TLS).
+    </p>
+
+    <h2>— your rights</h2>
+    <ul>
+      <li><em>Access</em> — ask for a copy of what we hold.</li>
+      <li><em>Rectification</em> — ask us to correct it.</li>
+      <li><em>Erasure</em> — ask us to delete it.</li>
+      <li><em>Restriction</em> — ask us to limit processing.</li>
+      <li><em>Portability</em> — receive what we hold in a machine-readable form.</li>
+      <li><em>Objection</em> — object to processing on legitimate-interest grounds.</li>
+    </ul>
+    <p>
+      Exercise any of these by writing to <a href="mailto:hello@atheric.eu">hello@atheric.eu</a>. We will respond within thirty days.
+    </p>
+
+    <h2>— complaints</h2>
+    <p>
+      If you believe your data has been mishandled, you can lodge a complaint with the Finnish Data Protection Ombudsman — <a href="https://tietosuoja.fi" target="_blank" rel="noopener">tietosuoja.fi <span class="ext-arrow" aria-hidden="true">↗</span></a>.
+    </p>
+
+    <h2>— changes</h2>
+    <p>
+      This notice will be revised when the Atheric aputoiminimi is registered, when VAT registration is added, or when the site begins commercial operation. The version date below reflects the last revision.
+    </p>
+
+    <p class="privacy-version">— version: 2026-05-08</p>
+  </section>
+</main>
+
+<!-- ============================================================
      Library view — the page header pattern. "library" + the two
      chrome dots that act as its typographic period. content is
      placeholder for now; phase 4 fills in case studies.
@@ -748,11 +949,84 @@
     <p class="page-kicker">— concept studies, ongoing</p>
   </header>
   <section class="page-body">
+    <div class="library-grid">
+      <a href="/library/1" class="library-tile library-tile--alive" data-nav-to="library-1">
+        <span class="lib-tile-num">01</span>
+        <span class="lib-tile-name">Aevum</span>
+        <span class="lib-tile-meta">— spa &amp; sensory</span>
+      </a>
+      <a href="/library/2" class="library-tile library-tile--alive" data-nav-to="library-2">
+        <span class="lib-tile-num">02</span>
+        <span class="lib-tile-name">Forma</span>
+        <span class="lib-tile-meta">— architecture studio</span>
+      </a>
+      <a href="/library/3" class="library-tile library-tile--alive" data-nav-to="library-3">
+        <span class="lib-tile-num">03</span>
+        <span class="lib-tile-name">Codon</span>
+        <span class="lib-tile-meta">— gene editing therapeutics</span>
+      </a>
+      <span class="library-tile library-tile--quiet" aria-disabled="true">
+        <span class="lib-tile-num">04</span>
+        <span class="lib-tile-name">—</span>
+        <span class="lib-tile-meta">in development</span>
+      </span>
+      <span class="library-tile library-tile--quiet" aria-disabled="true">
+        <span class="lib-tile-num">05</span>
+        <span class="lib-tile-name">—</span>
+        <span class="lib-tile-meta">in development</span>
+      </span>
+    </div>
+  </section>
+</main>
+
+<!-- Case studies — each one gets its own <main> + own scene + own
+     dark-themed body class. visible only when the route lands on
+     /library/{1,2,3}. -->
+
+<main data-view="library-1" hidden>
+  <header class="page-header">
+    <span class="cs-tag">— case study 01</span>
+    <h1 class="page-title">aevum</h1>
+    <p class="page-kicker">— a sensory spa, in development</p>
+  </header>
+  <section class="page-body">
+    <p class="page-prose">In progress.</p>
+  </section>
+</main>
+
+<main data-view="library-2" hidden>
+  <header class="page-header">
+    <span class="cs-tag">— case study 02</span>
+    <h1 class="page-title">forma</h1>
+    <p class="page-kicker">— an architecture studio, in development</p>
+  </header>
+  <section class="page-body">
+    <p class="page-prose">In progress.</p>
+  </section>
+</main>
+
+<main data-view="library-3" hidden>
+  <header class="page-header">
+    <span class="cs-tag">— case study 03</span>
+    <h1 class="page-title">codon</h1>
+    <p class="page-kicker">— gene editing therapeutics</p>
+  </header>
+  <section class="page-body">
     <p class="page-prose">
-      The library is being curated. Three case studies are in
-      preparation — identity, editorial, and a digital product
-      study. <em>Soon.</em>
+      A therapeutics company turning rare-disease genetics into
+      clinical programs. The brief: a brand and design language
+      that reads as <em>scientific</em> without reading as
+      <em>clinical-cold</em>.
     </p>
+    <p class="page-prose">
+      The full case study lives at its own subdomain — a deployable
+      design system, dark indigo, with the helix as its centre.
+    </p>
+    <a class="cs-visit cs-visit--soon" href="https://codon.atheric.eu" aria-disabled="true" tabindex="-1">
+      <span>codon.atheric.eu</span>
+      <span class="ext-arrow" aria-hidden="true">↗</span>
+      <span class="cs-visit-soon-tag">— soon</span>
+    </a>
   </section>
 </main>
 

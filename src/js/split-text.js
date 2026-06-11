@@ -1,4 +1,8 @@
 function splitText(el) {
+  // accessible name first: per-char inline-block spans read letter-by-
+  // letter in screen readers, so the element keeps its plain text as
+  // aria-label and the visual spans are hidden from the a11y tree.
+  el.setAttribute('aria-label', el.textContent.replace(/\s+/g, ' ').trim());
   const text = el.innerHTML;
   // Carefully wrap each character, preserving inline tags by walking nodes.
   // Simpler: split by whitespace into words, then by chars per word, keeping <em></em>.
@@ -36,6 +40,7 @@ function splitText(el) {
       }
       const wordSpan = document.createElement('span');
       wordSpan.className = 'word';
+      wordSpan.setAttribute('aria-hidden', 'true');
       for (const ch of w) {
         const charSpan = document.createElement(tok.em ? 'em' : 'span');
         charSpan.className = 'char';
