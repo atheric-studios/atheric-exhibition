@@ -19,6 +19,7 @@ import { initNavScroll } from './js/nav-scroll.js';
 import { initMotionEmbed } from './js/motion-embed.js';
 import { initPinStage } from './js/pin-stage.js';
 import { initMotionBg } from './js/motion-bg.js';
+import { initInquiry } from './js/inquiry.js';
 
 initSplitText();
 initLoader();
@@ -38,4 +39,5 @@ initNavScroll();
 initMotionEmbed();
 initPinStage();
 initMotionBg();
+initInquiry();
 initPageTransitions();

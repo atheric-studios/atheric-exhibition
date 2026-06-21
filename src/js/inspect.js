@@ -568,6 +568,12 @@ export function initInspect() {
   buildHints();
   buildTrigger();
 
+  // let any [data-inspect-open] affordance (e.g. the /author proof
+  // pointer) open the lab too — not only the hero marker.
+  document.querySelectorAll('[data-inspect-open]').forEach((el) => {
+    el.addEventListener('click', (e) => { e.preventDefault(); enter(); });
+  });
+
   addEventListener('keydown', (e) => {
     if (!state.active) return;
     if (e.key === 'Escape') exit();

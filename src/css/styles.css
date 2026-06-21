@@ -1752,6 +1752,218 @@
     font-size: 16px;
   }
 
+  /* ---------- CONTACT — INQUIRY FORM ----------
+     The real form that replaced the decorative compose mockup. Same
+     ash/linen-on-ink palette as the rest of the contact section; glass
+     panel with the studio's top-edge highlight. Reveal + magnetic
+     interactions reuse the existing site hooks; focus states are made
+     deliberately visible because fine pointers hide the cursor. */
+  .inquiry {
+    position: relative;
+    margin-top: 44px;
+    max-width: 760px;
+    padding: clamp(26px, 4vw, 46px);
+    border: 1px solid rgba(244,241,236,0.14);
+    border-radius: 18px;
+    background: rgba(244,241,236,0.04);
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    overflow: hidden;
+  }
+  .inquiry::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 1px;
+    background: linear-gradient(90deg,
+      transparent, rgba(244,241,236,0.5) 50%, transparent);
+    pointer-events: none;
+  }
+  /* .contact specificity so this beats the big .contact h2 display rule */
+  .contact .inquiry-title {
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: clamp(34px, 5.2vw, 60px);
+    letter-spacing: -0.035em;
+    line-height: 0.95;
+    text-transform: lowercase;
+  }
+  .inquiry-period {
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 400;
+    color: var(--signal);
+  }
+  .inquiry-lede {
+    margin-top: 14px;
+    max-width: 46ch;
+    font-family: var(--display);
+    font-size: 15px;
+    line-height: 1.5;
+    color: rgba(244,241,236,0.62);
+  }
+  .inquiry-grid {
+    margin-top: 32px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 22px 24px;
+  }
+  .field { display: grid; gap: 9px; min-width: 0; }
+  .field--wide { grid-column: 1 / -1; }
+  .field label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgba(244,241,236,0.55);
+  }
+  .field input,
+  .field select,
+  .field textarea {
+    width: 100%;
+    font-family: var(--display);
+    font-size: 15px;
+    color: var(--bone);
+    background: rgba(10,10,10,0.25);
+    border: 1px solid rgba(244,241,236,0.16);
+    border-radius: 10px;
+    padding: 13px 14px;
+    appearance: none;
+    -webkit-appearance: none;
+    transition: border-color 0.3s, background 0.3s, box-shadow 0.3s;
+  }
+  .field textarea { resize: vertical; min-height: 112px; line-height: 1.5; }
+  .field input::placeholder,
+  .field textarea::placeholder { color: rgba(244,241,236,0.32); }
+  /* drawn chevron — native appearance is stripped for consistency */
+  .field select {
+    padding-right: 40px;
+    cursor: pointer;
+    background-image:
+      linear-gradient(45deg, transparent 50%, rgba(244,241,236,0.5) 50%),
+      linear-gradient(135deg, rgba(244,241,236,0.5) 50%, transparent 50%);
+    background-position: calc(100% - 20px) 52%, calc(100% - 14px) 52%;
+    background-size: 6px 6px, 6px 6px;
+    background-repeat: no-repeat;
+  }
+  .field select option { color: var(--ink); } /* native menu renders light */
+  .field input:hover,
+  .field select:hover,
+  .field textarea:hover { border-color: rgba(244,241,236,0.3); }
+  .field input:focus,
+  .field select:focus,
+  .field textarea:focus {
+    outline: none;
+    border-color: var(--signal);
+    background: rgba(10,10,10,0.4);
+    box-shadow: 0 0 0 3px rgba(255,77,31,0.22);
+  }
+  .field input:focus-visible,
+  .field select:focus-visible,
+  .field textarea:focus-visible {
+    box-shadow: 0 0 0 3px rgba(255,77,31,0.34);
+  }
+  .field input:user-invalid,
+  .field select:user-invalid,
+  .field textarea:user-invalid { border-color: rgba(255,77,31,0.6); }
+
+  .inquiry-foot {
+    margin-top: 28px;
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    flex-wrap: wrap;
+  }
+  .inquiry-send {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 15px 16px 15px 24px;
+    border: none;
+    border-radius: 999px;
+    background: var(--bone);
+    color: var(--ink);
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: transform 0.4s cubic-bezier(.2,.8,.2,1), background 0.3s, color 0.3s;
+  }
+  .inquiry-send:hover { background: var(--signal); }
+  .inquiry-send:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(255,77,31,0.4);
+  }
+  .inquiry-send[disabled] { opacity: 0.5; cursor: default; }
+  .inquiry-send .arrow {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--ink);
+    color: var(--bone);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    transition: background 0.3s, color 0.3s;
+  }
+  .inquiry-send:hover .arrow { background: var(--bone); color: var(--ink); }
+  .inquiry-note {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: rgba(244,241,236,0.45);
+  }
+  .inquiry-status {
+    margin-top: 16px;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    color: var(--signal-2);
+  }
+  .inquiry-status:empty { margin: 0; }
+
+  /* Confirmation — swapped in when the form is hidden. Gentle rise,
+     disabled under reduced motion (handled in the global block). */
+  .inquiry-done {
+    margin-top: 44px;
+    max-width: 760px;
+    opacity: 0;
+    transform: translateY(14px);
+    transition: opacity 0.7s ease, transform 0.8s cubic-bezier(.2,.8,.2,1);
+  }
+  .inquiry-done.in { opacity: 1; transform: none; }
+  .contact .inquiry-done .inquiry-title { margin-top: 18px; }
+  .inquiry-again {
+    display: inline-block;
+    margin-top: 24px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgba(244,241,236,0.6);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0 0 4px;
+    border-bottom: 1px solid rgba(244,241,236,0.2);
+    transition: color 0.3s, border-color 0.3s;
+  }
+  .inquiry-again:hover { color: var(--signal); border-color: var(--signal); }
+  .inquiry-again:focus-visible {
+    outline: none;
+    color: var(--signal);
+    border-color: var(--signal);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .inquiry-done { transition: none; transform: none; }
+  }
+  @media (max-width: 720px) {
+    .inquiry-grid { grid-template-columns: 1fr; }
+  }
+
   .contact-grid {
     margin-top: 80px;
     display: grid;
@@ -3947,4 +4159,107 @@
       opacity: 0.22;
       transition: none;
     }
+  }
+
+  /* ============================================================
+     Home-narrative reframe — WORK placeholder, TRUST beat, /author
+     notes. All on existing tokens; no restyle of existing components.
+     ============================================================ */
+  .work-placeholder {
+    grid-column: 1 / -1;
+    display: grid;
+    justify-items: center;
+    gap: 18px;
+    text-align: center;
+    padding: clamp(56px, 10vw, 120px) 24px;
+    border: 1px dashed var(--rule);
+    border-radius: 10px;
+  }
+  .work-placeholder-line {
+    font-family: var(--display);
+    font-weight: 500;
+    font-size: clamp(17px, 1.9vw, 24px);
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    max-width: 38ch;
+  }
+
+  .trust-inner {
+    max-width: 760px;
+    margin: 0 auto;
+    display: grid;
+    justify-items: center;
+    text-align: center;
+    gap: 20px;
+  }
+  .trust h2 {
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: clamp(34px, 5vw, 76px);
+    letter-spacing: -0.04em;
+    line-height: 0.95;
+    text-transform: lowercase;
+  }
+  .trust h2 em {
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 400;
+    color: var(--signal);
+  }
+  .trust-points {
+    list-style: none;
+    display: grid;
+    gap: 12px;
+    margin: 0;
+  }
+  .trust-points li {
+    font-family: var(--display);
+    font-size: clamp(15px, 1.5vw, 19px);
+    color: var(--ink-dim);
+  }
+  .trust-avail {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink);
+  }
+
+  .author-notes {
+    display: grid;
+    gap: 18px;
+  }
+  .author-note {
+    font-family: var(--display);
+    font-size: clamp(15px, 1.4vw, 18px);
+    line-height: 1.6;
+    color: var(--ink-dim);
+    margin: 0;
+    max-width: 52ch;
+  }
+  .author-person {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    color: var(--ink);
+    margin: 0;
+  }
+  .author-link {
+    font: inherit;
+    color: var(--signal);
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(255, 77, 31, 0.4);
+    transition: border-color 0.3s;
+  }
+  .author-link:hover { border-color: var(--signal); }
+  .author-link:focus-visible {
+    outline: none;
+    border-color: var(--signal);
+    border-bottom-width: 2px;
   }

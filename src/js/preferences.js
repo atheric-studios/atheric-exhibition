@@ -124,7 +124,7 @@ function buildShell() {
           <p class="pref-detail-block">
             <strong>Operator</strong><br>
             YDT Holdings Oy · Y-tunnus 3608568-3 · Finland<br>
-            Atheric is the studio name, planned as an aputoiminimi of YDT Holdings Oy. Atheric is not yet trading. A postal address will be published before any commercial activity begins under this name. Not VAT-registered.<br>
+            Atheric is the studio name, planned as an aputoiminimi of YDT Holdings Oy, now accepting its first commissions. A postal address will be published as commercial activity formalises under this name. Not VAT-registered.<br>
             Contact: <a href="mailto:hello@atheric.eu">hello@atheric.eu</a>
           </p>
           <p class="pref-detail-block">

@@ -63,7 +63,7 @@ function CodePanel({ x, y, w, h }) {
     { tag: 'kw', text: 'compose ' }, // 0
     { tag: 'pl', text: 'inquiry №04', nl: true }, // 1
     { tag: 'sp', text: '' , nl: true},
-    { tag: 'cm', text: '// to:   contact@atheric.eu', nl: true },
+    { tag: 'cm', text: '// to:   hello@atheric.eu', nl: true },
     { tag: 'cm', text: '// from: a small studio, helsinki', nl: true },
     { tag: 'sp', text: '' , nl: true},
     { tag: 'kw', text: 'subject ' },
