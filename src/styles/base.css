@@ -40,6 +40,16 @@ body {
   color: var(--ink-on-dark);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  /* THE WEBKIT COMPOSITING TRAP (2026-07-06). The backdrop stack lives at NEGATIVE z-index,
+     and this body background is opaque — per CSS painting order (Appendix E) an in-flow
+     block background paints ABOVE negative-z positioned descendants of the root stacking
+     context. Safari/WebKit honours that for the accelerated WebGL canvas (#blob-layer):
+     the blob rendered every frame but was composited UNDER this background — invisible.
+     Chrome's compositor is lenient and masked it. `isolation` makes body its own stacking
+     context, so this background becomes the context's step-1 backdrop, BELOW its negative-z
+     children, in every engine. (isolation — unlike transform/filter — creates NO containing
+     block, so the fixed layers stay viewport-fixed.) Do not remove; verified Safari+Chrome. */
+  isolation: isolate;
 }
 
 /* ── Page backdrop: five fixed, pointer-inert layers behind every region ───────────────────
