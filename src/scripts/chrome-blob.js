@@ -419,7 +419,15 @@ export function initChromeBlob(canvas) {
 
   const resize = () => {
     const dpr = Math.min(devicePixelRatio || 1, 1.4);
-    const w = innerWidth, h = innerHeight;
+    // Width = the LAYOUT viewport (documentElement.clientWidth), never innerWidth. On mobile
+    // innerWidth tracks the layout viewport AS IT EXPANDS to fit any horizontal overflow — so
+    // a stray over-wide element would balloon innerWidth (measured: 390 → 453 at device-width
+    // 390), the blob would size to that, render off-centre, and its right half would sit
+    // off-canvas (pinch-zoom exposed it). clientWidth is the stable visible width (== the
+    // visual viewport at scale 1) and cannot be pushed past the screen, so the blob stays
+    // clamped to what the viewport actually shows. Height stays innerHeight (no such feedback
+    // vertically; the blob must still fill the full hero height incl. the URL bar zone). */
+    const w = document.documentElement.clientWidth || innerWidth, h = innerHeight;
     canvas.width = Math.floor(w * dpr);
     canvas.height = Math.floor(h * dpr);
     canvas.style.width = w + 'px';
@@ -529,6 +537,32 @@ export function initChromeBlob(canvas) {
     gl.drawArrays(gl.TRIANGLES, 0, 6);
     rafId = requestAnimationFrame(render);
   };
+
+  // Commit the CURRENT state to the uniforms and draw ONE frame — no time advance, no camera
+  // lerp, no rAF. setActive(true) calls this synchronously on resume so a correct frame is in
+  // the drawing buffer BEFORE the set-veil (main.js, --set) lifts to reveal it. Without it the
+  // buffer cleared on idle (setActive(false)) shows through for the one composite between the
+  // resume and the next render rAF — a stale/blank blob flash on ~half of scroll-ups (worst
+  // under reduced motion, where the veil un-covers in a single hard cut). Records drawn.* so
+  // the motion-quiet skip treats this as the frame it already laid down.
+  const commitAndDraw = () => {
+    const c = cameraState.current;
+    const t = frozenT;
+    drawn.px = c.pos[0]; drawn.py = c.pos[1]; drawn.pz = c.pos[2];
+    drawn.lx = c.look[0]; drawn.ly = c.look[1]; drawn.lz = c.look[2];
+    drawn.fov = c.fov; drawn.comp = cameraState.compressCurrent; drawn.t = t;
+    drawn.mx = mLerpX; drawn.my = mLerpY; drawn.w = canvas.width; drawn.h = canvas.height;
+    gl.uniform2f(uRes, canvas.width, canvas.height);
+    gl.uniform1f(uTime, t);
+    gl.uniform2f(uMouse, mLerpX, mLerpY);
+    gl.uniform1f(uScroll, cameraState.scrollOverride);
+    gl.uniform3f(uCamPosLoc, c.pos[0], c.pos[1], c.pos[2]);
+    gl.uniform3f(uCamLookLoc, c.look[0], c.look[1], c.look[2]);
+    gl.uniform1f(uCamFOVLoc, c.fov);
+    gl.uniform1f(uCompressLoc, cameraState.compressCurrent);
+    gl.uniform1f(uPageModeLoc, cameraState.pageMode);
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+  };
   render();
 
   return {
@@ -545,8 +579,8 @@ export function initChromeBlob(canvas) {
       if (on) {
         if (running) return;
         running = true;
-        lastNow = performance.now();
-        drawn.w = -1; // the buffer was cleared while idle — force one real draw
+        lastNow = performance.now(); // reset the clock so frozenT doesn't jump the paused span
+        commitAndDraw(); // one clean frame NOW, at the settled position, before the veil lifts
         rafId = requestAnimationFrame(render);
       } else {
         if (!running) return;

@@ -592,6 +592,17 @@
    ignites under hover / focus-within — signal on the dark plane only, per the materials
    law. The castings' warm facets keep the old bench's role: the last dark section
    foreshadows the cream. */
+/* Clip the works sheet on X only: clara's backing bleed (.work__bleed, inset -14% -20% of
+   the castbox) is decorative light that reaches past the shard — on the fluid single-column
+   mobile layout the castbox is near-full-width, so its -20% horizontal reach spilled ~50px
+   past the viewport, expanding the layout viewport (measured 390 → 453) and dragging the
+   fixed blob wide with it. `clip` (not hidden) contains that spill to the sheet box (≤96vw)
+   without becoming a scroll container — the fracture band's sticky seal, a sibling section,
+   is untouched — and overflow-y stays visible so the bleed's vertical escape and the reveal
+   translateYs are unclipped. */
+.sheet--works {
+  overflow-x: clip;
+}
 .work {
   display: grid;
   grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
@@ -1509,9 +1520,15 @@
   .movement__dim {
     display: none;
   }
-  /* the works stack — casting above its entry, both on the column's left axis */
+  /* the works stack — casting above its entry, both on the column's left axis. The single
+     track is minmax(min(272px, 100%), 1fr), NOT a bare 1fr: a 1fr track floors at its
+     min-content, so the casting's widest atom (the boxed open control with its printed URL,
+     ~272px) could push the column — and the sheet — past the viewport on the narrowest
+     phones. min(272px, 100%) caps that floor at the container width, so below ~312px the
+     track collapses to 100% instead of overflowing; at 375/390 it resolves to the full
+     column as before. */
   .work {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(min(272px, 100%), 1fr);
     gap: clamp(26px, 4vh, 40px);
   }
   .work--flip .work__cast {

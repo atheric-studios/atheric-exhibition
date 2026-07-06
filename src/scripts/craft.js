@@ -27,7 +27,7 @@
 // hero camera and unlocks scroll.
 
 // same versioned specifier as blob.js — one URL, one module instance, one cameraState.
-import { cameraState, HOME_CAM, BLOB_SPEED } from './chrome-blob.js?v=11';
+import { cameraState, HOME_CAM, BLOB_SPEED } from './chrome-blob.js?v=12';
 
 // ---------------------------------------------------------------------------
 // the five figures — world anchor + camera per figure. The copy/code panels are

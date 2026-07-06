@@ -13,7 +13,7 @@
 // NOTE: the ?v stamp busts the CDN/browser cache (4h max-age on module files) and MUST match
 // craft.js's specifier exactly — module identity is by URL, and both need the ONE instance
 // (one cameraState) of chrome-blob.js.
-import { initChromeBlob } from './chrome-blob.js?v=11';
+import { initChromeBlob } from './chrome-blob.js?v=12';
 
 export class BlobAdapter {
   constructor() {

@@ -52,7 +52,7 @@
     <!-- The dark hero: keyframes + interaction classes. LOCKED — carried verbatim. -->
     <link rel="stylesheet" href="src/styles/dark.css?v=8" />
     <!-- The post-hero body: the cooled-chrome engineering broadsheet (docs/DESIGN.md). -->
-    <link rel="stylesheet" href="src/styles/body.css?v=18" />
+    <link rel="stylesheet" href="src/styles/body.css?v=19" />
     <!-- The crystallisation: the dark plane fractures into the cream editorial close (docs/DESIGN.md). -->
     <link rel="stylesheet" href="src/styles/fracture.css?v=14" />
     <!-- The blob craft-reveal ("see how the chrome is made") — the zoom study over the live
@@ -63,8 +63,8 @@
          discovered after main.js parses; these hints start the fetch with the page.
          Specifiers must stay byte-identical to the import strings (the ?v module-cache
          trap: one URL, one module instance). -->
-    <link rel="modulepreload" href="src/scripts/blob.js?v=11" />
-    <link rel="modulepreload" href="src/scripts/chrome-blob.js?v=11" />
+    <link rel="modulepreload" href="src/scripts/blob.js?v=12" />
+    <link rel="modulepreload" href="src/scripts/chrome-blob.js?v=12" />
   </head>
 
   <body>
@@ -1332,12 +1332,12 @@ col += <span class="cm-kw">vec3</span>(<span class="cm-num">1.00</span>, <span c
     <script type="module" src="src/scripts/dark.js?v=8"></script>
     <!-- The blob lifecycle: mount + the scroll-coupled "set" dissolve (paint the blob out into
          black gradually, idle the render loop once covered, restore on scroll-up). -->
-    <script type="module" src="src/scripts/main.js?v=11"></script>
+    <script type="module" src="src/scripts/main.js?v=12"></script>
     <!-- The post-hero broadsheet: annealing light, diegetic reveals, the hel clock, AND the
          fracture (crystallisation) scroll signal. Passive scroll→rAF. -->
     <script type="module" src="src/scripts/body.js?v=16"></script>
     <!-- The blob craft-reveal: the zoom study (camera flights over the live blob, explain-dots,
          technique tab, figure panels). Native <dialog>; one rAF only while the study is open. -->
-    <script type="module" src="src/scripts/craft.js?v=14"></script>
+    <script type="module" src="src/scripts/craft.js?v=15"></script>
   </body>
 </html>

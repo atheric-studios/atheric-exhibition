@@ -8,7 +8,7 @@
 // IntersectionObserver on the hero, no rAF. The seam/inversion substrate it used to sit beside
 // is gone (the post-hero world is now the cooled broadsheet, not a dark→cream inversion).
 
-import { BlobAdapter } from './blob.js?v=11';
+import { BlobAdapter } from './blob.js?v=12';
 
 // The blob is a page-level layer behind the hero (#blob-layer), so it holds position while the
 // hero is on screen and is the only place the liquid object ever lives.
@@ -58,19 +58,26 @@ if (hero && blobMount && anchor) {
       const lin = Math.min(1, Math.max(0, (START * vh - bottom) / (RAMP * vh)));
       set = smooth(lin);
     }
-    root.style.setProperty('--set', set.toFixed(3));
-
-    // Idle the render loop once the veil fully hides the blob; resume the instant it lifts.
     const covered = set >= 0.999;
+
+    // THE RESTORE GATE (order matters). Resume the loop BEFORE lowering --set, so the blob has
+    // laid down one clean frame (setActive(true) draws synchronously — chrome-blob.js) by the
+    // time the veil lifts to reveal it. Same task ⇒ the fresh frame and the new veil opacity
+    // composite together; the veil never uncovers a stale/blank buffer (the ~50% scroll-up
+    // flicker, worst under RM where --set un-covers in one hard cut).
+    if (!covered && !active) {
+      active = true;
+      clearTimeout(pauseTimer);
+      blob.setActive(true); // resume + clean frame FIRST …
+    }
+    root.style.setProperty('--set', set.toFixed(3)); // … then fade in
+
+    // Idle the render loop once the veil fully hides the blob.
     if (covered && active) {
       active = false;
       clearTimeout(pauseTimer);
       // Small delay so brief scrubbing across the boundary doesn't thrash the GL loop.
       pauseTimer = setTimeout(() => blob.setActive(false), reduceMo.matches ? 0 : 140);
-    } else if (!covered && !active) {
-      active = true;
-      clearTimeout(pauseTimer);
-      blob.setActive(true); // resume before the blob is uncovered, so no blank frame shows
     }
   };
 
