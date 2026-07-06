@@ -225,6 +225,77 @@
         transform: none;
       }
 
+      /* ── The thesis stones — the crystallisation's vocabulary, at rest on the ideas sheet.
+         Three small faceted stones (generated artifacts — docs/generators/gen-thesis-stones.js;
+         never hand-edit the polygons) occupy the theses' empty counter-fields at desktop:
+         right of № 01 and № 03, LEFT of the off-measure № 02 (the mark counterweights the
+         score). They enact the annealing down the page — stone i un-set metal, stone ii
+         mid-resolve, stone iii nearly set with one near-paper plate. Each assembles ONCE as
+         its thesis reveals — dark facets first, warm last (the castings' own law: the object
+         cools into visibility), per-facet delay baked inline (--fd), opacity only — then
+         perfectly still: no embers, no breath, nothing loops. Decorative → aria-hidden;
+         hidden <900px (fig. 00's own law). Reduced motion presents them assembled. */
+      .t-stone {
+        display: none;
+      }
+      @media (min-width: 900px) {
+        .t-stone {
+          display: block;
+          position: absolute;
+          top: 50%;
+          right: var(--page-x);
+          width: clamp(150px, 16vw, 240px);
+          margin: 0;
+          transform: translateY(-50%);
+          pointer-events: none;
+        }
+        .thesis--off .t-stone {
+          right: auto;
+          left: var(--page-x);
+          width: clamp(140px, 15vw, 220px);
+        }
+        .t-stone svg {
+          display: block;
+          width: 100%;
+          height: auto;
+        }
+      }
+      .ts-f {
+        stroke-width: 1; /* same-colour self-stroke — seals the antialiasing seams */
+        opacity: 0;
+        transition: opacity 0.55s var(--ease);
+        transition-delay: var(--fd, 0s);
+      }
+      .t-stone.is-in .ts-f {
+        opacity: 1;
+      }
+
+      /* ── The core-line word-rise — the thesis line sets itself word by word (the voice
+         pull's own technique: per-word masks, 45ms letterpress stagger on the shared ease;
+         thought.js splits it, spaces stay bare text nodes). The split line hands its block
+         reveal to the words. Reduced motion / no-JS: the split never happens — the composed
+         paragraph stands. */
+      .t-core--split[data-reveal] {
+        opacity: 1;
+        transform: none;
+        transition: none;
+      }
+      .t-core .w {
+        display: inline-block;
+        overflow: hidden;
+        vertical-align: bottom;
+        padding: 0.09em 0.05em;
+        margin: -0.09em -0.05em;
+      }
+      .t-core .w__in {
+        display: inline-block;
+        transform: translateY(118%);
+        transition: transform 0.8s var(--ease);
+      }
+      .t-core.is-in .w__in {
+        transform: none;
+      }
+
       /* ── The author — the coda, half a screen, quieter ────────────────────────────────── */
       .author {
         padding-block: clamp(72px, 12vh, 150px);
@@ -256,6 +327,35 @@
       .author__close em {
         font-style: italic;
         color: var(--signal);
+      }
+      /* the coda's period, set — the close line arrives without its full stop; a beat after
+         it lands the period arrives still warm (amber, a faint halo — glow on the dark plane
+         only) and cools through the signal to resting bone: the homepage's final-period
+         moment, answered on the ideas sheet. Base state is the composed one (ink, opacity 1),
+         so no-JS and reduced motion are static. */
+      .t-fin {
+        opacity: 1;
+      }
+      .author__close.is-in .t-fin {
+        animation: tFinSet 2.2s var(--ease) 1.2s both;
+      }
+      @keyframes tFinSet {
+        0% {
+          opacity: 0;
+          color: var(--signal-2);
+          text-shadow: 0 0 14px rgba(255, 180, 60, 0.5);
+        }
+        20% {
+          opacity: 1;
+          color: var(--signal-2);
+        }
+        45% {
+          color: var(--signal);
+        }
+        100% {
+          color: var(--ink);
+          text-shadow: 0 0 0 rgba(255, 180, 60, 0);
+        }
       }
       .author__sig {
         display: block;
@@ -303,6 +403,15 @@
         .t-rule::after {
           transition: none !important;
         }
+        /* the stones present assembled — no facet stagger (a state, not a motion) */
+        .ts-f {
+          transition: none !important;
+          opacity: 1 !important;
+        }
+        /* the coda's period is simply ink, already set */
+        .t-fin {
+          animation: none !important;
+        }
       }
     </style>
 
@@ -317,6 +426,9 @@
           transform: scaleX(1);
         }
         .t-rule::after {
+          opacity: 1;
+        }
+        .ts-f {
           opacity: 1;
         }
       </style>
@@ -346,6 +458,39 @@
             control is wrong — intent should map directly to action, the first time.
           </p>
         </div>
+
+        <!-- the thesis stone — un-set metal, one warm whisper (generated artifact; see the t-stone CSS note) -->
+        <figure class="t-stone" data-fig aria-hidden="true">
+          <svg viewBox="0 0 220 240" focusable="false">
+            <polygon class="ts-f" points="148,234 214,168 180.7,199.1" fill="#4d402f" stroke="#4d402f" style="--fd:0.676s"/>
+            <polygon class="ts-f" points="8,128 52,222 31.3,174.2" fill="#0d0d0d" stroke="#0d0d0d" style="--fd:0.286s"/>
+            <polygon class="ts-f" points="104,6 34,40 71.2,23.9" fill="#0d0d0d" stroke="#0d0d0d" style="--fd:0.052s"/>
+            <polygon class="ts-f" points="34,40 19.2,83 39,44.4" fill="#0d0d0d" stroke="#0d0d0d" style="--fd:0.026s"/>
+            <polygon class="ts-f" points="71.2,23.9 34,40 39,44.4" fill="#0b0b0b" stroke="#0b0b0b" style="--fd:0s"/>
+            <polygon class="ts-f" points="196,58 151,31.7 107.3,64.5" fill="#0b0b0b" stroke="#0b0b0b" style="--fd:0.26s"/>
+            <polygon class="ts-f" points="151,31.7 104,6 107.3,64.5" fill="#0e0e0e" stroke="#0e0e0e" style="--fd:0.156s"/>
+            <polygon class="ts-f" points="104,6 71.2,23.9 107.3,64.5" fill="#0e0e0e" stroke="#0e0e0e" style="--fd:0.13s"/>
+            <polygon class="ts-f" points="71.2,23.9 39,44.4 107.3,64.5" fill="#070707" stroke="#070707" style="--fd:0.078s"/>
+            <polygon class="ts-f" points="39,44.4 19.2,83 107.3,64.5" fill="#060606" stroke="#060606" style="--fd:0.104s"/>
+            <polygon class="ts-f" points="204.6,113.5 196,58 130.4,127.9" fill="#0e0e0e" stroke="#0e0e0e" style="--fd:0.416s"/>
+            <polygon class="ts-f" points="196,58 107.3,64.5 130.4,127.9" fill="#080808" stroke="#080808" style="--fd:0.338s"/>
+            <polygon class="ts-f" points="52,222 102,228.1 89.2,137.2" fill="#090909" stroke="#090909" style="--fd:0.442s"/>
+            <polygon class="ts-f" points="31.3,174.2 52,222 89.2,137.2" fill="#0c0c0c" stroke="#0c0c0c" style="--fd:0.364s"/>
+            <polygon class="ts-f" points="8,128 31.3,174.2 89.2,137.2" fill="#0a0a0a" stroke="#0a0a0a" style="--fd:0.234s"/>
+            <polygon class="ts-f" points="19.2,83 8,128 89.2,137.2" fill="#0d0d0d" stroke="#0d0d0d" style="--fd:0.182s"/>
+            <polygon class="ts-f" points="107.3,64.5 19.2,83 89.2,137.2" fill="#0d0d0d" stroke="#0d0d0d" style="--fd:0.208s"/>
+            <polygon class="ts-f" points="130.4,127.9 107.3,64.5 89.2,137.2" fill="#070707" stroke="#070707" style="--fd:0.312s"/>
+            <polygon class="ts-f" points="214,168 204.6,113.5 130.2,162.9" fill="#191511" stroke="#191511" style="--fd:0.546s"/>
+            <polygon class="ts-f" points="204.6,113.5 130.4,127.9 130.2,162.9" fill="#0d0d0d" stroke="#0d0d0d" style="--fd:0.494s"/>
+            <polygon class="ts-f" points="180.7,199.1 214,168 130.2,162.9" fill="#14100c" stroke="#14100c" style="--fd:0.598s"/>
+            <polygon class="ts-f" points="130.4,127.9 89.2,137.2 130.2,162.9" fill="#090909" stroke="#090909" style="--fd:0.39s"/>
+            <polygon class="ts-f" points="89.2,137.2 102,228.1 130.2,162.9" fill="#0e0e0e" stroke="#0e0e0e" style="--fd:0.468s"/>
+            <polygon class="ts-f" points="148,234 180.7,199.1 135.8,187.4" fill="#3a2f22" stroke="#3a2f22" style="--fd:0.65s"/>
+            <polygon class="ts-f" points="180.7,199.1 130.2,162.9 135.8,187.4" fill="#120e0a" stroke="#120e0a" style="--fd:0.572s"/>
+            <polygon class="ts-f" points="102,228.1 148,234 135.8,187.4" fill="#1b140e" stroke="#1b140e" style="--fd:0.624s"/>
+            <polygon class="ts-f" points="130.2,162.9 102,228.1 135.8,187.4" fill="#0b0b0b" stroke="#0b0b0b" style="--fd:0.52s"/>
+          </svg>
+        </figure>
       </section>
 
       <!-- THESIS № 02 — off the shared axis on desktop (the score's off-measure bar). -->
@@ -361,6 +506,44 @@
             that carried it.
           </p>
         </div>
+
+        <!-- the thesis stone — mid-resolve, the warm greys risen (generated artifact; see the t-stone CSS note) -->
+        <figure class="t-stone" data-fig aria-hidden="true">
+          <svg viewBox="0 0 230 220" focusable="false">
+            <polygon class="ts-f" points="58,208 162,216 109.7,209.7" fill="#281e14" stroke="#281e14" style="--fd:0.6s"/>
+            <polygon class="ts-f" points="44,30 6,118 25.6,74.1" fill="#0b0b0b" stroke="#0b0b0b" style="--fd:0.048s"/>
+            <polygon class="ts-f" points="44,30 25.6,74.1 44.9,57" fill="#0a0a0a" stroke="#0a0a0a" style="--fd:0.024s"/>
+            <polygon class="ts-f" points="80.4,15.8 44,30 44.9,57" fill="#0e0e0e" stroke="#0e0e0e" style="--fd:0s"/>
+            <polygon class="ts-f" points="166.9,27 120,4 96.8,70.8" fill="#0e0e0e" stroke="#0e0e0e" style="--fd:0.216s"/>
+            <polygon class="ts-f" points="120,4 80.4,15.8 96.8,70.8" fill="#0e0e0e" stroke="#0e0e0e" style="--fd:0.096s"/>
+            <polygon class="ts-f" points="80.4,15.8 44.9,57 96.8,70.8" fill="#080808" stroke="#080808" style="--fd:0.072s"/>
+            <polygon class="ts-f" points="212,52 166.9,27 182,68.1" fill="#0e0e0e" stroke="#0e0e0e" style="--fd:0.384s"/>
+            <polygon class="ts-f" points="218.8,99.9 212,52 182,68.1" fill="#201913" stroke="#201913" style="--fd:0.528s"/>
+            <polygon class="ts-f" points="44.9,57 25.6,74.1 75.4,116.2" fill="#0e0e0e" stroke="#0e0e0e" style="--fd:0.12s"/>
+            <polygon class="ts-f" points="96.8,70.8 44.9,57 75.4,116.2" fill="#0c0c0c" stroke="#0c0c0c" style="--fd:0.168s"/>
+            <polygon class="ts-f" points="166.9,27 96.8,70.8 134.4,93.8" fill="#0d0d0d" stroke="#0d0d0d" style="--fd:0.288s"/>
+            <polygon class="ts-f" points="182,68.1 166.9,27 134.4,93.8" fill="#070707" stroke="#070707" style="--fd:0.336s"/>
+            <polygon class="ts-f" points="96.8,70.8 75.4,116.2 134.4,93.8" fill="#0e0e0e" stroke="#0e0e0e" style="--fd:0.264s"/>
+            <polygon class="ts-f" points="226,152 218.8,99.9 189,132.3" fill="#665844" stroke="#665844" style="--fd:0.696s"/>
+            <polygon class="ts-f" points="192.7,186 226,152 189,132.3" fill="#897b65" stroke="#897b65" style="--fd:0.744s"/>
+            <polygon class="ts-f" points="218.8,99.9 182,68.1 189,132.3" fill="#2c2319" stroke="#2c2319" style="--fd:0.576s"/>
+            <polygon class="ts-f" points="182,68.1 134.4,93.8 189,132.3" fill="#1c150f" stroke="#1c150f" style="--fd:0.48s"/>
+            <polygon class="ts-f" points="58,208 109.7,209.7 43.4,138.5" fill="#130f0b" stroke="#130f0b" style="--fd:0.432s"/>
+            <polygon class="ts-f" points="109.7,209.7 75.4,116.2 43.4,138.5" fill="#090909" stroke="#090909" style="--fd:0.36s"/>
+            <polygon class="ts-f" points="32.9,164.8 58,208 43.4,138.5" fill="#0b0b0b" stroke="#0b0b0b" style="--fd:0.312s"/>
+            <polygon class="ts-f" points="6,118 32.9,164.8 43.4,138.5" fill="#090909" stroke="#090909" style="--fd:0.24s"/>
+            <polygon class="ts-f" points="25.6,74.1 6,118 43.4,138.5" fill="#060606" stroke="#060606" style="--fd:0.144s"/>
+            <polygon class="ts-f" points="75.4,116.2 25.6,74.1 43.4,138.5" fill="#060606" stroke="#060606" style="--fd:0.192s"/>
+            <polygon class="ts-f" points="162,216 192.7,186 144.8,165.4" fill="#675946" stroke="#675946" style="--fd:0.72s"/>
+            <polygon class="ts-f" points="109.7,209.7 162,216 144.8,165.4" fill="#3b3023" stroke="#3b3023" style="--fd:0.672s"/>
+            <polygon class="ts-f" points="75.4,116.2 109.7,209.7 144.8,165.4" fill="#1d1610" stroke="#1d1610" style="--fd:0.504s"/>
+            <polygon class="ts-f" points="134.4,93.8 75.4,116.2 156.1,140.1" fill="#0d0d0d" stroke="#0d0d0d" style="--fd:0.408s"/>
+            <polygon class="ts-f" points="75.4,116.2 144.8,165.4 156.1,140.1" fill="#211a14" stroke="#211a14" style="--fd:0.456s"/>
+            <polygon class="ts-f" points="192.7,186 189,132.3 156.1,140.1" fill="#392d20" stroke="#392d20" style="--fd:0.648s"/>
+            <polygon class="ts-f" points="144.8,165.4 192.7,186 156.1,140.1" fill="#3d3125" stroke="#3d3125" style="--fd:0.624s"/>
+            <polygon class="ts-f" points="189,132.3 134.4,93.8 156.1,140.1" fill="#2d241a" stroke="#2d241a" style="--fd:0.552s"/>
+          </svg>
+        </figure>
       </section>
 
       <!-- THESIS № 03 — elaborates the spec lede's "built in the right order". -->
@@ -375,6 +558,39 @@
             decorated after: ornament cannot repair a wrong structure, only hide it.
           </p>
         </div>
+
+        <!-- the thesis stone — nearly set, one near-paper plate (generated artifact; see the t-stone CSS note) -->
+        <figure class="t-stone" data-fig aria-hidden="true">
+          <svg viewBox="0 0 220 235" focusable="false">
+            <polygon class="ts-f" points="216,150 204,46 208.1,98.9" fill="#4f4232" stroke="#4f4232" style="--fd:0.504s"/>
+            <polygon class="ts-f" points="160,230 216,150 186.6,188.8" fill="#e8e1d0" stroke="#e8e1d0" style="--fd:0.624s"/>
+            <polygon class="ts-f" points="112,4 26,42 71.4,24.8" fill="#070707" stroke="#070707" style="--fd:0s"/>
+            <polygon class="ts-f" points="26,42 14.6,91.4 37.2,81.4" fill="#060606" stroke="#060606" style="--fd:0.048s"/>
+            <polygon class="ts-f" points="71.4,24.8 26,42 37.2,81.4" fill="#070707" stroke="#070707" style="--fd:0.024s"/>
+            <polygon class="ts-f" points="56,224 109.3,228.3 102.5,125.5" fill="#4b3e2e" stroke="#4b3e2e" style="--fd:0.432s"/>
+            <polygon class="ts-f" points="29.3,179 56,224 102.5,125.5" fill="#2d241a" stroke="#2d241a" style="--fd:0.36s"/>
+            <polygon class="ts-f" points="204,46 159.9,25.1 135.6,110.6" fill="#292016" stroke="#292016" style="--fd:0.312s"/>
+            <polygon class="ts-f" points="208.1,98.9 204,46 135.6,110.6" fill="#4f4232" stroke="#4f4232" style="--fd:0.408s"/>
+            <polygon class="ts-f" points="159.9,25.1 112,4 135.6,110.6" fill="#15110d" stroke="#15110d" style="--fd:0.216s"/>
+            <polygon class="ts-f" points="112,4 71.4,24.8 135.6,110.6" fill="#0c0c0c" stroke="#0c0c0c" style="--fd:0.144s"/>
+            <polygon class="ts-f" points="216,150 208.1,98.9 135.6,110.6" fill="#504332" stroke="#504332" style="--fd:0.48s"/>
+            <polygon class="ts-f" points="14.6,91.4 4,136 40.4,136.2" fill="#0c0c0c" stroke="#0c0c0c" style="--fd:0.096s"/>
+            <polygon class="ts-f" points="37.2,81.4 14.6,91.4 40.4,136.2" fill="#090909" stroke="#090909" style="--fd:0.072s"/>
+            <polygon class="ts-f" points="4,136 29.3,179 40.4,136.2" fill="#0b0b0b" stroke="#0b0b0b" style="--fd:0.192s"/>
+            <polygon class="ts-f" points="29.3,179 102.5,125.5 40.4,136.2" fill="#1f1812" stroke="#1f1812" style="--fd:0.264s"/>
+            <polygon class="ts-f" points="71.4,24.8 37.2,81.4 98,121.6" fill="#060606" stroke="#060606" style="--fd:0.12s"/>
+            <polygon class="ts-f" points="102.5,125.5 135.6,110.6 98,121.6" fill="#2d241a" stroke="#2d241a" style="--fd:0.336s"/>
+            <polygon class="ts-f" points="135.6,110.6 71.4,24.8 98,121.6" fill="#15110d" stroke="#15110d" style="--fd:0.24s"/>
+            <polygon class="ts-f" points="37.2,81.4 40.4,136.2 98,121.6" fill="#080808" stroke="#080808" style="--fd:0.168s"/>
+            <polygon class="ts-f" points="40.4,136.2 102.5,125.5 98,121.6" fill="#1d1610" stroke="#1d1610" style="--fd:0.288s"/>
+            <polygon class="ts-f" points="160,230 186.6,188.8 153,176.8" fill="#b5a893" stroke="#b5a893" style="--fd:0.6s"/>
+            <polygon class="ts-f" points="109.3,228.3 160,230 153,176.8" fill="#685a47" stroke="#685a47" style="--fd:0.552s"/>
+            <polygon class="ts-f" points="102.5,125.5 109.3,228.3 153,176.8" fill="#4d402f" stroke="#4d402f" style="--fd:0.456s"/>
+            <polygon class="ts-f" points="186.6,188.8 216,150 153,176.8" fill="#8a7b66" stroke="#8a7b66" style="--fd:0.576s"/>
+            <polygon class="ts-f" points="216,150 135.6,110.6 153,176.8" fill="#4c3f2e" stroke="#4c3f2e" style="--fd:0.528s"/>
+            <polygon class="ts-f" points="135.6,110.6 102.5,125.5 153,176.8" fill="#3a2f22" stroke="#3a2f22" style="--fd:0.384s"/>
+          </svg>
+        </figure>
       </section>
 
       <!-- THE AUTHOR — the coda, linked from the footer colophon (/thought#author).
@@ -389,7 +605,7 @@
             friction between a person and their intent. every product is built from first
             principles; every interaction must justify interrupting a human.
           </p>
-          <p class="author__close" data-reveal>this is the first <em>work</em>.</p>
+          <p class="author__close" data-reveal>this is the first <em>work</em><span class="t-fin">.</span></p>
           <span class="author__sig" data-reveal>yki lähteenmäki · helsinki, fi</span>
         </div>
       </section>
@@ -402,6 +618,6 @@
     </footer>
 
     <!-- The reveals — one IntersectionObserver at the broadsheet's cadence. -->
-    <script type="module" src="src/scripts/thought.js?v=1"></script>
+    <script type="module" src="src/scripts/thought.js?v=2"></script>
   </body>
 </html>
