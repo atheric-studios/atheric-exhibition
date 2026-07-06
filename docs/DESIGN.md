@@ -555,6 +555,19 @@ Concept: *the machine's frame parting to reveal the light it makes.*
   `#fracture-layer` at **opacity 1**: any layer-level fade leaves the canvas translucent at the
   band's entry, unable to occlude the annealing pool, and the cover edge cuts the glow as a
   straight line.
+- **The WebKit negative-z compositing trap (2026-07-06).** The backdrop stack (ground / blob /
+  veil / pool / vignette) lives at NEGATIVE z-index while body carries an opaque background —
+  per CSS painting order an in-flow block background paints ABOVE negative-z positioned
+  descendants of the root stacking context. WebKit honours this for the accelerated WebGL
+  canvas: the blob rendered every frame (readpixels showed the full thin-film palette;
+  context, compile, link, draws, glError all clean) but composited invisible under body's
+  background. Chrome's compositor is lenient and masked it — all pre-launch verification was
+  Chrome-only. Fix: `isolation: isolate` on body (base.css) makes body its own stacking
+  context, so its background paints below its negative-z children in every engine; isolation
+  (unlike transform/filter) creates no containing block, so the fixed layers stay
+  viewport-fixed. Chrome A/B: byte-equal outside compositor dither (maxΔ 2/255). Do not
+  remove; verify BOTH engines (playwright webkit) for anything touching the backdrop stack,
+  body/html backgrounds, or layer z-order.
 - **The bottom-of-page reveal trap.** The shared reveal IO uses `rootMargin '0px 0px -7% 0px'` —
   elements living in the page's last few percent (the footer's colophon row) can NEVER intersect
   that shrunken root and would stay invisible forever. Footer revealables observe a second IO
