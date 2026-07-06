@@ -710,12 +710,19 @@
   position: relative;
   z-index: 1; /* the opaque shard occludes the bleed's cores — light shows only past the silhouette */
 }
-/* the backing bleed — candy light behind the casting. Oversized past the shard's box so the
-   escaping fringe has room; pool CENTRES sit under the silhouette (hidden), only their falloff
-   emerges around the edges. Two counter-drifting layers = slow living light, transform-only. */
+/* the backing bleed — candy LIGHT behind the casting, not candy paint (illumination pass,
+   2026-07-06). Oversized past the shard's box so the escaping fringe has room; pool CENTRES
+   sit under the silhouette (hidden), only their falloff emerges around the edges. What makes
+   it read as light: LUMINANCE-LED profiles (a whiter, brighter core stepping down through the
+   hue in a near-inverse-square ladder, zero exactly at the gradient's 100% — no perceivable
+   boundary anywhere) and screen blending, so where pools overlap they ADD like light instead
+   of alpha-mixing to mud. Two counter-drifting layers = slow living light, transform-only. */
 .work__bleed {
+  /* the box is generous BECAUSE the light must die inside it: every pool's 100% stop (true
+     zero) lands within the box even mid-drift, so the box edge can never print — the one
+     boundary a light is not allowed to have */
   position: absolute;
-  inset: -7% -12%;
+  inset: -14% -20%;
   z-index: 0;
   pointer-events: none;
   opacity: 0;
@@ -726,17 +733,47 @@
   content: '';
   position: absolute;
   inset: 0;
+  /* the bleed's own opacity < 1 makes it a stacking context, so the pools screen against
+     each other inside the layer — additive overlap, isolated from the page */
+  mix-blend-mode: screen;
 }
 .work__bleed::before {
   background:
-    radial-gradient(42% 36% at 30% 28%, rgba(255, 46, 136, 0.4), transparent 70%),
-    radial-gradient(44% 38% at 74% 72%, rgba(95, 123, 255, 0.48), transparent 70%);
+    radial-gradient(
+      34% 30% at 34% 30%,
+      rgba(255, 173, 214, 0.5) 0%,
+      rgba(255, 92, 168, 0.26) 22%,
+      rgba(255, 46, 136, 0.13) 45%,
+      rgba(255, 46, 136, 0.05) 68%,
+      rgba(255, 46, 136, 0) 100%
+    ),
+    radial-gradient(
+      32% 30% at 68% 68%,
+      rgba(186, 200, 255, 0.55) 0%,
+      rgba(122, 146, 255, 0.28) 22%,
+      rgba(95, 123, 255, 0.13) 46%,
+      rgba(95, 123, 255, 0.05) 70%,
+      rgba(95, 123, 255, 0) 100%
+    );
   animation: bleedDriftA 15s ease-in-out infinite alternate;
 }
 .work__bleed::after {
   background:
-    radial-gradient(40% 34% at 68% 42%, rgba(255, 158, 46, 0.42), transparent 70%),
-    radial-gradient(30% 26% at 34% 64%, rgba(255, 46, 136, 0.28), transparent 68%);
+    radial-gradient(
+      33% 29% at 63% 41%,
+      rgba(255, 214, 156, 0.5) 0%,
+      rgba(255, 178, 92, 0.26) 22%,
+      rgba(255, 158, 46, 0.12) 46%,
+      rgba(255, 158, 46, 0.045) 70%,
+      rgba(255, 158, 46, 0) 100%
+    ),
+    radial-gradient(
+      26% 24% at 38% 63%,
+      rgba(255, 140, 190, 0.34) 0%,
+      rgba(255, 74, 152, 0.16) 26%,
+      rgba(255, 46, 136, 0.07) 52%,
+      rgba(255, 46, 136, 0) 100%
+    );
   animation: bleedDriftB 19s ease-in-out infinite alternate;
 }
 @keyframes bleedDriftA {

@@ -140,8 +140,10 @@ if (broadsheet && !reduce) {
 //   crack     mid-resolve a facet contracts a hair about its centroid: the seams part and the gap
 //             glows with THE MACHINE'S LIGHT — the blob's own thin-film spectrum (gold → magenta
 //             → blue → violet, chrome-blob.js thinFilm()), sampled from a slow spatial sweep so
-//             the escaping light reads as one spectral source behind the plane (dark plane only),
-//             then the crystal seats, the seam seals, and the light is shut out.
+//             the escaping light reads as one spectral source behind the plane (dark plane only);
+//             the parted seam itself is stroked ADDITIVELY as a small neon ring — wide faint halo
+//             + thin near-white core — so the light is unmistakable (the neon pass, below); then
+//             the crystal seats, the seam seals, and the light is shut out.
 //   warm      the tone ramp is warm-biased per channel (endpoints exact: near-black --d → --paper),
 //             so facets pass through warm greys — cooling metal, never wet concrete — with a small
 //             brightness glint as each crystal seats.
@@ -241,9 +243,21 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     }
   };
 
+  // THE NEON SEAMS (illumination pass, 2026-07-06) — the crack's light, made unmistakable.
+  // The iridescent underfill alone read under-visible through the 1–3px contraction gap; now
+  // each cracking facet also queues its seam ring here and, AFTER the whole field has painted
+  // (so no neighbour can cover the light), the rings are stroked additively (composite
+  // 'lighter'): a wide faint halo bleeding onto the adjacent faces + a thin near-white core on
+  // the seam line itself — small neon panels between the triangles, appearing and vanishing on
+  // the same sin(πu) crack envelope, sunk by the same presence fade. Flat scratch array, no
+  // per-frame allocation; only facets inside the crack window ever queue (a handful at once).
+  const neon = new Float32Array(facets.length * 10); // x1 y1 x2 y2 x3 y3 r g b a
+  let neonN = 0;
+
   const draw = (time) => {
     g.clearRect(0, 0, fcanvas.width, fcanvas.height);
     if (curF <= 0.001) return; // dark: nothing to paint (layer is hidden too)
+    neonN = 0;
     const shimmer = !reduce && curF > 0.02 && curF < 0.92;
     // breathe: the un-set plane lets the annealing pool through; opaque before the cream flood
     // (applied per facet below — the presence fade lifts it back to opaque at the cover's edge)
@@ -301,6 +315,20 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
         g.strokeStyle = g.fillStyle;
         g.beginPath(); g.moveTo(s[0], s[1]); g.lineTo(s[2], s[3]); g.lineTo(s[4], s[5]); g.closePath();
         g.fill(); g.stroke();
+        // queue the seam ring for the neon pass (drawn after the field, additive). The light's
+        // strength rides the crack envelope × presence — AND the facet's own nucleation motion
+        // (its remaining chase distance), so the neon flares while the seam is actually parting
+        // and dies as the facet comes to rest: a transient of the CRACKING, never a held state.
+        // (A front-line facet parked mid-window at scroll-rest would otherwise hold its ring lit.)
+        const act = Math.min(1, Math.abs(fa.tgt - fa.cur) * 25);
+        const na = bump * act * pr * (1 - 0.35 * curF);
+        if (na > 0.02) {
+          const q = neonN * 10;
+          neon[q] = s[0]; neon[q + 1] = s[1]; neon[q + 2] = s[2]; neon[q + 3] = s[3];
+          neon[q + 4] = s[4]; neon[q + 5] = s[5];
+          neon[q + 6] = IR[0]; neon[q + 7] = IR[1]; neon[q + 8] = IR[2]; neon[q + 9] = na;
+          neonN++;
+        }
         // … then the crystal seats: the facet contracted about its centroid, sealing at the set
         const sc = Math.max(0.4, 1 - (Math.min(3 * dpr, fa.md * 0.08) * bump) / fa.md);
         g.fillStyle = 'rgb(' + (R | 0) + ',' + (G | 0) + ',' + (B | 0) + ')';
@@ -315,6 +343,33 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
         g.beginPath(); g.moveTo(s[0], s[1]); g.lineTo(s[2], s[3]); g.lineTo(s[4], s[5]); g.closePath();
         g.fill(); g.stroke(); // the self-stroke seals antialiasing seams between neighbours
       }
+    }
+    // — the neon pass: the queued seam rings, stroked as LIGHT over the finished field —
+    if (neonN) {
+      g.globalCompositeOperation = 'lighter';
+      const wHalo = Math.min(5 * dpr, 7);
+      const wCore = Math.max(1, 1.2 * dpr);
+      for (let i = 0; i < neonN; i++) {
+        const q = i * 10, a = neon[q + 9];
+        const r = neon[q + 6], gg = neon[q + 7], b = neon[q + 8];
+        g.beginPath();
+        g.moveTo(neon[q], neon[q + 1]); g.lineTo(neon[q + 2], neon[q + 3]);
+        g.lineTo(neon[q + 4], neon[q + 5]); g.closePath();
+        // halo — the bloom escaping onto the neighbouring faces
+        g.globalAlpha = 0.26 * a;
+        g.lineWidth = wHalo;
+        g.strokeStyle = 'rgb(' + (r | 0) + ',' + (gg | 0) + ',' + (b | 0) + ')';
+        g.stroke();
+        // core — thin and near-white-hot on the seam line itself (hue pulled 55% to white)
+        g.globalAlpha = 0.9 * a;
+        g.lineWidth = wCore;
+        g.strokeStyle = 'rgb(' +
+          ((r + (255 - r) * 0.55) | 0) + ',' +
+          ((gg + (255 - gg) * 0.55) | 0) + ',' +
+          ((b + (255 - b) * 0.55) | 0) + ')';
+        g.stroke();
+      }
+      g.globalCompositeOperation = 'source-over';
     }
     g.globalAlpha = 1;
   };
