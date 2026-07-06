@@ -313,16 +313,16 @@
            except the aurora band's illumination pass (2026-07-06, noted below). === -->
       <!-- The dark build's opaque radial-gradient ground is removed here so the page-level
            blob shows through behind the hero. The dark ground is now painted by #ground-layer
-           (flat --ground-dark at progress 0). The aurora band carries the FIELD PASS
-           (2026-07-06, supersedes the pool pass): the goal is not visible light sources but
-           a cleanly ILLUMINATED FIELD — ambient light washing the plane. Two full-band wash
-           layers (warm keyed left, cool keyed right) whose gradient CENTRES sit off-canvas
-           ABOVE the viewport, so no core — no identifiable source — can ever enter the frame:
-           only the long luminance decay is visible, warm and cool merging to one continuous
-           wash mid-band, dying to the dark plane at true zero inside the band's box (nothing
-           for the edge to print). screen-blended within the band's filtered group, smoothed
-           by its 64px blur; same slow bGlow breathe (transform/opacity only), data-ambient so
-           the field rests composed under reduced motion. Blob lighting untouched. -->
+           (flat --ground-dark at progress 0). The aurora band carries the POOL RESTORATION
+           (2026-07-06, supersedes the field pass — the uniform wash read as a blurry panel,
+           not an aurora): the ORIGINAL dark-build pool composition is the baseline — its
+           geometry, energy placement, core brightness and mid-stops are carried VERBATIM
+           (amber 0.9 / signal 0.7 / blue 0.78 / white 0.7, same positions, same bGlow
+           periods). Only the falloff character changes: the original cut its alpha at
+           66–74% (a paint edge); each pool now continues past its original mid-stop down a
+           decaying tail to TRUE zero at 100%, and blends with mix-blend-mode:screen so
+           crossings ADD like light. The original's vibrancy, light-like edges. data-ambient
+           rests the loop under reduced motion. Blob lighting untouched. -->
       <div style="min-height:100vh; font-family:'Archivo',system-ui,sans-serif; position:relative; overflow-x:hidden;">
 
         <div id="b-progress" style="position:fixed; top:0; left:0; height:2px; width:0%; background:#ff4d1f; box-shadow:0 0 10px rgba(255,77,31,0.6); z-index:90;"></div>
@@ -349,10 +349,12 @@
         <!-- HERO: aurora chrome band, bleeding into black -->
         <section style="position:relative; min-height:clamp(640px,94vh,1000px); display:flex; flex-direction:column; align-items:center; justify-content:flex-end; text-align:center; padding:0 clamp(20px,6vw,90px) clamp(56px,8vh,96px); overflow:hidden;">
 
-          <!-- ambient illumination field (top) — sourceless: wash centres live off-canvas above -->
+          <!-- aurora glow band (top) — the original pools, edges re-set as light -->
           <div style="position:absolute; top:-12%; left:50%; transform:translateX(-50%); width:170%; height:64%; pointer-events:none; filter:blur(64px); opacity:0.95;">
-            <div style="position:absolute; inset:0; mix-blend-mode:screen; background:radial-gradient(115% 135% at 20% -15%, rgba(255,216,150,0.6) 0%, rgba(255,176,80,0.34) 22%, rgba(255,148,58,0.18) 44%, rgba(255,134,52,0.08) 64%, rgba(255,130,50,0.03) 82%, transparent 100%), radial-gradient(150% 120% at 50% -35%, rgba(255,250,240,0.26) 0%, rgba(255,248,236,0.13) 40%, rgba(255,246,232,0.05) 68%, transparent 100%); animation:bGlow 18s ease-in-out infinite;" data-ambient></div>
-            <div style="position:absolute; inset:0; mix-blend-mode:screen; background:radial-gradient(115% 135% at 80% -15%, rgba(168,192,255,0.55) 0%, rgba(100,132,255,0.3) 22%, rgba(52,82,255,0.16) 44%, rgba(36,64,255,0.07) 64%, rgba(31,59,255,0.025) 82%, transparent 100%); animation:bGlow 23s ease-in-out infinite reverse;" data-ambient></div>
+            <div style="position:absolute; top:6%; left:2%; width:42%; height:88%; border-radius:50%; mix-blend-mode:screen; background:radial-gradient(circle, rgba(255,180,60,0.9) 0%, rgba(255,140,50,0.4) 44%, rgba(255,138,48,0.18) 62%, rgba(255,136,46,0.07) 78%, rgba(255,134,45,0.025) 90%, transparent 100%); animation:bGlow 14s ease-in-out infinite;" data-ambient></div>
+            <div style="position:absolute; top:10%; left:30%; width:26%; height:80%; border-radius:50%; mix-blend-mode:screen; background:radial-gradient(circle, rgba(255,77,31,0.7) 0%, rgba(255,77,31,0.2) 50%, rgba(255,77,31,0.09) 68%, rgba(255,77,31,0.035) 83%, transparent 100%); animation:bGlow 11s ease-in-out infinite reverse;" data-ambient></div>
+            <div style="position:absolute; top:4%; right:2%; width:42%; height:88%; border-radius:50%; mix-blend-mode:screen; background:radial-gradient(circle, rgba(31,59,255,0.78) 0%, rgba(40,80,255,0.28) 46%, rgba(45,85,255,0.13) 64%, rgba(45,85,255,0.05) 80%, rgba(45,85,255,0.02) 91%, transparent 100%); animation:bGlow 16s ease-in-out infinite;" data-ambient></div>
+            <div style="position:absolute; top:16%; left:44%; width:16%; height:58%; border-radius:50%; mix-blend-mode:screen; background:radial-gradient(circle, rgba(255,250,240,0.7) 0%, rgba(255,249,238,0.3) 36%, rgba(255,248,236,0.12) 60%, rgba(255,247,234,0.04) 80%, transparent 100%); animation:bGlow 9s ease-in-out infinite;" data-ambient></div>
           </div>
           <!-- chrome reflective rim arc -->
           <div style="position:absolute; top:-30%; left:50%; transform:translateX(-50%); width:150%; height:64%; border-radius:50%; border:1px solid rgba(244,241,236,0.22); box-shadow:inset 0 24px 70px rgba(255,255,255,0.08), 0 0 60px rgba(255,255,255,0.04); pointer-events:none;"></div>
