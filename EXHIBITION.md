@@ -30,8 +30,10 @@ redistribution"* — resolves to something real and current.
   internal documents that were removed from the tree).
 - Exhibition-owned files (`docs/`, `LICENSE`, `README.md`,
   `EXHIBITION.md`) live only here and survive every sync.
-- The working repo's `.gitignore` is not mirrored — it ignores `docs/`
-  there (a deploy-branch concern), while `docs/` is committed here.
+- The working repo's `.gitignore` and `.github/` are not mirrored —
+  the ignore file excludes `docs/` there (a deploy-branch concern, while
+  `docs/` is committed here) and `.github/` holds the sync workflow
+  itself.
 - Each sync commit names the source commit:
   `mirror: home-v2 @ <sha> — <subject>`.
 
