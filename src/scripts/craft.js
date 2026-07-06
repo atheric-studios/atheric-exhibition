@@ -340,8 +340,12 @@ function enter() {
       dialog.classList.add('is-composed'); // dots + tab set on, staggered at the cadence
     }, hold);
   });
-  // predictable entry point for keyboard users
-  setTimeout(() => dialog.querySelector('[data-craft-close]')?.focus(), 40);
+  // predictable entry point for keyboard users. preventScroll: on an interrupted
+  // open (D1: click → Esc → re-click mid-fade) the browser's focus scroll-into-view
+  // produced a one-frame document scroll transient (measured 0→416→0, ~170ms)
+  // before the scroll lock corrected it; the dialog is a fixed full-viewport top
+  // layer, so there is never anything to scroll to.
+  setTimeout(() => dialog.querySelector('[data-craft-close]')?.focus({ preventScroll: true }), 40);
 }
 
 function exit() {
