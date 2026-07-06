@@ -659,6 +659,158 @@
     opacity: 0.32;
   }
 }
+
+/* ── THE CLARA REBRAND — her own light (2026-07-06) ─────────────────────────────────────────
+   Branding source: atheric-studios/gym-log (FLOW STATE · CANDY). Clara's identity is a cloud-
+   white canvas lit by ONE tutti-frutti candy gradient (#ff2e88 pink → #ff9e2e tangerine →
+   #5f7bff periwinkle, mark-matched), glow used sparingly as "this is alive". So HER casting
+   no longer answers the hand in the studio's furnace orange:
+     · the ACTIVATED accents (embers, title, open control, focus rings) shift to brand WHITE —
+       the shard runs white-hot, not ember-hot;
+     · the candy arrives ONLY as ILLUMINATION — light escaping from BEHIND the opaque shard
+       (.work__bleed, occluded by the silhouette, so only the fringe past the edges shows) and
+       BETWEEN the facets (.w-seam gradient strokes laid on real shared mesh edges). Never a
+       surface tint on a facet face; glow on the dark plane only, per the materials law.
+   Motion is transform/opacity only (drifting pools, breathing seams), arrives after the cast
+   assembles, lifts under the hand, and rests composed under reduced motion. The second
+   casting (under the code) keeps the furnace grammar — the contrast is the point. */
+.work--clara {
+  --cast-white: #f5f4f1; /* Clara's own cloud white (gym-log --bg) */
+}
+/* activated accents: signal-orange → brand white */
+.work--clara .w-e {
+  fill: var(--cast-white);
+  stroke: var(--cast-white);
+}
+.work--clara .work__title-a:hover,
+.work--clara .work__title-a:focus-visible {
+  color: #fff;
+  border-bottom-color: rgba(255, 255, 255, 0.55);
+}
+.work--clara .work__title-a:focus-visible {
+  outline-color: #fff;
+}
+.work--clara .work__open-arr {
+  color: var(--cast-white);
+}
+.work--clara .work__open:hover,
+.work--clara .work__open:focus-visible {
+  border-color: rgba(255, 255, 255, 0.5);
+}
+.work--clara .work__open:focus-visible {
+  outline-color: #fff;
+}
+/* the casting's box — the bleed needs the shard's exact berth to hide behind */
+.work--clara .work__castbox {
+  position: relative;
+  max-width: 440px;
+  margin-inline: auto;
+}
+.work--clara .work__shard {
+  position: relative;
+  z-index: 1; /* the opaque shard occludes the bleed's cores — light shows only past the silhouette */
+}
+/* the backing bleed — candy light behind the casting. Oversized past the shard's box so the
+   escaping fringe has room; pool CENTRES sit under the silhouette (hidden), only their falloff
+   emerges around the edges. Two counter-drifting layers = slow living light, transform-only. */
+.work__bleed {
+  position: absolute;
+  inset: -7% -12%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.6s var(--ease);
+}
+.work__bleed::before,
+.work__bleed::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+.work__bleed::before {
+  background:
+    radial-gradient(42% 36% at 30% 28%, rgba(255, 46, 136, 0.4), transparent 70%),
+    radial-gradient(44% 38% at 74% 72%, rgba(95, 123, 255, 0.48), transparent 70%);
+  animation: bleedDriftA 15s ease-in-out infinite alternate;
+}
+.work__bleed::after {
+  background:
+    radial-gradient(40% 34% at 68% 42%, rgba(255, 158, 46, 0.42), transparent 70%),
+    radial-gradient(30% 26% at 34% 64%, rgba(255, 46, 136, 0.28), transparent 68%);
+  animation: bleedDriftB 19s ease-in-out infinite alternate;
+}
+@keyframes bleedDriftA {
+  from {
+    transform: rotate(-5deg) translate(-1.5%, 1%);
+  }
+  to {
+    transform: rotate(4deg) translate(1.5%, -1%) scale(1.06);
+  }
+}
+@keyframes bleedDriftB {
+  from {
+    transform: rotate(4deg) translate(1%, -1.5%) scale(1.05);
+    opacity: 0.85;
+  }
+  to {
+    transform: rotate(-5deg) translate(-1%, 1.5%);
+    opacity: 1;
+  }
+}
+/* the seam light — between the facets (strokes on the mesh's real shared edges) */
+.w-seams {
+  opacity: 0;
+  transition: opacity 0.6s var(--ease);
+}
+.w-seam {
+  animation: seamBreath 5.6s ease-in-out infinite;
+  animation-delay: var(--sp, 0s);
+}
+.w-seam-halo {
+  stroke: url(#claraCandy);
+  stroke-width: 7;
+  stroke-linecap: round;
+  opacity: 0.15;
+}
+.w-seam-core {
+  stroke: url(#claraCandy);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  opacity: 0.8;
+}
+@keyframes seamBreath {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+/* the light arrives only after the cast has seated (facet assembly runs ~1.6s), then rests
+   quiet; the hand lifts it — the same activation grammar as the embers, in candy */
+.work--clara .work__cast.is-in .work__bleed {
+  opacity: 0.5;
+  animation: lightArrive 1.4s var(--ease) 1.1s backwards;
+}
+.work--clara .work__cast.is-in .w-seams {
+  opacity: 0.55;
+  animation: lightArrive 1.4s var(--ease) 1.3s backwards;
+}
+@keyframes lightArrive {
+  from {
+    opacity: 0;
+  }
+}
+.work--clara:hover .work__cast.is-in .work__bleed,
+.work--clara:focus-within .work__cast.is-in .work__bleed {
+  opacity: 0.85;
+}
+.work--clara:hover .work__cast.is-in .w-seams,
+.work--clara:focus-within .work__cast.is-in .w-seams {
+  opacity: 1;
+}
+
 .work__figcap {
   margin-top: 14px;
   text-align: center;
@@ -1333,6 +1485,11 @@
     max-width: min(430px, 100%);
     margin-inline: 0;
   }
+  /* Clara's berth follows the shard onto the column's left axis */
+  .work--clara .work__castbox {
+    max-width: min(430px, 100%);
+    margin-inline: 0;
+  }
   .work__figcap {
     text-align: left;
   }
@@ -1384,6 +1541,22 @@
   .w-e--k {
     animation: none;
     opacity: 0.24;
+  }
+  /* Clara's candy light presents COMPOSED — a still illumination: no arrival, no drifting
+     pools, no breathing seams. The light is simply on (its resting opacities, set by the
+     .is-in rules — body.js pins .is-in under RM), and the hand still lifts it, instantly. */
+  .work__bleed,
+  .w-seams {
+    animation: none !important;
+    transition: none;
+  }
+  .work__bleed::before,
+  .work__bleed::after {
+    animation: none;
+  }
+  .w-seam {
+    animation: none;
+    opacity: 0.7; /* the breath's composed middle */
   }
   /* the dimension gauges present at their stations (body.js pins .is-in on) */
   .movement__gauge-fill {

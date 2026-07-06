@@ -52,7 +52,7 @@
     <!-- The dark hero: keyframes + interaction classes. LOCKED — carried verbatim. -->
     <link rel="stylesheet" href="src/styles/dark.css?v=8" />
     <!-- The post-hero body: the cooled-chrome engineering broadsheet (docs/DESIGN.md). -->
-    <link rel="stylesheet" href="src/styles/body.css?v=16" />
+    <link rel="stylesheet" href="src/styles/body.css?v=17" />
     <!-- The crystallisation: the dark plane fractures into the cream editorial close (docs/DESIGN.md). -->
     <link rel="stylesheet" href="src/styles/fracture.css?v=14" />
     <!-- The blob craft-reveal ("see how the chrome is made") — the zoom study over the live
@@ -765,9 +765,27 @@ col += <span class="cm-kw">vec3</span>(<span class="cm-num">1.00</span>, <span c
           </h2>
         </header>
 
-        <article class="work" data-reveal-group>
+        <!-- CLARA'S OWN LIGHT (2026-07-06): this casting is rebranded to its subject's identity
+             (atheric-studios/gym-log, FLOW STATE · CANDY). Activated accents answer in brand
+             WHITE (Clara's cloud-white canvas), never the furnace orange; her candy gradient
+             (#ff2e88 → #ff9e2e → #5f7bff) arrives ONLY as illumination — .work__bleed behind the
+             opaque shard (light escaping past the silhouette) + .w-seam strokes laid on REAL
+             shared facet edges (light escaping between the facets). The facet faces themselves
+             are never tinted, per the physics law. (body.css → the Clara rebrand block) -->
+        <article class="work work--clara" data-reveal-group>
           <figure class="work__cast" data-reveal aria-hidden="true">
+            <div class="work__castbox">
+            <div class="work__bleed" aria-hidden="true"></div>
             <svg class="work__shard" viewBox="0 0 440 560" aria-hidden="true" focusable="false">
+              <defs>
+                <!-- the CANDY gradient — Clara's mark-matched stops (gym-log --candy-a/-b/-c),
+                     laid on the shard's own diagonal like the app's 118deg accent -->
+                <linearGradient id="claraCandy" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0" stop-color="#ff2e88"/>
+                  <stop offset="0.52" stop-color="#ff9e2e"/>
+                  <stop offset="1" stop-color="#5f7bff"/>
+                </linearGradient>
+              </defs>
               <polygon class="w-f" points="382,92 210,4 294.2,50.3" fill="#0b0b0b" stroke="#0b0b0b" style="--fd:0.286s"/>
               <polygon class="w-f" points="150,530 352,548 252.8,536.6" fill="#b5a893" stroke="#b5a893" style="--fd:0.968s"/>
               <polygon class="w-f" points="210,4 70,120 142.2,61.3" fill="#080808" stroke="#080808" style="--fd:0s"/>
@@ -819,7 +837,25 @@ col += <span class="cm-kw">vec3</span>(<span class="cm-num">1.00</span>, <span c
               <polygon class="w-e" points="430,300 405.8,197.9 376.3,293.8"/>
               <polygon class="w-e" points="391.2,422.1 376.3,293.8 336.3,386.7"/>
               <polygon class="w-e" points="150,530 252.8,536.6 193.1,431.2"/>
+              <!-- THE SEAM LIGHT — candy illumination escaping BETWEEN the facets. Every line is a
+                   REAL shared edge of the facet mesh (verified against the polygon list): a crack
+                   network radiating from the junction at 336.3,386.7 in the warm/dark boundary,
+                   reaching up into the dark. Halo (wide, faint) under core (thin, bright) = a
+                   cheap bloom; both stroke the one candy gradient so the light is spatially
+                   coherent across the shard. Negative --sp delays de-sync the breathing. -->
+              <g class="w-seams" aria-hidden="true">
+                <g class="w-seam" style="--sp:0s"><line class="w-seam-halo" x1="268.5" y1="316.5" x2="336.3" y2="386.7"/><line class="w-seam-core" x1="268.5" y1="316.5" x2="336.3" y2="386.7"/></g>
+                <g class="w-seam" style="--sp:-1.3s"><line class="w-seam-halo" x1="376.3" y1="293.8" x2="336.3" y2="386.7"/><line class="w-seam-core" x1="376.3" y1="293.8" x2="336.3" y2="386.7"/></g>
+                <g class="w-seam" style="--sp:-2.7s"><line class="w-seam-halo" x1="391.2" y1="422.1" x2="336.3" y2="386.7"/><line class="w-seam-core" x1="391.2" y1="422.1" x2="336.3" y2="386.7"/></g>
+                <g class="w-seam" style="--sp:-4.1s"><line class="w-seam-halo" x1="262.5" y1="391.1" x2="336.3" y2="386.7"/><line class="w-seam-core" x1="262.5" y1="391.1" x2="336.3" y2="386.7"/></g>
+                <g class="w-seam" style="--sp:-5.2s"><line class="w-seam-halo" x1="252.8" y1="536.6" x2="336.3" y2="386.7"/><line class="w-seam-core" x1="252.8" y1="536.6" x2="336.3" y2="386.7"/></g>
+                <g class="w-seam" style="--sp:-2s"><line class="w-seam-halo" x1="193.1" y1="431.2" x2="262.5" y2="391.1"/><line class="w-seam-core" x1="193.1" y1="431.2" x2="262.5" y2="391.1"/></g>
+                <g class="w-seam" style="--sp:-3.4s"><line class="w-seam-halo" x1="318.8" y1="264.8" x2="376.3" y2="293.8"/><line class="w-seam-core" x1="318.8" y1="264.8" x2="376.3" y2="293.8"/></g>
+                <g class="w-seam" style="--sp:-4.6s"><line class="w-seam-halo" x1="300.4" y1="199.4" x2="318.8" y2="264.8"/><line class="w-seam-core" x1="300.4" y1="199.4" x2="318.8" y2="264.8"/></g>
+                <g class="w-seam" style="--sp:-0.7s"><line class="w-seam-halo" x1="154.1" y1="331.9" x2="268.5" y2="316.5"/><line class="w-seam-core" x1="154.1" y1="331.9" x2="268.5" y2="316.5"/></g>
+              </g>
             </svg>
+            </div>
             <figcaption class="work__figcap">fig. 07 — clara, cast for the pocket</figcaption>
           </figure>
           <div class="work__entry">
@@ -1289,7 +1325,7 @@ col += <span class="cm-kw">vec3</span>(<span class="cm-num">1.00</span>, <span c
     <script type="module" src="src/scripts/main.js?v=11"></script>
     <!-- The post-hero broadsheet: annealing light, diegetic reveals, the hel clock, AND the
          fracture (crystallisation) scroll signal. Passive scroll→rAF. -->
-    <script type="module" src="src/scripts/body.js?v=14"></script>
+    <script type="module" src="src/scripts/body.js?v=15"></script>
     <!-- The blob craft-reveal: the zoom study (camera flights over the live blob, explain-dots,
          technique tab, figure panels). Native <dialog>; one rAF only while the study is open. -->
     <script type="module" src="src/scripts/craft.js?v=14"></script>

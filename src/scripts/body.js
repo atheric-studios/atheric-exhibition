@@ -138,8 +138,10 @@ if (broadsheet && !reduce) {
 //             in a breath when the reader pauses. Scroll stays the master; the field only ever
 //             converges on the scroll value.
 //   crack     mid-resolve a facet contracts a hair about its centroid: the seams part and the gap
-//             glows ember (the annealing light inside the fracture — brand signal family, dark
-//             plane only), then the crystal seats, the seam seals, and the heat is shut out.
+//             glows with THE MACHINE'S LIGHT — the blob's own thin-film spectrum (gold → magenta
+//             → blue → violet, chrome-blob.js thinFilm()), sampled from a slow spatial sweep so
+//             the escaping light reads as one spectral source behind the plane (dark plane only),
+//             then the crystal seats, the seam seals, and the light is shut out.
 //   warm      the tone ramp is warm-biased per channel (endpoints exact: near-black --d → --paper),
 //             so facets pass through warm greys — cooling metal, never wet concrete — with a small
 //             brightness glint as each crystal seats.
@@ -157,7 +159,27 @@ const fgeo = document.getElementById('fracture-geo');
 if (band && fcanvas && fgeo && fcanvas.getContext) {
   const g = fcanvas.getContext('2d');
   const CREAM = [247, 241, 226]; // --paper #f7f1e2 (matches the #cream-layer flood behind the field)
-  const EMBER = [255, 108, 44]; // the annealing light's own family (--signal / the pool oranges)
+  // THE MACHINE'S LIGHT (2026-07-06) — the crack glow is no longer the annealing orange. The
+  // seams part on the blob's own thin-film spectrum (chrome-blob.js → thinFilm(), scaled 0–255):
+  // gold → magenta → blue → violet, with the shader's own smoothstep stations (0 → .3 → .55 →
+  // .82). Each cracking facet samples the ramp from a slow spatial sweep across the field's
+  // diagonal (plus a whisper of per-facet jitter and a very slow drift while the field lives),
+  // ping-ponged so the spectrum never wraps hard violet→gold. One spectral source behind the
+  // plane, escaping through the parting seams — not confetti.
+  const IRID = [[255, 209, 97], [255, 66, 153], [51, 158, 255], [133, 66, 250]];
+  const IRB = [0, 0, 0]; // scratch — the sampled crack colour (no per-frame allocation)
+  const iridAt = (t) => {
+    let a, b, u;
+    if (t < 0.3) { a = IRID[0]; b = IRID[1]; u = t / 0.3; }
+    else if (t < 0.55) { a = IRID[1]; b = IRID[2]; u = (t - 0.3) / 0.25; }
+    else if (t < 0.82) { a = IRID[2]; b = IRID[3]; u = (t - 0.55) / 0.27; }
+    else { a = IRID[3]; b = IRID[3]; u = 0; }
+    u = u * u * (3 - 2 * u); // the shader's smoothstep between stations
+    IRB[0] = a[0] + (b[0] - a[0]) * u;
+    IRB[1] = a[1] + (b[1] - a[1]) * u;
+    IRB[2] = a[2] + (b[2] - a[2]) * u;
+    return IRB;
+  };
   const WIDTH = 0.24; // per-facet resolve width
   const VB = 1600, VBH = 1000; // geometry viewBox
 
@@ -261,16 +283,21 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
       const s = fa.sp;
       const u = reduce ? -1 : (v - 0.03) / 0.59; // the crack window, v 0.03 → 0.62
       if (u > 0 && u < 1) {
-        // the seam parts: full facet as ember underfill (the heat inside the fracture) …
-        // the embers themselves cool as the field sets: full glow in the early cracks, faint
+        // the seam parts: full facet as iridescent underfill (the machine's light inside the
+        // fracture) … the light cools as the field sets: full glow in the early cracks, faint
         // by the time the cream carries the view (no hot outlines on a mostly-set field)
         const bump = Math.sin(Math.PI * u);
         const m = 0.34 * bump * (1 - 0.6 * curF);
-        // the ember underfill sinks with the same presence — no hot seam can meet the cover
+        // sample the thin-film ramp: spatial sweep along the diagonal + slow drift + jitter,
+        // ping-ponged (triangle wave) so neighbours never sit across a hard violet→gold seam
+        let ht = (fa.cx + fa.cy) / (fcanvas.width + fcanvas.height) * 0.9 + time * 0.000022 + fa.ph * 0.03;
+        ht = ht - Math.floor(ht);
+        const IR = iridAt(ht < 0.5 ? ht * 2 : 2 - ht * 2);
+        // the lit underfill sinks with the same presence — no glowing seam can meet the cover
         g.fillStyle = 'rgb(' +
-          ((PLANE[0] + ((fa.d[0] + (EMBER[0] - fa.d[0]) * m) - PLANE[0]) * pr) | 0) + ',' +
-          ((PLANE[1] + ((fa.d[1] + (EMBER[1] - fa.d[1]) * m) - PLANE[1]) * pr) | 0) + ',' +
-          ((PLANE[2] + ((fa.d[2] + (EMBER[2] - fa.d[2]) * m) - PLANE[2]) * pr) | 0) + ')';
+          ((PLANE[0] + ((fa.d[0] + (IR[0] - fa.d[0]) * m) - PLANE[0]) * pr) | 0) + ',' +
+          ((PLANE[1] + ((fa.d[1] + (IR[1] - fa.d[1]) * m) - PLANE[1]) * pr) | 0) + ',' +
+          ((PLANE[2] + ((fa.d[2] + (IR[2] - fa.d[2]) * m) - PLANE[2]) * pr) | 0) + ')';
         g.strokeStyle = g.fillStyle;
         g.beginPath(); g.moveTo(s[0], s[1]); g.lineTo(s[2], s[3]); g.lineTo(s[4], s[5]); g.closePath();
         g.fill(); g.stroke();
