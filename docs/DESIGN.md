@@ -1,5 +1,10 @@
 # DESIGN — the annealing
 
+> **Canonical committed home (2026-07-06):** this file and `generators/` are published in
+> [atheric-studios/atheric-exhibition](https://github.com/atheric-studios/atheric-exhibition)
+> under `docs/` — the working repo gitignores `docs/`, so this local copy is a convenience
+> mirror; commit doc changes to the exhibition (or let the next hand-sync carry them).
+
 > **Current design law.** This supersedes the earlier "permanent-dark · paper objects on the dark
 > plane · set light" model (and, before it, the dark→cream *ground inversion* of `docs/SPEC.md` /
 > `docs/ARCHITECTURE.md`). The hero is unchanged; **everything after the hero was rebuilt** as the
@@ -138,9 +143,19 @@ as the metal finally sets solid.
   **scribe clockwise** (the craft stage's own drawn-rule grammar, 0.66→0.84) → the ledger inks
   row by row (0.76→0.90) → the divider sets → the stamp presses in and its orbit scribes
   (0.80→0.86), ticks extend, the **punctum arrives last** (0.875→0.905, flat accent — no glow on
-  paper) → the fig. caption (`fig. 06 — the cast, certified`) inks beneath (0.90→0.93). Sticky at
-  52vh; the caption sits in flow inside the sticky footprint so the assembly can never overhang
-  the band into the voice datum. Ink only ever on resolved ground. Reduced motion: presents
+  paper) → the fig. caption (`fig. 06 — the cast, certified`) inks beneath (0.90→0.93). **The
+  seal's berth (2026-07-06):** sticky at `top: calc(48vh − 56px)` so the boxed tab reads
+  optically centred (~48vh) while it scribes, from short ultrawide (~480px) to tall viewports —
+  and the band carries `padding-bottom: clamp(90px, 16vh, 180px)` (border-box: the band's
+  painted 138vh and the `--fracture` ramp, which reads the border box, are untouched) so the
+  sticky range ends early and the certified tab **settles ON the sheet** with clear cream below
+  it — measured 144/135/90px above the band's end at 1440×900 / 390×844 / 1638×480 (it
+  previously rode to 0px and came to rest glued against the voice datum, reading unfinished).
+  The caption sits in flow inside the sticky footprint so the assembly can never overhang the
+  band into the voice datum. Ink only ever on resolved ground — re-measured at the higher
+  station: zero-defect cream under the box at full ink (0.74); through the 0.66→0.74 fade the
+  worst residue is near-cream warm grey (R≥200) on ≤3% of the box area while the ink is still
+  translucent. Reduced motion: presents
   composed (no scribe/stagger/press); its appearance still tracks scroll, like the facets. Trap:
   **no `vector-effect: non-scaling-stroke` on the orbit** — it computes dashes in screen space
   and breaks the `pathLength` normalisation (an ~8% seam at the NE station even fully scribed).
