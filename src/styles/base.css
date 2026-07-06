@@ -206,7 +206,10 @@ body.craft-active #dark section::after {
     order: 3;
     flex: 1 1 100%;
     justify-content: center;
-    gap: clamp(24px, 9vw, 40px) !important;
+    /* four links now (thought joined) — wrap is the pressure valve on the narrowest
+       viewports; the tighter clamp keeps all four on one row from ~360px up */
+    flex-wrap: wrap;
+    gap: 12px clamp(18px, 7vw, 40px) !important;
     margin-top: 13px;
     padding: 12px 0 14px;
     border-top: 1px solid rgba(244, 241, 236, 0.08);

@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Atheric — thought</title>
+    <meta name="description" content="Three working theses from Atheric: software should be used, not learned; software is the bridge, not the meaning; structure before ornament. And the author's note." />
+    <meta name="theme-color" content="#050505" />
+
+    <!-- Canonical + share card — the apex is canonical (www serves the same content);
+         the card assets are shared with index.html. -->
+    <link rel="canonical" href="https://atheric.eu/thought" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Atheric" />
+    <meta property="og:title" content="Atheric — thought" />
+    <meta property="og:description" content="Three working theses from Atheric: software should be used, not learned; software is the bridge, not the meaning; structure before ornament. And the author's note." />
+    <meta property="og:url" content="https://atheric.eu/thought" />
+    <meta property="og:image" content="https://atheric.eu/og.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="we engineer weightless software — the Atheric hero, the iridescent chrome blob behind the headline" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- The Atheric mark as an inline favicon — same as index.html; also removes the
+         auto-requested favicon.ico 404. -->
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23050505'/%3E%3Ccircle cx='32' cy='32' r='22' fill='none' stroke='%23f4f1ec' stroke-width='1.6'/%3E%3Cline x1='6' y1='32' x2='22' y2='32' stroke='%23f4f1ec' stroke-width='1.3' opacity='0.55'/%3E%3Cline x1='32' y1='6' x2='32' y2='14' stroke='%23f4f1ec' stroke-width='1.3' opacity='0.55'/%3E%3Ccircle cx='48' cy='16' r='6' fill='%23ff4d1f'/%3E%3C/svg%3E"
+    />
+
+    <!-- Brand type, self-hosted under /fonts/ (see src/styles/fonts.css) — no third-party
+         font requests. ?v= matches index.html's cache stamps (long max-age assets). -->
+    <link rel="stylesheet" href="src/styles/fonts.css?v=2" />
+    <link rel="stylesheet" href="src/styles/tokens.css?v=9" />
+    <link rel="stylesheet" href="src/styles/base.css?v=12" />
+
+    <style>
+      /* THE IDEAS SHEET — /thought (docs/DESIGN.md, "the philosophy layer"). The exhibition
+         of ideas: three theses, one screen each, set directly into the permanently dark
+         computational plane in the broadsheet's own grammar — drawn ticked rules, mono
+         coordinate labels, lowercase Archivo display with the one italic-serif breath,
+         Instrument Serif roman for each thesis's core line. No blob (the blob is hero-only,
+         LOCKED), no paper objects: this sheet is all ink on the cooled dark plane.
+         Motion: transform/opacity only, the shared --ease, the 0.09s cadence (thought.js). */
+
+      body {
+        min-height: 100dvh;
+        background: var(--ground-dark);
+        color: var(--ink);
+      }
+
+      /* ── Top bar — the sheet corner: mark home, sheet name right ─────────────────────── */
+      .t-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 22px var(--page-x);
+        border-bottom: 1px solid var(--rule);
+      }
+      .t-brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 11px;
+        text-decoration: none;
+      }
+      .t-brand__mark {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 34% 30%, #fff 0%, #e7ddcf 18%, #9a9489 46%, #3a3733 72%, #0a0a0a 100%);
+        box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.6);
+      }
+      .t-brand__name {
+        font-family: var(--font-display);
+        font-weight: 800;
+        font-size: 14px;
+        letter-spacing: -0.015em;
+        color: var(--ink);
+      }
+      .t-brand__name em {
+        font-family: var(--font-break);
+        font-style: italic;
+        font-weight: 400;
+        color: var(--signal);
+      }
+      .t-top__label {
+        font-family: var(--font-label);
+        font-weight: 500;
+        font-size: 10px;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--ink-faint);
+      }
+
+      /* ── Shared sheet measure ─────────────────────────────────────────────────────────── */
+      .thesis,
+      .author {
+        position: relative;
+        max-width: var(--measure);
+        margin-inline: auto;
+        padding-inline: var(--page-x);
+      }
+
+      /* ── The theses — one screen each ─────────────────────────────────────────────────── */
+      .thesis {
+        min-height: 100vh;
+        min-height: 100svh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding-block: clamp(56px, 9vh, 120px);
+      }
+      /* thesis 02 steps off the shared left axis on desktop — the scroll score's
+         "off-measure" bar, so the eye never learns one pattern */
+      @media (min-width: 861px) {
+        .thesis--off .thesis__in {
+          margin-left: clamp(120px, 18vw, 300px);
+        }
+      }
+
+      .t-index {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: clamp(18px, 2.4vh, 30px);
+        font-family: var(--font-label);
+        font-weight: 500;
+        font-size: 0.69rem;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--ink-faint);
+      }
+
+      .t-display {
+        margin: 0;
+        font-family: var(--font-display);
+        font-weight: 800;
+        text-transform: lowercase;
+        letter-spacing: -0.045em;
+        line-height: 0.9;
+        font-size: clamp(2.2rem, 5.4vw, 4.9rem);
+        color: var(--ink);
+      }
+      .t-display em,
+      .t-core em {
+        font-family: var(--font-break);
+        font-style: italic;
+        font-weight: 400;
+        letter-spacing: 0;
+        color: var(--signal);
+      }
+
+      /* the core line — the thesis itself, serif at pull-quote scale (bone on the plane) */
+      .t-core {
+        max-width: 24ch;
+        margin: clamp(26px, 4vh, 44px) 0 0;
+        font-family: var(--font-break);
+        font-weight: 400;
+        font-size: clamp(1.7rem, 3.4vw, 2.9rem);
+        line-height: 1.14;
+        letter-spacing: -0.01em;
+        color: var(--ink);
+      }
+
+      /* the support — at most two or three plain sentences, secondary ink */
+      .t-body {
+        max-width: 52ch;
+        margin: clamp(20px, 3vh, 32px) 0 0;
+        font-size: clamp(1rem, 1.35vw, 1.2rem);
+        line-height: 1.6;
+        color: var(--ink-dim);
+      }
+
+      /* ── Drawn ticked rule (the broadsheet's dimension-line grammar, verbatim) ────────── */
+      .t-rule {
+        position: relative;
+        height: 24px;
+        margin-bottom: clamp(26px, 4.5vh, 54px);
+      }
+      .t-rule::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 11px;
+        height: 1px;
+        background: var(--rule);
+        transform: scaleX(0);
+        transform-origin: left center;
+        transition: transform var(--dur-rule) var(--ease);
+      }
+      .t-rule::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 5px;
+        height: 7px;
+        background-image: repeating-linear-gradient(
+          90deg,
+          var(--rule-strong) 0 1px,
+          transparent 1px var(--tick-gap)
+        );
+        opacity: 0;
+        transition: opacity 0.55s var(--ease) 0.4s;
+      }
+      .t-rule.is-in::before {
+        transform: scaleX(1);
+      }
+      .t-rule.is-in::after {
+        opacity: 1;
+      }
+
+      /* ── Block reveal — the body's quiet rise, same durations ─────────────────────────── */
+      [data-reveal] {
+        opacity: 0;
+        transform: translateY(24px);
+        transition:
+          opacity 0.55s var(--ease),
+          transform var(--dur-rise) var(--ease);
+      }
+      [data-reveal].is-in {
+        opacity: 1;
+        transform: none;
+      }
+
+      /* ── The author — the coda, half a screen, quieter ────────────────────────────────── */
+      .author {
+        padding-block: clamp(72px, 12vh, 150px);
+        scroll-margin-top: 10vh;
+      }
+      .author__lead {
+        max-width: 22ch;
+        margin: 0;
+        font-family: var(--font-break);
+        font-weight: 400;
+        font-size: clamp(1.5rem, 2.8vw, 2.3rem);
+        line-height: 1.16;
+        letter-spacing: -0.01em;
+        color: var(--ink);
+      }
+      .author__body {
+        max-width: 52ch;
+        margin: clamp(20px, 3vh, 32px) 0 0;
+        font-size: clamp(1rem, 1.35vw, 1.2rem);
+        line-height: 1.6;
+        color: var(--ink-dim);
+      }
+      .author__close {
+        margin: clamp(24px, 3.6vh, 40px) 0 0;
+        font-family: var(--font-break);
+        font-size: clamp(1.15rem, 1.7vw, 1.45rem);
+        color: var(--ink);
+      }
+      .author__close em {
+        font-style: italic;
+        color: var(--signal);
+      }
+      .author__sig {
+        display: block;
+        margin-top: clamp(22px, 3vh, 34px);
+        font-family: var(--font-label);
+        font-weight: 500;
+        font-size: 0.66rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--ink-faint);
+      }
+
+      /* ── Footer — minimal sheet edge ──────────────────────────────────────────────────── */
+      .t-foot {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px 22px;
+        max-width: var(--measure);
+        margin-inline: auto;
+        padding: 26px var(--page-x) 34px;
+        border-top: 1px solid var(--rule);
+        font-family: var(--font-label);
+        font-size: 0.62rem;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--ink-faint);
+      }
+      .t-foot a {
+        color: var(--ink-dim);
+        text-decoration: none;
+        border-bottom: 1px solid var(--rule-strong);
+        padding-bottom: 2px;
+      }
+      .t-foot a:hover {
+        color: var(--ink);
+        border-bottom-color: var(--accent);
+      }
+
+      /* ── Reduced motion: present fully formed (thought.js pins .is-in; belt-and-braces) ─ */
+      @media (prefers-reduced-motion: reduce) {
+        [data-reveal],
+        .t-rule::before,
+        .t-rule::after {
+          transition: none !important;
+        }
+      }
+    </style>
+
+    <!-- No-JS: the sheet presents fully formed (reveals are enhancement only). -->
+    <noscript>
+      <style>
+        [data-reveal] {
+          opacity: 1;
+          transform: none;
+        }
+        .t-rule::before {
+          transform: scaleX(1);
+        }
+        .t-rule::after {
+          opacity: 1;
+        }
+      </style>
+    </noscript>
+  </head>
+
+  <body>
+    <header class="t-top">
+      <a class="t-brand" href="/" aria-label="Atheric — home">
+        <span class="t-brand__mark" aria-hidden="true"></span>
+        <span class="t-brand__name">Atheric<em>.</em></span>
+      </a>
+      <span class="t-top__label">thought / three theses</span>
+    </header>
+
+    <main>
+      <!-- THESIS № 01 — the owner's line, typeset; the support extends it minimally and
+           stays paraphrasable: needing a manual is the design's failure, not the user's. -->
+      <section class="thesis" aria-labelledby="t1-h">
+        <div class="thesis__in" data-reveal-group>
+          <div class="t-rule" data-rule aria-hidden="true"></div>
+          <p class="t-index" data-reveal>— thesis № 01 / iii</p>
+          <h2 class="t-display" id="t1-h" data-reveal>not learned, <em>used</em>.</h2>
+          <p class="t-core" data-reveal>software should not be learned. it should be used.</p>
+          <p class="t-body" data-reveal>
+            no manual, no tour, no onboarding curve. if a control needs explaining, the
+            control is wrong — intent should map directly to action, the first time.
+          </p>
+        </div>
+      </section>
+
+      <!-- THESIS № 02 — off the shared axis on desktop (the score's off-measure bar). -->
+      <section class="thesis thesis--off" aria-labelledby="t2-h">
+        <div class="thesis__in" data-reveal-group>
+          <div class="t-rule" data-rule aria-hidden="true"></div>
+          <p class="t-index" data-reveal>— thesis № 02 / iii</p>
+          <h2 class="t-display" id="t2-h" data-reveal><em>weightless</em> software.</h2>
+          <p class="t-core" data-reveal>software is not the meaning. it is the bridge.</p>
+          <p class="t-body" data-reveal>
+            an interface exists to carry you from wanting to done, without announcing itself
+            along the way. what you should remember afterwards is the work — not the software
+            that carried it.
+          </p>
+        </div>
+      </section>
+
+      <!-- THESIS № 03 — elaborates the spec lede's "built in the right order". -->
+      <section class="thesis" aria-labelledby="t3-h">
+        <div class="thesis__in" data-reveal-group>
+          <div class="t-rule" data-rule aria-hidden="true"></div>
+          <p class="t-index" data-reveal>— thesis № 03 / iii</p>
+          <h2 class="t-display" id="t3-h" data-reveal>built in the right <em>order</em>.</h2>
+          <p class="t-core" data-reveal>structure before ornament.</p>
+          <p class="t-body" data-reveal>
+            the system is designed first — what it must say and do, in what order. nothing is
+            decorated after: ornament cannot repair a wrong structure, only hide it.
+          </p>
+        </div>
+      </section>
+
+      <!-- THE AUTHOR — the coda, linked from the footer colophon (/thought#author).
+           Register: mission and craft; no résumé, no mythology. -->
+      <section class="author" id="author" aria-labelledby="author-h">
+        <div data-reveal-group>
+          <div class="t-rule" data-rule aria-hidden="true"></div>
+          <p class="t-index" data-reveal>— the author</p>
+          <p class="author__lead" id="author-h" data-reveal>atheric is authored by one person.</p>
+          <p class="author__body" data-reveal>
+            the practice combines mathematics, software and design into systems that reduce
+            friction between a person and their intent. every product is built from first
+            principles; every interaction must justify interrupting a human.
+          </p>
+          <p class="author__close" data-reveal>this is the first <em>work</em>.</p>
+          <span class="author__sig" data-reveal>yki lähteenmäki · helsinki, fi</span>
+        </div>
+      </section>
+    </main>
+
+    <footer class="t-foot">
+      <span>© mmxxvi · ydt holdings oy · atheric</span>
+      <a href="mailto:hello@atheric.eu">write to us</a>
+      <a href="/">← back to atheric.eu</a>
+    </footer>
+
+    <!-- The reveals — one IntersectionObserver at the broadsheet's cadence. -->
+    <script type="module" src="src/scripts/thought.js?v=1"></script>
+  </body>
+</html>
