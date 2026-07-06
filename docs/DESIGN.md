@@ -832,3 +832,46 @@ hero/blob/study or the fracture/cabinet machinery.
   gains `flex-wrap:wrap` + a tighter gap clamp (`12px clamp(18px, 7vw, 40px)`) so four links
   hold one row from ~360px and wrap gracefully below — **base.css ?v=11 → 12** (bumped in
   index.html + privacy.html; 404.html does not reference base.css).
+
+## The handcraft pass (2026-07-06) — /thought carries its own authored moments
+
+A frame-by-frame walk of the live site at 1440 and 390 found index already saturated (every
+sheet carries its authored moment — fig. 00, the gauges, the castings, the pull word-rise,
+the fin-dot, the folio, the furnace) and /thought the one under-handcrafted surface: three
+near-identical screens of left-set type, empty counter-fields at desktop, generic block
+fades only, zero facet vocabulary. **Index deliberately untouched** (restraint governs);
+three additions, all on /thought, all one-shot — the page at rest is still:
+
+- **The thesis stones — the crystallisation's vocabulary, at rest on the ideas sheet** (the
+  first use of the facet grammar outside the transitions/castings). Three small faceted
+  stones (27/32/27 facets) occupy the theses' empty counter-fields ≥900px: right of № 01
+  and № 03, LEFT of the off-measure № 02 (the mark counterweights the score). They **enact
+  the annealing down the page**: stone i un-set metal (one warm whisper), stone ii
+  mid-resolve (warm greys risen along the one diagonal grain), stone iii nearly set (one
+  near-paper plate seated bottom-right). Same tone law as the band/castings (warm-biased
+  `#050505`→paper ramp, station-snapped, 1px same-colour self-strokes); each assembles ONCE
+  as its thesis reveals — dark facets first, warm last, per-facet `--fd` delays (~0.7s
+  sweep), opacity only — then perfectly still: **no embers, no breath, nothing loops**
+  (unlike the cabinet's castings, deliberately — the philosophy page rests). Generated
+  artifacts: `docs/generators/gen-thesis-stones.js` (seeded, same policy as the cabinet
+  generator — never hand-edit the polygons). `aria-hidden`, pointer-inert, hidden <900px.
+- **The core-line word-rise.** Each thesis's serif core line — the line the page exists to
+  deliver — rises **word by word** out of per-word masks (the voice pull's exact technique,
+  body.js §1b ported into thought.js: spaces stay bare text nodes, kerning/breaks/resting
+  render untouched; 45ms letterpress stagger). The words carry the line's group-stagger
+  delay as their base, so the section cadence (index → display → core words → body) holds.
+  `.t-core--split` hands the block reveal to the words. RM / no-JS: the split never
+  happens — the composed paragraph stands.
+- **The coda's period, set.** The author close ("this is the first *work*.") finishes with
+  the homepage's final-period moment, answered on the dark plane: a beat after the line
+  lands the period arrives still-molten amber (`--signal-2`, faint warm halo — glow allowed
+  on the dark plane, the ledeCool grammar) and cools through the signal to resting bone
+  (`tFinSet`, 2.2s, 1.2s delay). Base state is the composed one (ink) → no-JS and reduced
+  motion are static.
+
+`thought.js ?v=1 → 2` (bumped in thought.html — the page's only reference; all new CSS is
+in thought.html's own `<style>` block, no shared-asset stamps touched). Verified local on
+**Chrome AND WebKit** (playwright, both-engines law) × 1440/390 × full/reduced motion:
+zero overflow, stones present/hidden per width, split only under full motion (21 word
+masks), RM presents everything composed, no-JS composed, zero console errors; scroll-through
+with reveals firing 386 frames avg 8.3ms worst 9.4ms, **zero frames >25ms**.
