@@ -1,0 +1,1413 @@
+/* body.css — THE BROADSHEET (everything after the hero).
+ *
+ * Concept (docs/DESIGN.md → "the annealing"): the molten chrome of the hero SETS as it leaves;
+ * below, the same metal — cooled — is read as the studio's engineering broadsheet. A machinist's
+ * document drawn on the permanent-dark plane, warm-lit from below by the annealing light. The
+ * grammar is editorial-technical: drawn hairline rules with tick marks, monospace coordinate
+ * metadata, big lowercase Archivo with the Instrument Serif italic-orange breath. The only
+ * warm objects are the cabinet's two castings — the works the furnace made (both live).
+ *
+ * Motion is disciplined: transform/opacity only, one shared easing (--ease, the hero's own
+ * curve), at most one or two key elements moving per view. Everything degrades to fully-formed
+ * under prefers-reduced-motion (see the block at the foot of this file + body.js).
+ */
+
+/* ── Broadsheet shell + shared layout ─────────────────────────────────────────────────────── */
+.broadsheet {
+  position: relative;
+  z-index: 1; /* content paints over the fixed backdrop layers */
+  font-family: var(--font-display);
+}
+
+/* THE DARK RUN — the opaque occluder behind the post-hero DARK sections (see index.html).
+   The page backdrop stack (ground / blob / veil / annealing / vignette) all sit at NEGATIVE
+   z-index; content in .broadsheet paints in front of them at z-index 1. But content only HIDES the
+   blob where it is actually opaque — the .sheet sections are transparent and max-width-capped, so
+   the fixed blob bled through both the column and the side gutters while the set-veil was still
+   ramping. This full-width, flat --ground-dark run covers the blob edge-to-edge the instant it
+   scrolls into view, independent of the fade/dispose timing. It also carries the broadsheet's
+   former top inset so the very seam (DATUM 00) is opaque — no bleed at the hero → first-section
+   boundary. The cream close is NOT wrapped, so #cream-layer still floods through it. */
+.dark-run {
+  padding-top: clamp(40px, 7vh, 96px);
+  background: var(--ground-dark);
+}
+
+.sheet {
+  position: relative;
+  max-width: var(--measure);
+  margin-inline: auto;
+  padding-inline: var(--page-x);
+  padding-block: 0 var(--bay);
+  scroll-margin-top: 5vh;
+}
+
+.sheet__head {
+  /* No max-width here: the headings author their own line breaks via <span class="ln">, and a
+     ch-based cap (measured against the small inherited font) would force the big display type to
+     wrap — which the line-rise mask then clips. The mono index sits comfortably full-measure. */
+  margin-bottom: clamp(34px, 5vh, 62px);
+}
+
+/* ── Type system (Archivo display · Instrument Serif breath · JetBrains Mono labels) ───────── */
+.display {
+  font-family: var(--font-display);
+  font-weight: 800;
+  text-transform: lowercase;
+  letter-spacing: -0.045em; /* the hero headline's own tracking — one display voice everywhere */
+  line-height: 0.9;
+  font-size: clamp(2.2rem, 5.4vw, 4.9rem);
+  color: var(--ink);
+  margin: 0;
+}
+.display--xl {
+  font-size: clamp(2.9rem, 8vw, 7.2rem);
+  line-height: 0.9;
+  letter-spacing: -0.045em;
+}
+.display em,
+.lede em,
+.pull em,
+.spec__lede em,
+.works__stand em,
+.dd em {
+  font-family: var(--font-break);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--accent);
+}
+
+.index,
+.kicker,
+.datum__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-label);
+  font-weight: 500;
+  font-size: 0.69rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.index {
+  margin-bottom: clamp(18px, 2.4vh, 30px);
+}
+.index--center {
+  justify-content: center;
+}
+.kicker__dot,
+.live__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent);
+}
+
+.lede {
+  max-width: 44ch;
+  margin: clamp(22px, 3vh, 34px) 0 0;
+  font-size: clamp(1.05rem, 1.5vw, 1.3rem);
+  line-height: 1.56;
+  color: var(--ink-dim);
+}
+
+/* ── Motion primitives ────────────────────────────────────────────────────────────────────
+   Toggled by a single IntersectionObserver (body.js) adding .is-in. */
+
+/* Block reveal — a quiet rise. Staggered inside [data-reveal-group] via JS transition-delay.
+   The fade lands before the travel finishes, so blocks read as settling, not arriving. */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 0.55s var(--ease),
+    transform var(--dur-rise) var(--ease);
+}
+[data-reveal].is-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* Heading line-rise — each line sets up into its mask, like type rising onto the sheet. */
+[data-anneal] .ln {
+  display: block;
+  overflow: hidden;
+  padding-block: 0.08em;
+  margin-block: -0.08em;
+}
+[data-anneal] .ln__in {
+  display: block;
+  /* Each authored line is one visual line — never let it wrap, or the line-rise mask
+     (overflow:hidden on .ln) would clip a too-long word. Mobile re-enables wrapping below. */
+  white-space: nowrap;
+  transform: translateY(112%);
+  transition: transform var(--dur-line) var(--ease);
+}
+[data-anneal].is-in .ln__in {
+  transform: none;
+}
+/* line stagger = the hero's own 0.09s reveal rhythm */
+[data-anneal] .ln:nth-child(2) .ln__in {
+  transition-delay: 0.09s;
+}
+[data-anneal] .ln:nth-child(3) .ln__in {
+  transition-delay: 0.18s;
+}
+
+/* Drawn rule — a dimension line scribes itself left→right, then the tick marks set on. */
+.datum,
+.rule--ticked {
+  position: relative;
+  height: 24px;
+}
+.rule--ticked {
+  margin-bottom: clamp(40px, 6vh, 78px);
+}
+.datum {
+  margin-bottom: clamp(26px, 4.5vh, 54px);
+}
+.datum::before,
+.rule--ticked::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 11px;
+  height: 1px;
+  background: var(--rule);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform var(--dur-rule) var(--ease);
+}
+.datum::after,
+.rule--ticked::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 5px;
+  height: 7px;
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--rule-strong) 0 1px,
+    transparent 1px var(--tick-gap)
+  );
+  opacity: 0;
+  /* the ticks set on only once the line is mostly drawn — measure first, then marks */
+  transition: opacity 0.55s var(--ease) 0.4s;
+}
+.is-in.datum::before,
+.is-in.rule--ticked::before {
+  transform: scaleX(1);
+}
+.is-in.datum::after,
+.is-in.rule--ticked::after {
+  opacity: 1;
+}
+
+/* ── Section 0 — THE HANDOFF / MASTHEAD ───────────────────────────────────────────────────── */
+.sheet--open {
+  padding-top: clamp(20px, 4vh, 48px);
+}
+.datum__label {
+  position: absolute;
+  left: 0;
+  top: -1px;
+  z-index: 2; /* sit above the rule's ::after tick marks (which paint last in tree order) */
+  padding-right: 16px;
+  background: var(--surface); /* mask the drawn line + ticks behind the label */
+  color: var(--accent);
+}
+.masthead {
+  position: relative;
+}
+.masthead__corners {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: clamp(36px, 7vh, 84px);
+}
+.meta {
+  font-family: var(--font-label);
+  font-size: 0.66rem;
+  line-height: 1.85;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.meta b {
+  color: var(--ink-dim);
+  font-weight: 500;
+}
+.meta--r {
+  text-align: right;
+}
+.live {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--accent);
+}
+/* the clock is live — its dot breathes like the hero's (bPulse, dark.css). Off under
+   reduced motion (foot of this file). */
+.live__dot {
+  animation: bPulse 1.4s ease-in-out infinite;
+}
+.meta--r .live {
+  flex-direction: row-reverse;
+}
+.sheet--open .lede {
+  max-width: 52ch;
+}
+/* the word performs itself — the lede's italic "cools" arrives still molten (amber, a faint
+   warm halo: glow on the dark plane only) and settles to the resting signal as the sheet is
+   read. One-shot, keyed off the heading's own .is-in (no extra JS); the final period at the
+   close is this moment's sibling. Base state is the composed one, so no-JS is static. */
+.sheet--open [data-anneal].is-in ~ .lede em {
+  animation: ledeCool 2.2s var(--ease) 1.15s both;
+}
+@keyframes ledeCool {
+  0% {
+    color: var(--signal-2);
+    text-shadow: 0 0 16px rgba(255, 180, 60, 0.55);
+  }
+  100% {
+    color: var(--signal);
+    text-shadow: 0 0 0 rgba(255, 180, 60, 0);
+  }
+}
+
+/* FIG. 00 — the studio mark, drawn (the broadsheet's title figure; markup in index.html).
+   A one-shot technical-drawing construction on the masthead's empty right field, sequenced to
+   land after the heading has risen: centre cross locates the body (0.12s) → the orbit scribes
+   (--dur-rule, from the punctum's station, clockwise, molten iridescent stroke on top) → the
+   molten stroke cools to the bone hairline (1.3s) → ticks extend outward (1.15s) → the punctum
+   ignites where the scribe closed (1.5s). Then perfectly still — the drawing is finished.
+   All hairlines are 1px via vector-effect (crisp at any size). CSS transitions only; the same
+   IO that runs every reveal adds .is-in ([data-fig], body.js). Hidden <900px (mobile keeps the
+   single-column restraint); reduced motion presents it fully drawn (foot of this file). */
+.fig-mark {
+  position: absolute;
+  right: 0;
+  top: 38%;
+  width: clamp(190px, 21vw, 272px);
+  margin: 0;
+  pointer-events: none;
+}
+.fig-mark svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.fig-mark line,
+.fig-mark .fig-mark__orbit {
+  fill: none;
+  stroke: var(--ink-dim);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.fig-mark__cross line {
+  stroke: var(--ink-faint);
+  opacity: 0;
+  transition: opacity 0.45s var(--ease) 0.12s;
+}
+.fig-mark.is-in .fig-mark__cross line {
+  opacity: 1;
+}
+.fig-mark__orbit {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  transition: stroke-dashoffset var(--dur-rule) var(--ease) 0.3s;
+}
+.fig-mark.is-in .fig-mark__orbit {
+  stroke-dashoffset: 0;
+}
+/* (scoped under .fig-mark so it outranks the base hairline stroke above) */
+.fig-mark .fig-mark__orbit--molten {
+  stroke: url(#fig-molten); /* the chrome, still hot — brand signal/cool stops (index.html) */
+  opacity: 0.9;
+  transition:
+    stroke-dashoffset var(--dur-rule) var(--ease) 0.3s,
+    opacity 0.8s var(--ease) 1.3s;
+}
+.fig-mark.is-in .fig-mark__orbit--molten {
+  stroke-dashoffset: 0;
+  opacity: 0; /* cools into the bone hairline beneath */
+}
+.fig-mark__tick {
+  stroke: var(--ink-faint);
+  transform-box: fill-box;
+  opacity: 0;
+  transition:
+    opacity 0.4s var(--ease) 1.15s,
+    transform 0.5s var(--ease) 1.15s;
+}
+.fig-mark__tick--w {
+  transform: scaleX(0);
+  transform-origin: right center; /* extends outward from the ring */
+}
+.fig-mark__tick--n {
+  transform: scaleY(0);
+  transform-origin: center bottom;
+}
+.fig-mark.is-in .fig-mark__tick {
+  opacity: 1;
+  transform: none;
+}
+.fig-mark__punctum {
+  fill: var(--accent);
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(0);
+  opacity: 0;
+  transition:
+    transform 0.5s var(--ease) 1.5s,
+    opacity 0.3s var(--ease) 1.5s;
+}
+.fig-mark.is-in .fig-mark__punctum {
+  transform: scale(1);
+  opacity: 1;
+}
+.fig-mark__halo {
+  opacity: 0;
+  transition: opacity 0.7s var(--ease) 1.6s;
+}
+.fig-mark.is-in .fig-mark__halo {
+  opacity: 0.8; /* a static warm halo — the machine's light, resting in the drawing (dark plane only) */
+}
+.fig-mark__cap {
+  margin-top: 10px;
+  font-family: var(--font-label);
+  font-size: 0.62rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  opacity: 0;
+  transition: opacity 0.55s var(--ease) 1.3s;
+}
+.fig-mark.is-in .fig-mark__cap {
+  opacity: 1;
+}
+
+/* ── Section 1 — THE STUDIO (the spec) ────────────────────────────────────────────────────── */
+.spec {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1fr);
+  gap: clamp(28px, 5vw, 80px) clamp(32px, 6vw, 88px);
+  align-items: start;
+}
+.spec__lede {
+  font-family: var(--font-break);
+  font-style: italic;
+  font-size: clamp(1.35rem, 2.7vw, 2.15rem);
+  line-height: 1.32;
+  color: var(--ink);
+  margin: 0;
+}
+.spec__lede em {
+  font-style: italic;
+}
+.spec__grid {
+  margin: 0;
+  display: grid;
+  gap: 0;
+}
+.spec__row {
+  display: grid;
+  grid-template-columns: 7.5rem 1fr;
+  gap: clamp(12px, 2vw, 26px);
+  padding: clamp(15px, 2.2vh, 22px) 0;
+  border-top: 1px solid var(--rule);
+  transition: border-color 0.5s var(--ease);
+}
+.spec__row:last-child {
+  border-bottom: 1px solid var(--rule);
+}
+.spec__row dt {
+  font-family: var(--font-label);
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink);
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding-top: 0.2em;
+  transition: color 0.4s var(--ease);
+}
+/* the spec answers the hand — the row's label inks signal and its hairline strengthens under
+   the pointer (the movements' step-hover, in the spec's own quieter register). */
+@media (hover: hover) and (pointer: fine) {
+  .spec__row:hover {
+    border-top-color: var(--rule-strong);
+  }
+  .spec__row:hover dt {
+    color: var(--accent);
+  }
+}
+.coord {
+  color: var(--accent);
+  font-size: 0.62rem;
+}
+.spec__row dd {
+  margin: 0;
+  font-size: clamp(0.98rem, 1.25vw, 1.12rem);
+  line-height: 1.5;
+  color: var(--ink-dim);
+}
+.spec__row dd b {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* ── Section 2 — HOW WE WORK (three movements) ────────────────────────────────────────────── */
+.movements {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.movement {
+  position: relative;
+  display: grid;
+  grid-template-columns: 10rem minmax(0, 1fr) 7rem;
+  gap: clamp(16px, 3vw, 48px);
+  align-items: baseline;
+  padding: clamp(26px, 4vh, 44px) 0;
+  border-top: 1px solid var(--rule);
+}
+.movement:last-child {
+  border-bottom: 1px solid var(--rule);
+}
+.movement__no {
+  font-family: var(--font-label);
+  font-size: 0.68rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  transition: color 0.4s var(--ease);
+}
+/* the row answers the hand — the dark build's own step-hover (its process rows inked the
+   number and eased the content aside), carried into the broadsheet: transform/opacity only,
+   the shared ease, fine pointers only. */
+.movement__main {
+  transition: transform 0.5s var(--ease);
+}
+@media (hover: hover) and (pointer: fine) {
+  .movement:hover .movement__no {
+    color: var(--accent);
+  }
+  .movement:hover .movement__main {
+    transform: translateX(8px);
+  }
+}
+.movement__title {
+  font-family: var(--font-break);
+  font-weight: 400;
+  font-style: normal;
+  font-size: clamp(2rem, 4vw, 3.3rem);
+  line-height: 1;
+  color: var(--ink);
+  margin: 0 0 0.5rem;
+}
+.movement__body {
+  margin: 0;
+  max-width: 46ch;
+  font-size: clamp(0.98rem, 1.2vw, 1.12rem);
+  line-height: 1.55;
+  color: var(--ink-dim);
+}
+.movement__dim {
+  justify-self: end;
+  display: grid;
+  gap: 9px;
+  justify-items: end;
+  font-family: var(--font-label);
+  font-size: 0.62rem;
+  letter-spacing: 0.18em;
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+/* the dimension gauge — the movement's station on the three-movement span, drawn in the
+   machinist grammar: a hairline track, station ticks at 0 / i / ii / iii, and the travelled
+   span filled. The fill scribes on reveal (after the row has risen), like every drawn rule. */
+.movement__gauge {
+  position: relative;
+  width: 88px;
+  height: 9px;
+}
+.movement__gauge::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 4px;
+  height: 1px;
+  background: var(--rule);
+}
+.movement__gauge::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--rule-strong) 0 1px,
+    transparent 1px 29px
+  );
+}
+.movement__gauge-fill {
+  position: absolute;
+  left: 0;
+  top: 3px;
+  height: 3px;
+  width: 100%;
+  background: var(--ink-dim);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform var(--dur-rule) var(--ease) 0.5s;
+}
+.movement:nth-child(1) .movement__gauge-fill {
+  --f: 0.3333;
+}
+.movement:nth-child(2) .movement__gauge-fill {
+  --f: 0.6667;
+}
+.movement:nth-child(3) .movement__gauge-fill {
+  --f: 1;
+}
+.movement.is-in .movement__gauge-fill {
+  transform: scaleX(var(--f, 1));
+}
+
+/* ── Section 3 — THE CABINET (the works — two live castings) ──────────────────────────────
+   The invented specimen bench is retired. Two REAL works sit on the dark plane as CASTINGS:
+   faceted shards in the crystallisation band's own grammar — jittered-grid triangles, the
+   warm-biased dark→paper ramp baked into their fills (warm rising bottom-right, toward the
+   annealing light), 1px same-colour self-strokes (the canvas field's own antialias seal).
+   Facets assemble once on reveal (per-facet transition-delay off the figure's .is-in —
+   opacity only, one-shot, no rAF); a keeper ember breathes at rest and the ember set
+   ignites under hover / focus-within — signal on the dark plane only, per the materials
+   law. The castings' warm facets keep the old bench's role: the last dark section
+   foreshadows the cream. */
+.work {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: clamp(36px, 6vw, 92px);
+  align-items: center;
+  padding-block: clamp(44px, 7vh, 84px);
+}
+.work + .work {
+  border-top: 1px solid var(--rule);
+}
+.work--flip .work__cast {
+  order: 2; /* the second entry reads text first — the scroll score varies the measure */
+}
+.work__cast {
+  margin: 0;
+}
+.work__shard {
+  display: block;
+  width: 100%;
+  max-width: 440px;
+  height: auto;
+  margin-inline: auto;
+}
+.work--flip .work__shard {
+  max-width: 560px;
+}
+.w-f {
+  stroke-width: 1; /* same-colour self-stroke — seals the antialiasing seams between facets */
+}
+/* the facets assemble once as the casting enters — dark facets first, the warm ones last
+   (the object cools into visibility). One-shot, opacity only; per-facet delay baked inline. */
+.work__cast .w-f {
+  opacity: 0;
+  transition: opacity 0.55s var(--ease);
+  transition-delay: var(--fd, 0s);
+}
+.work__cast.is-in .w-f {
+  opacity: 1;
+}
+/* the embers — a few facets at the dark/warm boundary re-melt under the hand (hover or any
+   focus within the entry): signal on the dark plane only. The keeper (--k) stays faintly
+   warm at rest — the casting is not cold yet. */
+.w-e {
+  fill: var(--accent);
+  stroke: var(--accent);
+  stroke-width: 1;
+  opacity: 0;
+  transition: opacity 0.5s var(--ease);
+}
+.w-e--k {
+  opacity: 0.24;
+  animation: emberBreath 3.4s ease-in-out infinite;
+}
+.work:hover .w-e,
+.work:focus-within .w-e {
+  opacity: 0.8;
+  animation: none;
+}
+@keyframes emberBreath {
+  0%,
+  100% {
+    opacity: 0.16;
+  }
+  50% {
+    opacity: 0.32;
+  }
+}
+.work__figcap {
+  margin-top: 14px;
+  text-align: center;
+  font-family: var(--font-label);
+  font-weight: 500;
+  font-size: 0.6rem;
+  letter-spacing: 0.2em; /* the one fig. voice — matched to fig. 00 / fig. 06 */
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.work__meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 18px;
+  margin: 0;
+  font-family: var(--font-label);
+  font-weight: 500;
+  font-size: 0.66rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.work__title {
+  margin: clamp(14px, 2vh, 22px) 0 0;
+}
+/* the name is a door — serif roman (the movement/plate title family, raised to entry scale),
+   with a resting hairline so it reads clickable before the hand arrives */
+.work__title-a {
+  display: inline-block;
+  font-family: var(--font-break);
+  font-weight: 400;
+  font-size: clamp(2.1rem, 3.6vw, 3.15rem);
+  line-height: 1.04;
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: 1px solid var(--rule-strong);
+  padding-bottom: 3px;
+  transition:
+    color 0.4s var(--ease),
+    border-color 0.4s var(--ease);
+}
+.work__title-a:hover,
+.work__title-a:focus-visible {
+  color: var(--accent);
+  border-bottom-color: var(--accent-soft);
+}
+.work__title-a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+.work__body {
+  margin: clamp(16px, 2.4vh, 26px) 0 0;
+  max-width: 46ch;
+  font-size: clamp(1rem, 1.3vw, 1.16rem);
+  line-height: 1.6;
+  color: var(--ink-dim);
+}
+.work__spec {
+  margin: clamp(16px, 2.4vh, 24px) 0 0;
+  font-family: var(--font-label);
+  font-weight: 500;
+  font-size: 0.66rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+/* the open instrument — the entry's one boxed control: mono verb + address + accent arrow.
+   Hairline-boxed like the study's chips; ≥44px tall; the URL is printed, not hidden. */
+.work__open {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: clamp(22px, 3.2vh, 34px);
+  min-height: 44px;
+  padding: 10px 18px 10px 20px;
+  border: 1px solid var(--rule-strong);
+  border-radius: 2px;
+  text-decoration: none;
+  font-family: var(--font-label);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  transition: border-color 0.4s var(--ease);
+}
+.work__open-verb {
+  color: var(--ink);
+}
+.work__open-url {
+  color: var(--ink-faint);
+  transition: color 0.4s var(--ease);
+}
+.work__open-arr {
+  color: var(--accent);
+  transition: transform 0.4s var(--ease);
+}
+.work__open:hover,
+.work__open:focus-visible {
+  border-color: var(--accent-soft);
+}
+.work__open:hover .work__open-url,
+.work__open:focus-visible .work__open-url {
+  color: var(--ink-dim);
+}
+.work__open:hover .work__open-arr,
+.work__open:focus-visible .work__open-arr {
+  transform: translateX(5px);
+}
+.work__open:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+.works__stand {
+  max-width: 40ch;
+  margin: clamp(10px, 2vh, 18px) 0 0;
+  font-family: var(--font-break);
+  font-style: italic;
+  font-size: clamp(1.15rem, 1.9vw, 1.6rem);
+  line-height: 1.3;
+  color: var(--ink-dim);
+}
+
+/* ── Section 4 — VOICE ────────────────────────────────────────────────────────────────────── */
+/* (no ch-based max-width on the head — with .ln__in nowrap it would clip the display line, per
+   the heading trap in DESIGN.md.) */
+.pull {
+  max-width: 20ch;
+  margin: 0 0 clamp(40px, 7vh, 84px);
+  font-family: var(--font-break);
+  font-weight: 400;
+  font-size: clamp(2rem, 4.6vw, 3.8rem);
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+/* the pull rises word by word (body.js splits it; masks per word, the heading line-rise at
+   word grain, 45ms letterpress stagger). The split quote hands its block reveal to the words —
+   the masks keep everything hidden until .is-in, so the container itself stays composed. */
+.pull--split[data-reveal] {
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
+.pull .w {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+  padding: 0.09em 0.05em;
+  margin: -0.09em -0.05em;
+}
+.pull .w__in {
+  display: inline-block;
+  transform: translateY(118%);
+  transition: transform 0.8s var(--ease);
+}
+.pull.is-in .w__in {
+  transform: none;
+}
+
+.dd {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(28px, 5vw, 72px);
+}
+.dd__h {
+  font-family: var(--font-label);
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 1.1rem;
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid var(--rule);
+}
+.dd__col--dont .dd__h {
+  color: var(--ink-faint);
+}
+.dd ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.dd li {
+  font-size: clamp(0.95rem, 1.2vw, 1.08rem);
+  line-height: 1.45;
+  color: var(--ink-dim);
+  padding: 0.6rem 0;
+  border-top: 1px solid rgba(244, 241, 236, 0.06);
+}
+.dd li:first-child {
+  border-top: none;
+}
+/* the "off-measure voice" of the scroll score: the section's body steps off the shared left
+   axis (its head stays on it) — the one deliberate sway between the full-bleed bench above
+   and the centred close below. Wide screens only; mobile keeps the single axis. */
+@media (min-width: 861px) {
+  .sheet--voice .pull,
+  .sheet--voice .dd {
+    margin-left: clamp(24px, 7vw, 104px);
+  }
+}
+
+/* ── Section 5 — THE CLOSE (begin) ────────────────────────────────────────────────────────── */
+.begin {
+  position: relative;
+  padding: clamp(40px, 7vh, 90px) var(--page-x) clamp(90px, 16vh, 170px);
+  text-align: center;
+  overflow: hidden;
+  scroll-margin-top: 5vh;
+}
+.begin .rule--ticked {
+  max-width: var(--measure);
+  margin-inline: auto;
+  margin-bottom: clamp(56px, 10vh, 120px);
+}
+.begin__glow {
+  position: absolute;
+  bottom: -45%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 72%;
+  height: 85%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 92, 38, 0.32), transparent 64%);
+  filter: blur(70px);
+  animation: bGlow 9s ease-in-out infinite;
+  pointer-events: none;
+}
+.begin__inner {
+  position: relative;
+  z-index: 2;
+  max-width: var(--measure);
+  margin-inline: auto;
+}
+.begin__h {
+  margin-inline: auto;
+}
+/* THE FINAL PERIOD, SET — the document's last mark. The heading lines rise WITHOUT their full
+   stop; a beat after they land the period arrives warm (flat --accent — no glow/blur on paper,
+   per the materials law) and cools to ink: the machine's last ember, finished deliberately.
+   Base state is the composed one (ink, opacity 1) so no-JS and reduced motion are static;
+   the one-shot keyframe runs only when the heading's .is-in lands. */
+.fin-dot {
+  opacity: 1;
+}
+[data-anneal].is-in .fin-dot {
+  animation: finSet 2.2s var(--ease) 1.2s both;
+}
+@keyframes finSet {
+  0% {
+    opacity: 0;
+    color: var(--accent);
+  }
+  20% {
+    opacity: 1;
+    color: var(--accent);
+  }
+  45% {
+    color: var(--accent);
+  }
+  100% {
+    opacity: 1;
+    color: var(--ink);
+  }
+}
+.begin__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: clamp(34px, 5vh, 50px);
+  padding: 16px 24px 16px 28px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--ground-dark-raised);
+  font-family: var(--font-label);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+.begin__cta .lbl {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.begin__cta-mark {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--ground-dark-raised);
+  color: var(--ink);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+}
+/* the address, in hand — the CTA opens a mail client; this line is for everyone whose
+   machine has none. One quiet control: the address in mono, a hairline underneath, and a
+   dim "copy" verb that answers "copied" for a breath. Click-to-copy, keyboard-operable;
+   the confirmation is a letterpress tick (the folio's swap, at ledger scale). */
+.begin__copy {
+  margin: clamp(18px, 2.6vh, 26px) auto 0;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 6px 2px;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--rule);
+  cursor: pointer;
+  font-family: var(--font-label);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  transition: border-color 0.4s var(--ease);
+}
+.begin__copy:hover,
+.begin__copy:focus-visible {
+  border-bottom-color: var(--rule-strong);
+}
+.begin__copy-addr {
+  font-size: 0.72rem;
+  color: var(--ink-dim);
+  transition: color 0.4s var(--ease);
+}
+.begin__copy:hover .begin__copy-addr,
+.begin__copy:focus-visible .begin__copy-addr {
+  color: var(--ink);
+}
+.begin__copy-act {
+  display: inline-block;
+  overflow: hidden;
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  color: var(--ink-faint);
+  transition: color 0.4s var(--ease);
+}
+.begin__copy:hover .begin__copy-act {
+  color: var(--accent);
+}
+.begin__copy.is-copied .begin__copy-act {
+  color: var(--accent);
+}
+.copy-tick {
+  display: inline-block;
+}
+.is-copied .copy-tick {
+  animation: folioSwap 0.38s var(--ease) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .is-copied .copy-tick {
+    animation: none;
+  }
+}
+
+.begin__note {
+  margin: clamp(24px, 3.5vh, 32px) 0 0;
+  font-family: var(--font-break);
+  font-style: italic;
+  font-size: 1rem;
+  color: var(--ink-faint);
+}
+
+/* ── Footer — THE BENCH, AT NIGHT (the end panel) ─────────────────────────────────────────────
+   The document closes and the reader is returned to the dark plane it was drawn on: a full-bleed
+   panel in the machine's own tone carries the preferences ledger + the colophon title block —
+   set directly into the cooled dark, per the materials law (no .on-cream here; the base dark
+   semantic tokens re-ink everything, and the drawn rule scribes itself in bone). Low at the
+   panel's foot, the BANKED FURNACE: the annealing light's last, faint warmth — a static glow on
+   the dark plane only, never on paper. Bonus: rubber-band overscroll past the page end shows the
+   same dark, so the close is seamless. */
+.foot {
+  position: relative;
+  padding: clamp(56px, 9vh, 96px) 0 48px;
+  background:
+    radial-gradient(
+      90% 60% at 50% 116%,
+      rgb(255 110 46 / 0.1) 0%,
+      rgb(255 90 40 / 0.04) 42%,
+      transparent 66%
+    ),
+    var(--ground-dark);
+  /* THE FOOT SEAL. The page's vh/clamp paddings sum to a fractional document height, so
+     scrollHeight rounds ~1px past the footer's painted box — and that row would show the fixed
+     #cream-layer (z 0, opacity 1 at the page foot), a light sliver at the true bottom. This
+     ink-only shadow paints solid dark well below the box (no layout, no scrollable overflow —
+     box-shadow is ink overflow) in the footer's own paint order, above the cream layer: the
+     bench covers to the document's end at any viewport height, and small overscroll reveals
+     stay black even where fixed layers pin during a bounce. */
+  box-shadow: 0 120px 0 0 var(--ground-dark);
+}
+.foot__in {
+  max-width: var(--measure);
+  margin-inline: auto;
+  padding-inline: var(--page-x);
+}
+/* the bench opens with its own drawn datum, like every sheet above it */
+.foot .rule--ticked {
+  margin-bottom: clamp(28px, 4.5vh, 48px);
+}
+/* the preferences ledger — v1's prefs-sheet studio section, set as a coordinate ledger */
+.foot__prefs-h {
+  margin: 0 0 clamp(14px, 2vh, 22px);
+}
+.foot__ledger {
+  margin: 0 0 clamp(30px, 4.5vh, 48px);
+  display: grid;
+  gap: 0;
+}
+.foot__ledger-row {
+  display: grid;
+  grid-template-columns: 7.5rem 1fr;
+  gap: clamp(12px, 2vw, 26px);
+  padding: 13px 0;
+  border-top: 1px solid var(--rule);
+  transition: border-color 0.5s var(--ease);
+}
+.foot__ledger-row:last-child {
+  border-bottom: 1px solid var(--rule);
+}
+.foot__ledger-row dt {
+  font-family: var(--font-label);
+  font-size: 0.62rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  padding-top: 0.3em;
+  transition: color 0.4s var(--ease);
+}
+/* the ledger answers the hand too — but it is night at the bench: the label only lifts to
+   dim bone, no signal (the spec's daytime hover, banked). */
+@media (hover: hover) and (pointer: fine) {
+  .foot__ledger-row:hover {
+    border-top-color: var(--rule-strong);
+  }
+  .foot__ledger-row:hover dt {
+    color: var(--ink-dim);
+  }
+}
+.foot__ledger-row dd {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--ink-dim);
+}
+.foot__ledger-row dd a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  text-decoration-color: color-mix(in srgb, currentColor 35%, transparent);
+  transition: text-decoration-color 0.4s var(--ease);
+}
+.foot__ledger-row dd a:hover {
+  text-decoration-color: currentColor;
+}
+/* the contact row's copy verb — the night register of the begin control: mono, faint,
+   answers "copied" without raising its voice */
+.foot__copybtn {
+  margin-left: 14px;
+  padding: 4px 2px;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  overflow: hidden;
+  font-family: var(--font-label);
+  font-size: 0.56rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  transition: color 0.4s var(--ease);
+}
+.foot__copybtn:hover,
+.foot__copybtn:focus-visible {
+  color: var(--ink-dim);
+}
+.foot__copybtn.is-copied {
+  color: var(--ink-dim);
+}
+.foot__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+  /* the sheet's base line — the colophon row sits on its own closing hairline, at the
+     ledger's row rhythm, instead of floating under the open ledger */
+  border-top: 1px solid var(--rule);
+  padding-top: 20px;
+}
+.foot__brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+.foot__mark {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 34% 30%,
+    #ffffff 0%,
+    #e7ddcf 18%,
+    #9a9489 46%,
+    #3a3733 72%,
+    #0a0a0a 100%
+  );
+}
+.foot__name {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 0.85rem;
+  color: var(--ink);
+}
+.foot__name em {
+  font-family: var(--font-break);
+  font-style: italic;
+  font-weight: 400;
+  color: var(--accent);
+}
+.foot__meta,
+.foot__copy {
+  font-family: var(--font-label);
+  font-size: 0.56rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.foot__links {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.foot__links a {
+  font-family: var(--font-label);
+  font-size: 0.56rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  text-decoration: none;
+  transition: color 0.4s var(--ease);
+}
+.foot__links a:hover {
+  color: var(--ink);
+}
+
+/* ── The running folio — the broadsheet's sheet-corner ────────────────────────────────────────
+   A fixed mono line low in the left gutter naming the sheet under the reader. Appears exactly
+   as the chrome sets (opacity = --set, the blob's own dissolve signal), re-inks per ground
+   (body.js toggles .folio--ink on cream; through the band it follows --fracture), and ticks
+   between labels through a letterpress mask (folioSwap — the label leaves upward, the next
+   sets in from below, the heading line-rise at folio scale). Decorative → aria-hidden,
+   pointer-inert; desktop only. */
+.folio {
+  position: fixed;
+  left: var(--page-x);
+  bottom: 15px;
+  z-index: 5;
+  pointer-events: none;
+  overflow: hidden;
+  font-family: var(--font-label);
+  font-weight: 500;
+  font-size: 0.6rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(244, 241, 236, 0.42);
+  opacity: var(--set, 0);
+  transition: color 0.45s var(--ease);
+}
+.folio--ink {
+  color: rgba(10, 10, 10, 0.55);
+}
+.folio__line {
+  display: inline-block;
+}
+.folio__line.folio-swap {
+  animation: folioSwap 0.38s var(--ease) both;
+}
+@keyframes folioSwap {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  45% {
+    transform: translateY(-120%);
+    opacity: 0;
+  }
+  55% {
+    transform: translateY(130%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+@media (max-width: 899px) {
+  .folio {
+    display: none;
+  }
+}
+
+/* ── Responsive ───────────────────────────────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  /* On narrow screens the big display lines may be wider than the viewport. Let them wrap and
+     neutralise the line-rise mask so nothing clips or forces horizontal scroll; the heading
+     simply presents in place (the block reveals still carry the motion). */
+  [data-anneal] .ln {
+    overflow: visible;
+  }
+  [data-anneal] .ln__in {
+    white-space: normal;
+    transform: none;
+  }
+  /* the preferences ledger stacks its label over its value */
+  .foot__ledger-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+  /* the spec ledger does the same — the x0n label sits over its body, full measure each */
+  .spec__row {
+    grid-template-columns: 1fr;
+    gap: 7px;
+  }
+  .spec__row dt {
+    padding-top: 0;
+  }
+  /* the open instrument becomes a full-measure ledger row — the verb never wraps mid-word
+     inside its own box, and the tap target spans the column */
+  .work__open {
+    width: 100%;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .work__open-verb {
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 899px) {
+  /* fig. 00 is a broadsheet luxury — the narrow single-column keeps its restraint */
+  .fig-mark {
+    display: none;
+  }
+}
+
+@media (max-width: 860px) {
+  .spec {
+    grid-template-columns: 1fr;
+    gap: clamp(24px, 4vh, 40px);
+  }
+  .movement {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  .movement__dim {
+    display: none;
+  }
+  /* the works stack — casting above its entry, both on the column's left axis */
+  .work {
+    grid-template-columns: 1fr;
+    gap: clamp(26px, 4vh, 40px);
+  }
+  .work--flip .work__cast {
+    order: 0;
+  }
+  .work__shard,
+  .work--flip .work__shard {
+    max-width: min(430px, 100%);
+    margin-inline: 0;
+  }
+  .work__figcap {
+    text-align: left;
+  }
+  .dd {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  .masthead__corners {
+    flex-wrap: wrap;
+    gap: 28px;
+  }
+}
+
+/* ── Reduced motion: present everything fully formed, no transforms, no ambient loops ──────── */
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal],
+  [data-anneal] .ln__in {
+    transition: none !important;
+  }
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  [data-anneal] .ln__in {
+    transform: none !important;
+  }
+  .datum::before,
+  .rule--ticked::before {
+    transform: scaleX(1);
+    transition: none;
+  }
+  .datum::after,
+  .rule--ticked::after {
+    opacity: 1;
+    transition: none;
+  }
+  .live__dot {
+    animation: none;
+  }
+  /* the castings present assembled — no facet stagger, no ember breath; the resting ember
+     is still faintly warm (a state, not a motion) and hover/focus still answers, instantly */
+  .work__cast .w-f {
+    transition: none !important;
+    opacity: 1 !important;
+  }
+  .w-e {
+    transition: none;
+  }
+  .w-e--k {
+    animation: none;
+    opacity: 0.24;
+  }
+  /* the dimension gauges present at their stations (body.js pins .is-in on) */
+  .movement__gauge-fill {
+    transition: none !important;
+  }
+  /* the movement step-hover stays still */
+  .movement__main {
+    transition: none;
+  }
+  /* the lede's "cools" is already cool */
+  .sheet--open [data-anneal].is-in ~ .lede em {
+    animation: none;
+  }
+  /* the folio still names the sheet, but the label swaps without the tick */
+  .folio__line.folio-swap {
+    animation: none;
+  }
+  /* fig. 00 presents fully drawn (body.js pins .is-in on; killing transitions lands every
+     element on its final state — ring scribed, molten stroke cooled away, punctum lit). */
+  .fig-mark * {
+    transition: none !important;
+  }
+  /* the final period is simply ink, already set */
+  .fin-dot {
+    animation: none !important;
+  }
+}

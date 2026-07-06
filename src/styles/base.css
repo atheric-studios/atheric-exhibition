@@ -1,0 +1,230 @@
+/* base.css — the page foundation: the permanent-dark ground, the annealing light, and the
+ * blob departure / light handoff. Adds no section styling of its own (the hero owns its look;
+ * the broadsheet owns body.css) — only the world the content sits in. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  /* Anchor nav (studio / process / cabinet / begin) scrolls smoothly now that the scroll-linked
+     seam is gone. Reduced-motion turns this off below. */
+  scroll-behavior: smooth;
+  /* The world is dark-first: let the UA draw dark chrome (scrollbars, form controls) so nothing
+     system-drawn glares white against the #050505 plane. */
+  color-scheme: dark;
+  /* The root canvas is the dark plane, explicitly: whatever an engine exposes past the document
+     (rubber-band, overscroll glow regions, fractional-height rounding) is the same black the
+     bench sits on — never the UA default. body's background propagates when html has none, but
+     the intent is law here, not inheritance trivia. */
+  background: var(--ground-dark);
+  /* And the page does not rubber-band at all where the engine allows refusing: past the end
+     there is nothing to reveal. (Engines without support expose the dark canvas above; the
+     craft study's readouts keep their own overscroll-behavior: contain.) */
+  overscroll-behavior-y: none;
+}
+
+/* Selection carries the brand: near-black ink on the one hot signal — legible on both grounds. */
+::selection {
+  background: var(--signal);
+  color: #0a0a0a;
+}
+
+body {
+  margin: 0;
+  /* The visible ground is painted by the fixed #ground-layer; this is only the ultimate
+     fallback behind it (permanent-dark model — never cream). */
+  background: var(--ground-dark);
+  color: var(--ink-on-dark);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ── Page backdrop: five fixed, pointer-inert layers behind every region ───────────────────
+     #ground-layer   (-5)  the permanent dark plane (#050505), top to bottom
+     #blob-layer     (-4)  the one liquid object (HERO only) — rendered behind the set-veil
+     #dissolve-layer (-3)  the black "set" veil that paints OVER the blob as it cools (--set)
+     #horizon-layer  (-2)  the annealing light — warm amber pool low at the foot of the world
+     #vignette-layer (-1)  edge-darkening frame, above everything, below all content
+   The veil sits in FRONT of the blob and BEHIND the annealing light, so as the chrome cools the
+   blob dissolves into black while the warm foot-glow still reads on top of it. */
+#ground-layer,
+#blob-layer,
+#dissolve-layer,
+#horizon-layer,
+#vignette-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+#ground-layer {
+  z-index: -5;
+  background: var(--ground-dark);
+}
+
+/* THE SET-VEIL. A flat black sheet in front of the blob. While the hero headline is on screen
+   it is fully transparent (--set = 0) and the blob reads at full strength; as the reader scrolls
+   past, --set ramps to 1 and the veil paints the blob out, gradually and completely, by ~a
+   half-viewport later. This is the "the chrome has set" dissolve — black, in front of the blob,
+   scroll-coupled so it never pops. (--set is set by main.js; degrades to a hard cut under
+   reduced motion.) */
+#dissolve-layer {
+  z-index: -3;
+  background: var(--ground-dark);
+  opacity: var(--set, 0);
+}
+
+/* THE ANNEALING LIGHT — a warm amber pool low at the foot of the world: the residual heat of the
+   cooled chrome. It fades in WITH the dissolve (opacity = --set), in front of the veil, so its
+   warm glow reads on top of the black once the blob has set. Hue from the brand signal family,
+   never on paper. The inner .anneal-pool brightens + swells with scroll depth (--descent). */
+#horizon-layer {
+  z-index: -2;
+  opacity: var(--set, 0);
+  background:
+    radial-gradient(
+      130% 62% at 50% 116%,
+      rgb(255 92 38 / 0.14) 0%,
+      rgb(255 138 58 / 0.07) 30%,
+      transparent 60%
+    ),
+    linear-gradient(0deg, rgb(255 120 50 / 0.05) 0%, transparent 18%);
+}
+.anneal-pool {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    92% 50% at 50% 124%,
+    rgb(255 120 52 / 0.22) 0%,
+    rgb(255 90 40 / 0.1) 34%,
+    transparent 60%
+  );
+  transform-origin: 50% 100%;
+  transform: scaleY(calc(0.78 + var(--descent, 0) * 0.42));
+  opacity: calc(0.34 + var(--descent, 0) * 0.66);
+  transition: opacity 0.25s linear;
+}
+#blob-layer {
+  z-index: -4; /* the one liquid object, behind the set-veil that dissolves it */
+}
+
+/* Hero / world vignette: edge-darkening frame above the light + blob, transparent in the
+   centre so the chrome still reads behind the hero text. Static. */
+#vignette-layer {
+  z-index: -1;
+  background: radial-gradient(
+    125% 90% at 50% 42%,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0) 47%,
+    rgba(0, 0, 0, 0.55) 100%
+  );
+}
+
+#dark {
+  position: relative;
+  /* No background — #ground-layer paints the (permanent) dark, so the blob shows through. */
+  color: var(--ink-on-dark);
+  min-height: 100vh; /* dark overture; real height comes from the hero markup */
+}
+
+/* Visible focus must survive everywhere — this is the floor; components may sharpen it. */
+:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 3px;
+}
+
+/* ── The hero's text-band exposure ────────────────────────────────────────────────────────
+   The drifting blob's bright bloom periodically passes behind the hero type; the fix is light
+   control, never the shader. Two instruments, both invisible as fixes:
+   1. a wide, gently feathered radial scrim over the text band — a breath of exposure; the
+      blob reads at full strength around it;
+   2. a glyph-snug dark halo (text-shadow) on the three text blocks — the luminance clamp
+      exactly where type sits. Dark-on-dark it is nothing; over the bloom it holds the
+      ground behind each letterform.
+   The hero markup is the dark build's, carried verbatim with inline styles, so these live
+   here as stylesheet overrides — selectors only, markup untouched. */
+#dark section::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 3; /* above the atmosphere layers, below the z-4 type */
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 52% 34% at 50% 52%,
+    rgba(5, 5, 5, 0.34) 0%,
+    rgba(5, 5, 5, 0.22) 52%,
+    rgba(5, 5, 5, 0.08) 76%,
+    rgba(5, 5, 5, 0) 92%
+  );
+  transition: opacity 0.6s var(--ease);
+}
+body.craft-active #dark section::after {
+  opacity: 0; /* the study's stage belongs to the blob alone */
+}
+#dark section > span,
+#dark section > h1,
+#dark section > p {
+  text-shadow:
+    0 0 1px rgba(5, 5, 5, 0.9),
+    0 0 2px rgba(5, 5, 5, 0.9),
+    0 1px 6px rgba(5, 5, 5, 0.8),
+    0 2px 18px rgba(5, 5, 5, 0.6);
+}
+
+/* ── The hero nav, answering narrow viewports ─────────────────────────────────────────────
+   The inline grid (logo · links · CTA) cannot reflow, so below 660px the nav becomes the
+   broadsheet's own two-row title block: logo + CTA on the first row, the three mono links
+   centred on their own hairline-ruled row beneath. Nothing collapses behind a toggle —
+   every destination stays one tap away. (!important only where an inline style must yield.) */
+@media (max-width: 660px) {
+  #dark nav {
+    display: flex !important;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px clamp(20px, 5vw, 72px) 0 !important;
+  }
+  #dark nav > div:nth-child(1) {
+    order: 1;
+  }
+  #dark nav > div:nth-child(3) {
+    order: 2;
+  }
+  #dark nav > div:nth-child(2) {
+    order: 3;
+    flex: 1 1 100%;
+    justify-content: center;
+    gap: clamp(24px, 9vw, 40px) !important;
+    margin-top: 13px;
+    padding: 12px 0 14px;
+    border-top: 1px solid rgba(244, 241, 236, 0.08);
+  }
+  #dark nav .b-cta {
+    padding: 9px 14px !important;
+    font-size: 9px !important;
+    letter-spacing: 0.15em !important;
+  }
+}
+
+/* ── Reduced motion ───────────────────────────────────────────────────────────────────────
+   No smooth scroll, no ambient loops, and the blob departure + annealing handoff cut instantly
+   (no crossfade, no scroll-scored swell). The page presents fully formed. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  [data-ambient] {
+    animation: none !important;
+  }
+  #blob-layer,
+  #horizon-layer {
+    transition: none;
+  }
+  .anneal-pool {
+    transition: none;
+    transform: none;
+    opacity: 0.5;
+  }
+}

@@ -1,0 +1,32 @@
+/* dark.css — the dark build's hero stylesheet, carried over VERBATIM from
+ * builds/dark/handoff/renders/atheric-v2-B-aurora-chrome.html (its <style> block).
+ *
+ * One intentional omission: the original's page-level `html, body { background:#050505 }`
+ * rule is NOT carried here. In the merge the dark ground is painted per-region by base.css
+ * (#dark), so the cream resting state below the seam keeps its own ground. Everything else
+ * is unchanged — keyframes and hover/interaction classes exactly as the dark build ships
+ * them. (spec/INTEGRATION: carry over exact styles; do not restyle.) */
+
+@keyframes bFloat { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-16px); } }
+@keyframes bSheen { to { transform:rotate(360deg); } }
+@keyframes bGlow { 0%,100% { opacity:0.75; transform:scale(1); } 50% { opacity:1; transform:scale(1.08); } }
+@keyframes bPulse { 0%,100% { opacity:1; box-shadow:0 0 12px #ff4d1f; } 50% { opacity:0.4; box-shadow:0 0 4px #ff4d1f; } }
+@keyframes bMarquee { to { transform:translateX(-50%); } }
+@keyframes bChar { to { transform:translateY(0); opacity:1; } }
+.b-char { display:inline-block; transform:translateY(120%); opacity:0; animation:bChar 1s cubic-bezier(.2,.8,.2,1) forwards; }
+[data-breveal] { opacity:0; transform:translateY(40px); transition:opacity 1s cubic-bezier(.2,.8,.2,1), transform 1s cubic-bezier(.2,.8,.2,1); }
+[data-breveal].in { opacity:1; transform:translateY(0); }
+.b-navlink { position:relative; color:rgba(244,241,236,0.5); text-decoration:none; transition:color .4s; }
+.b-navlink::after { content:""; position:absolute; left:0; bottom:-6px; height:1px; width:0; background:#ff4d1f; transition:width .4s cubic-bezier(.2,.8,.2,1); }
+.b-navlink:hover { color:#f4f1ec; } .b-navlink:hover::after { width:100%; }
+.b-tile { position:relative; overflow:hidden; transition:border-color .5s, transform .5s cubic-bezier(.2,.8,.2,1); }
+.b-tile:hover { border-color:rgba(255,77,31,0.5) !important; transform:translateY(-6px); }
+.b-tile:hover .b-tile-art { transform:scale(1.08) rotate(-2deg); }
+.b-tile-art { transition:transform .7s cubic-bezier(.2,.8,.2,1); }
+.b-cta { position:relative; overflow:hidden; transition:transform .35s cubic-bezier(.2,.8,.2,1); }
+.b-cta > span.lbl { position:relative; z-index:2; transition:color .4s; }
+.b-cta::after { content:""; position:absolute; inset:0; background:#ff4d1f; transform:translateY(101%); transition:transform .45s cubic-bezier(.2,.8,.2,1); z-index:1; }
+.b-cta:hover::after { transform:translateY(0); } .b-cta:hover > span.lbl { color:#f4f1ec; }
+.b-step { transition:padding .4s cubic-bezier(.2,.8,.2,1), background .4s; }
+.b-step:hover { padding-left:22px !important; background:rgba(255,255,255,0.03); }
+.b-step:hover .b-step-no { color:#ff4d1f; }

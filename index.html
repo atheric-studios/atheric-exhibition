@@ -1,896 +1,1288 @@
 <!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<meta name="theme-color" content="#efece4" />
-<title>Atheric — a small studio for digital work</title>
-<meta name="description" content="Atheric is a small Finnish studio for premium digital work — websites and interfaces, two to three commissions at a time." />
-<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-<!-- social cards — og:title stays the studio-level line; per-view
-     document.title is handled by the router (page-transitions.js). -->
-<meta property="og:type" content="website" />
-<meta property="og:site_name" content="Atheric" />
-<meta property="og:title" content="Atheric — a small studio for digital work" />
-<meta property="og:description" content="A small Finnish studio for premium digital work — websites and interfaces, two to three commissions at a time." />
-<meta property="og:url" content="https://www.atheric.eu/" />
-<meta name="twitter:card" content="summary" />
-<!-- Fonts are self-hosted (see public/fonts/ + @font-face block in
-     styles.css). No external font requests, no IP leak to Google. -->
-</head>
-<body>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Atheric — we engineer weightless software</title>
+    <meta name="description" content="Atheric is a small software studio in Helsinki. We engineer interfaces and systems — code, type, motion and copy, built in the right order. Two to three commissions a year." />
+    <meta name="theme-color" content="#050505" />
 
-<!-- shared SVG sprite — the studio mark, used in the nav.
-     gradient lives at top level so <use> instances resolve correctly. -->
-<svg width="0" height="0" style="position:absolute;pointer-events:none" aria-hidden="true">
-  <defs>
-    <radialGradient id="atheric-grad" cx="38%" cy="32%" r="68%">
-      <stop offset="0%"   stop-color="#ffffff"/>
-      <stop offset="32%"  stop-color="#d3cec3"/>
-      <stop offset="72%"  stop-color="#3a3a3a"/>
-      <stop offset="100%" stop-color="#0a0a0a"/>
-    </radialGradient>
-    <symbol id="atheric-mark-symbol" viewBox="0 0 32 32">
-      <circle cx="16" cy="16" r="14" fill="url(#atheric-grad)"/>
-      <circle cx="11" cy="10" r="2.4" fill="#ffffff" opacity="0.85"/>
-      <circle cx="16" cy="16" r="14" fill="none" stroke="rgba(10,10,10,0.18)" stroke-width="0.5"/>
-    </symbol>
-  </defs>
-</svg>
+    <!-- Canonical + share card. www serves the same content as the apex, so the canonical
+         names the apex; og.jpg is the live hero at 1200×630 (og:image must be absolute). -->
+    <link rel="canonical" href="https://atheric.eu/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Atheric" />
+    <meta property="og:title" content="Atheric — we engineer weightless software" />
+    <meta property="og:description" content="Atheric is a small software studio in Helsinki. We engineer interfaces and systems — code, type, motion and copy, built in the right order. Two to three commissions a year." />
+    <meta property="og:url" content="https://atheric.eu/" />
+    <meta property="og:image" content="https://atheric.eu/og.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="we engineer weightless software — the Atheric hero, the iridescent chrome blob behind the headline" />
+    <meta name="twitter:card" content="summary_large_image" />
 
-<!-- ============================================================
-     Loader — a quiet waiting room. the studio name, a thin
-     progress thread, one atmospheric line. nothing else.
-     ============================================================ -->
-<div id="loader" role="status" aria-label="loading">
-  <div class="loader-glow"></div>
-  <div class="loader-room">
-    <div class="loader-name">Atheric<em>.</em></div>
-    <div class="loader-thread" id="loaderStrip">
-      <div class="loader-thread-fill"></div>
+    <!-- The Atheric mark as an inline favicon (hairline orbit + orange punctum) — keeps the
+         tab on-brand and removes the auto-requested favicon.ico 404. -->
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23050505'/%3E%3Ccircle cx='32' cy='32' r='22' fill='none' stroke='%23f4f1ec' stroke-width='1.6'/%3E%3Cline x1='6' y1='32' x2='22' y2='32' stroke='%23f4f1ec' stroke-width='1.3' opacity='0.55'/%3E%3Cline x1='32' y1='6' x2='32' y2='14' stroke='%23f4f1ec' stroke-width='1.3' opacity='0.55'/%3E%3Ccircle cx='48' cy='16' r='6' fill='%23ff4d1f'/%3E%3C/svg%3E"
+    />
+
+    <!-- Shared brand type (Archivo / Instrument Serif / JetBrains Mono), SELF-HOSTED under
+         /fonts/ — a mirror of the Google css2 payload (same subsets/unicode-ranges,
+         identical rendering), so no request leaves the origin and the privacy notice carries
+         no third-party font disclosure. The five canonical files below are the ONLY font
+         binaries the page ever fetches (subset + variable-font dedupe, fonts.css head
+         comment); they are preloaded so the type arrives with the first paint instead of
+         a stylesheet-parse later. hrefs must stay byte-identical to the fonts.css src urls
+         (same ?v stamp) or the browser fetches twice. -->
+    <link rel="preload" href="/fonts/archivo-latin.woff2?v=1" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/jetbrains-mono-latin.woff2?v=1" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/jetbrains-mono-400-normal-cyrillic.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/instrument-serif-latin.woff2?v=1" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/instrument-serif-italic-latin.woff2?v=1" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="src/styles/fonts.css?v=2" />
+
+    <!-- Brand tokens, then the page foundation (the permanent-dark ground, the annealing
+         light low at the foot of the world, and the blob departure / light handoff). -->
+    <!-- ?v= busts the CDN/browser cache when these assets change (they carry a long max-age;
+         index.html itself is served uncached, so bumping the stamp ships changes immediately). -->
+    <link rel="stylesheet" href="src/styles/tokens.css?v=9" />
+    <link rel="stylesheet" href="src/styles/base.css?v=10" />
+    <!-- The dark hero: keyframes + interaction classes. LOCKED — carried verbatim. -->
+    <link rel="stylesheet" href="src/styles/dark.css?v=8" />
+    <!-- The post-hero body: the cooled-chrome engineering broadsheet (docs/DESIGN.md). -->
+    <link rel="stylesheet" href="src/styles/body.css?v=16" />
+    <!-- The crystallisation: the dark plane fractures into the cream editorial close (docs/DESIGN.md). -->
+    <link rel="stylesheet" href="src/styles/fracture.css?v=13" />
+    <!-- The blob craft-reveal ("see how the chrome is made") — the zoom study over the live
+         blob: trigger, hero recede, shell, explain-dots, technique tab, figure panels. -->
+    <link rel="stylesheet" href="src/styles/craft.css?v=12" />
+
+    <!-- The blob's module chain (main.js → blob.js → chrome-blob.js) is otherwise only
+         discovered after main.js parses; these hints start the fetch with the page.
+         Specifiers must stay byte-identical to the import strings (the ?v module-cache
+         trap: one URL, one module instance). -->
+    <link rel="modulepreload" href="src/scripts/blob.js?v=11" />
+    <link rel="modulepreload" href="src/scripts/chrome-blob.js?v=11" />
+  </head>
+
+  <body>
+    <!-- ============================================================================
+         PAGE BACKDROP — three fixed, pointer-inert layers behind EVERY region (permanent-dark
+         model, docs/DESIGN.md):
+           #ground-layer    the permanent dark computational plane (#050505) at every position.
+           #blob-layer      the ONE shared chrome blob — present from the top, holding position
+                            through the seam and behind cream. Never unmounted mid-scroll.
+           #vignette-layer  edge-darkening frame above the blob, transparent centre so the
+                            chrome still reads behind the text.
+         All sit at negative z-index, so every region's content paints in front of them.
+         ============================================================================ -->
+    <div id="ground-layer" aria-hidden="true"></div>
+    <div id="blob-layer" data-blob-anchor aria-hidden="true"></div>
+    <!-- THE SET-VEIL — a black sheet in front of the blob. Transparent while the hero headline is
+         on screen; as the reader scrolls past, --set (main.js) ramps it to opaque so the blob
+         dissolves into black gradually and completely, in front of itself. (base.css) -->
+    <div id="dissolve-layer" aria-hidden="true"></div>
+    <!-- THE ANNEALING LIGHT — a warm amber pool low at the foot of the world: the residual heat of
+         the cooled chrome. Fades in WITH the dissolve (opacity = --set), in front of the veil, so
+         its warm foot-glow reads on top of the black once the blob has set. Its inner pool
+         brightens/swells with scroll depth (--descent, set by body.js). (base.css) -->
+    <div id="horizon-layer" aria-hidden="true"><div class="anneal-pool"></div></div>
+    <div id="vignette-layer" aria-hidden="true"></div>
+
+    <!-- THE CRYSTALLISATION LAYERS (fracture.css) — in front of the dark backdrop stack,
+         behind all content. #cream-layer floods to solid --paper for the cream close;
+         #fracture-layer is the procedural low-poly facet field (194 triangles, each with a
+         --t threshold + a faintly varied near-black --d tone) that resolves dark→cream as
+         --fracture (body.js) rises across the text-free band — each facet nucleating with
+         its own inertia, its seams parting ember-lit before the crystal seats (body.js §2b).
+         A supplied SVG facet pattern could replace these <polygon>s using the same
+         --t / --d convention. -->
+    <div id="cream-layer" aria-hidden="true"></div>
+    <div id="fracture-layer" aria-hidden="true">
+      <canvas aria-hidden="true"></canvas>
+      <svg id="fracture-geo" viewBox="0 0 1600 1000" hidden aria-hidden="true" focusable="false">
+        <polygon points="0.0,0.0 145.1,0.0 154.6,140.7" data-t="0.686" data-d="5 5 11"/>
+        <polygon points="0.0,0.0 154.6,140.7 0.0,120.8" data-t="0.613" data-d="5 5 11"/>
+        <polygon points="145.1,0.0 264.1,0.0 154.6,140.7" data-t="0.675" data-d="12 10 7"/>
+        <polygon points="264.1,0.0 285.8,127.7 154.6,140.7" data-t="0.599" data-d="9 8 8" data-sh="1"/>
+        <polygon points="264.1,0.0 437.3,0.0 409.3,137.8" data-t="0.675" data-d="8 7 9"/>
+        <polygon points="264.1,0.0 409.3,137.8 285.8,127.7" data-t="0.507" data-d="14 12 5"/>
+        <polygon points="437.3,0.0 601.2,0.0 409.3,137.8" data-t="0.450" data-d="13 11 6"/>
+        <polygon points="601.2,0.0 636.1,129.7 409.3,137.8" data-t="0.527" data-d="5 5 11"/>
+        <polygon points="601.2,0.0 723.2,0.0 724.8,110.2" data-t="0.609" data-d="14 12 5"/>
+        <polygon points="601.2,0.0 724.8,110.2 636.1,129.7" data-t="0.506" data-d="7 7 10"/>
+        <polygon points="723.2,0.0 845.6,0.0 724.8,110.2" data-t="0.624" data-d="11 10 7" data-sh="1"/>
+        <polygon points="845.6,0.0 847.4,139.6 724.8,110.2" data-t="0.674" data-d="14 12 5"/>
+        <polygon points="845.6,0.0 1009.9,0.0 978.5,143.5" data-t="0.554" data-d="6 6 10"/>
+        <polygon points="845.6,0.0 978.5,143.5 847.4,139.6" data-t="0.464" data-d="12 10 7"/>
+        <polygon points="1009.9,0.0 1134.3,0.0 978.5,143.5" data-t="0.458" data-d="10 9 8"/>
+        <polygon points="1134.3,0.0 1155.2,113.2 978.5,143.5" data-t="0.320" data-d="12 10 7"/>
+        <polygon points="1134.3,0.0 1273.7,0.0 1252.0,96.3" data-t="0.375" data-d="13 11 6"/>
+        <polygon points="1134.3,0.0 1252.0,96.3 1155.2,113.2" data-t="0.446" data-d="8 7 9" data-sh="1"/>
+        <polygon points="1273.7,0.0 1393.1,0.0 1252.0,96.3" data-t="0.504" data-d="12 11 6"/>
+        <polygon points="1393.1,0.0 1416.9,96.7 1252.0,96.3" data-t="0.354" data-d="14 12 5"/>
+        <polygon points="1393.1,0.0 1487.5,0.0 1461.6,105.8" data-t="0.558" data-d="13 11 6"/>
+        <polygon points="1393.1,0.0 1461.6,105.8 1416.9,96.7" data-t="0.555" data-d="9 8 9"/>
+        <polygon points="1487.5,0.0 1600.0,0.0 1461.6,105.8" data-t="0.341" data-d="4 4 12"/>
+        <polygon points="1600.0,0.0 1600.0,120.8 1461.6,105.8" data-t="0.318" data-d="10 9 8"/>
+        <polygon points="0.0,120.8 154.6,140.7 0.0,204.2" data-t="0.703" data-d="5 5 11" data-sh="1"/>
+        <polygon points="154.6,140.7 177.7,188.1 0.0,204.2" data-t="0.600" data-d="6 6 11"/>
+        <polygon points="154.6,140.7 285.8,127.7 245.5,198.8" data-t="0.685" data-d="11 9 7"/>
+        <polygon points="154.6,140.7 245.5,198.8 177.7,188.1" data-t="0.695" data-d="9 8 9"/>
+        <polygon points="285.8,127.7 409.3,137.8 245.5,198.8" data-t="0.553" data-d="8 7 9"/>
+        <polygon points="409.3,137.8 485.2,191.0 245.5,198.8" data-t="0.613" data-d="9 8 9"/>
+        <polygon points="409.3,137.8 636.1,129.7 575.1,193.9" data-t="0.650" data-d="13 12 5"/>
+        <polygon points="409.3,137.8 575.1,193.9 485.2,191.0" data-t="0.703" data-d="10 9 8" data-sh="1"/>
+        <polygon points="636.1,129.7 724.8,110.2 575.1,193.9" data-t="0.712" data-d="8 7 9"/>
+        <polygon points="724.8,110.2 743.9,180.1 575.1,193.9" data-t="0.627" data-d="13 11 6"/>
+        <polygon points="724.8,110.2 847.4,139.6 829.5,196.5" data-t="0.631" data-d="12 10 7"/>
+        <polygon points="724.8,110.2 829.5,196.5 743.9,180.1" data-t="0.531" data-d="13 11 6"/>
+        <polygon points="847.4,139.6 978.5,143.5 829.5,196.5" data-t="0.420" data-d="12 10 7"/>
+        <polygon points="978.5,143.5 1039.7,221.9 829.5,196.5" data-t="0.570" data-d="6 6 10"/>
+        <polygon points="978.5,143.5 1155.2,113.2 1159.8,192.6" data-t="0.444" data-d="13 11 6" data-sh="1"/>
+        <polygon points="978.5,143.5 1159.8,192.6 1039.7,221.9" data-t="0.600" data-d="5 5 11"/>
+        <polygon points="1155.2,113.2 1252.0,96.3 1159.8,192.6" data-t="0.633" data-d="5 5 11"/>
+        <polygon points="1252.0,96.3 1308.8,191.8 1159.8,192.6" data-t="0.633" data-d="12 11 6"/>
+        <polygon points="1252.0,96.3 1416.9,96.7 1414.5,214.6" data-t="0.336" data-d="13 11 6"/>
+        <polygon points="1252.0,96.3 1414.5,214.6 1308.8,191.8" data-t="0.405" data-d="9 8 8"/>
+        <polygon points="1416.9,96.7 1461.6,105.8 1414.5,214.6" data-t="0.513" data-d="4 4 12"/>
+        <polygon points="1461.6,105.8 1475.3,218.8 1414.5,214.6" data-t="0.605" data-d="10 9 8" data-sh="1"/>
+        <polygon points="1461.6,105.8 1600.0,120.8 1600.0,204.2" data-t="0.539" data-d="10 9 8"/>
+        <polygon points="1461.6,105.8 1600.0,204.2 1475.3,218.8" data-t="0.560" data-d="5 5 11"/>
+        <polygon points="0.0,204.2 177.7,188.1 126.7,329.9" data-t="0.656" data-d="8 7 9"/>
+        <polygon points="0.0,204.2 126.7,329.9 0.0,305.0" data-t="0.620" data-d="14 12 5"/>
+        <polygon points="177.7,188.1 245.5,198.8 126.7,329.9" data-t="0.609" data-d="6 5 11"/>
+        <polygon points="245.5,198.8 294.0,284.0 126.7,329.9" data-t="0.556" data-d="12 11 6"/>
+        <polygon points="245.5,198.8 485.2,191.0 399.1,322.3" data-t="0.364" data-d="11 10 7" data-sh="1"/>
+        <polygon points="245.5,198.8 399.1,322.3 294.0,284.0" data-t="0.640" data-d="7 6 10"/>
+        <polygon points="485.2,191.0 575.1,193.9 399.1,322.3" data-t="0.582" data-d="14 12 5"/>
+        <polygon points="575.1,193.9 600.3,286.7 399.1,322.3" data-t="0.566" data-d="7 6 10"/>
+        <polygon points="575.1,193.9 743.9,180.1 705.0,285.0" data-t="0.671" data-d="10 9 8"/>
+        <polygon points="575.1,193.9 705.0,285.0 600.3,286.7" data-t="0.629" data-d="11 9 7"/>
+        <polygon points="743.9,180.1 829.5,196.5 705.0,285.0" data-t="0.656" data-d="7 7 10"/>
+        <polygon points="829.5,196.5 815.5,277.3 705.0,285.0" data-t="0.585" data-d="7 6 10" data-sh="1"/>
+        <polygon points="829.5,196.5 1039.7,221.9 996.4,290.6" data-t="0.634" data-d="9 8 9"/>
+        <polygon points="829.5,196.5 996.4,290.6 815.5,277.3" data-t="0.502" data-d="14 12 5"/>
+        <polygon points="1039.7,221.9 1159.8,192.6 996.4,290.6" data-t="0.474" data-d="8 7 9"/>
+        <polygon points="1159.8,192.6 1122.0,288.8 996.4,290.6" data-t="0.461" data-d="11 9 7"/>
+        <polygon points="1159.8,192.6 1308.8,191.8 1308.2,311.5" data-t="0.417" data-d="10 8 8"/>
+        <polygon points="1159.8,192.6 1308.2,311.5 1122.0,288.8" data-t="0.233" data-d="10 9 8"/>
+        <polygon points="1308.8,191.8 1414.5,214.6 1308.2,311.5" data-t="0.406" data-d="7 6 10" data-sh="1"/>
+        <polygon points="1414.5,214.6 1388.7,280.8 1308.2,311.5" data-t="0.303" data-d="5 4 12"/>
+        <polygon points="1414.5,214.6 1475.3,218.8 1514.6,302.1" data-t="0.547" data-d="8 7 10"/>
+        <polygon points="1414.5,214.6 1514.6,302.1 1388.7,280.8" data-t="0.513" data-d="9 8 9"/>
+        <polygon points="1475.3,218.8 1600.0,204.2 1514.6,302.1" data-t="0.268" data-d="9 8 8"/>
+        <polygon points="1600.0,204.2 1600.0,305.0 1514.6,302.1" data-t="0.586" data-d="5 5 11"/>
+        <polygon points="0.0,305.0 126.7,329.9 0.0,437.5" data-t="0.540" data-d="6 6 10"/>
+        <polygon points="126.7,329.9 124.2,448.2 0.0,437.5" data-t="0.640" data-d="6 5 11" data-sh="1"/>
+        <polygon points="126.7,329.9 294.0,284.0 241.7,400.3" data-t="0.558" data-d="9 8 9"/>
+        <polygon points="126.7,329.9 241.7,400.3 124.2,448.2" data-t="0.421" data-d="4 4 12"/>
+        <polygon points="294.0,284.0 399.1,322.3 241.7,400.3" data-t="0.563" data-d="12 10 7"/>
+        <polygon points="399.1,322.3 433.2,431.8 241.7,400.3" data-t="0.497" data-d="6 6 10"/>
+        <polygon points="399.1,322.3 600.3,286.7 590.8,404.6" data-t="0.311" data-d="5 5 11"/>
+        <polygon points="399.1,322.3 590.8,404.6 433.2,431.8" data-t="0.631" data-d="5 5 12"/>
+        <polygon points="600.3,286.7 705.0,285.0 590.8,404.6" data-t="0.533" data-d="7 6 10" data-sh="1"/>
+        <polygon points="705.0,285.0 693.8,405.2 590.8,404.6" data-t="0.349" data-d="5 5 11"/>
+        <polygon points="705.0,285.0 815.5,277.3 838.7,435.4" data-t="0.384" data-d="7 6 10"/>
+        <polygon points="705.0,285.0 838.7,435.4 693.8,405.2" data-t="0.225" data-d="10 9 8"/>
+        <polygon points="815.5,277.3 996.4,290.6 838.7,435.4" data-t="0.317" data-d="5 5 11"/>
+        <polygon points="996.4,290.6 1013.4,438.5 838.7,435.4" data-t="0.213" data-d="5 5 11"/>
+        <polygon points="996.4,290.6 1122.0,288.8 1129.0,468.1" data-t="0.196" data-d="9 8 8"/>
+        <polygon points="996.4,290.6 1129.0,468.1 1013.4,438.5" data-t="0.506" data-d="10 9 8" data-sh="1"/>
+        <polygon points="1122.0,288.8 1308.2,311.5 1129.0,468.1" data-t="0.358" data-d="9 8 9"/>
+        <polygon points="1308.2,311.5 1249.7,417.2 1129.0,468.1" data-t="0.284" data-d="7 6 10"/>
+        <polygon points="1308.2,311.5 1388.7,280.8 1370.7,416.2" data-t="0.493" data-d="14 12 5"/>
+        <polygon points="1308.2,311.5 1370.7,416.2 1249.7,417.2" data-t="0.494" data-d="4 4 12"/>
+        <polygon points="1388.7,280.8 1514.6,302.1 1370.7,416.2" data-t="0.342" data-d="8 7 9"/>
+        <polygon points="1514.6,302.1 1491.9,438.5 1370.7,416.2" data-t="0.247" data-d="6 6 10"/>
+        <polygon points="1514.6,302.1 1600.0,305.0 1600.0,437.5" data-t="0.435" data-d="7 6 10" data-sh="1"/>
+        <polygon points="1514.6,302.1 1600.0,437.5 1491.9,438.5" data-t="0.433" data-d="9 8 9"/>
+        <polygon points="0.0,437.5 124.2,448.2 167.1,529.1" data-t="0.491" data-d="13 12 5"/>
+        <polygon points="0.0,437.5 167.1,529.1 0.0,562.7" data-t="0.617" data-d="6 5 11"/>
+        <polygon points="124.2,448.2 241.7,400.3 167.1,529.1" data-t="0.434" data-d="5 5 11"/>
+        <polygon points="241.7,400.3 295.0,542.3 167.1,529.1" data-t="0.443" data-d="14 12 5"/>
+        <polygon points="241.7,400.3 433.2,431.8 433.3,535.0" data-t="0.350" data-d="12 10 7"/>
+        <polygon points="241.7,400.3 433.3,535.0 295.0,542.3" data-t="0.360" data-d="13 11 6" data-sh="1"/>
+        <polygon points="433.2,431.8 590.8,404.6 433.3,535.0" data-t="0.526" data-d="7 6 10"/>
+        <polygon points="590.8,404.6 609.3,532.4 433.3,535.0" data-t="0.490" data-d="6 6 11"/>
+        <polygon points="590.8,404.6 693.8,405.2 747.3,599.2" data-t="0.291" data-d="8 7 9"/>
+        <polygon points="590.8,404.6 747.3,599.2 609.3,532.4" data-t="0.300" data-d="11 10 7"/>
+        <polygon points="693.8,405.2 838.7,435.4 747.3,599.2" data-t="0.332" data-d="10 9 8"/>
+        <polygon points="838.7,435.4 868.4,538.8 747.3,599.2" data-t="0.309" data-d="8 7 9"/>
+        <polygon points="838.7,435.4 1013.4,438.5 976.4,591.7" data-t="0.252" data-d="12 10 7" data-sh="1"/>
+        <polygon points="838.7,435.4 976.4,591.7 868.4,538.8" data-t="0.366" data-d="9 8 9"/>
+        <polygon points="1013.4,438.5 1129.0,468.1 976.4,591.7" data-t="0.207" data-d="8 7 9"/>
+        <polygon points="1129.0,468.1 1160.0,578.5 976.4,591.7" data-t="0.072" data-d="6 5 11"/>
+        <polygon points="1129.0,468.1 1249.7,417.2 1285.0,543.3" data-t="0.341" data-d="8 7 9"/>
+        <polygon points="1129.0,468.1 1285.0,543.3 1160.0,578.5" data-t="0.201" data-d="7 6 10"/>
+        <polygon points="1249.7,417.2 1370.7,416.2 1285.0,543.3" data-t="0.129" data-d="11 10 7"/>
+        <polygon points="1370.7,416.2 1368.9,533.3 1285.0,543.3" data-t="0.448" data-d="13 11 6" data-sh="1"/>
+        <polygon points="1370.7,416.2 1491.9,438.5 1501.4,571.2" data-t="0.122" data-d="10 9 8"/>
+        <polygon points="1370.7,416.2 1501.4,571.2 1368.9,533.3" data-t="0.483" data-d="7 6 10"/>
+        <polygon points="1491.9,438.5 1600.0,437.5 1501.4,571.2" data-t="0.131" data-d="14 12 5"/>
+        <polygon points="1600.0,437.5 1600.0,562.7 1501.4,571.2" data-t="0.154" data-d="6 6 10"/>
+        <polygon points="0.0,562.7 167.1,529.1 0.0,715.3" data-t="0.223" data-d="5 5 11"/>
+        <polygon points="167.1,529.1 171.3,747.5 0.0,715.3" data-t="0.273" data-d="13 12 5"/>
+        <polygon points="167.1,529.1 295.0,542.3 252.0,730.6" data-t="0.211" data-d="8 7 9" data-sh="1"/>
+        <polygon points="167.1,529.1 252.0,730.6 171.3,747.5" data-t="0.484" data-d="13 11 6"/>
+        <polygon points="295.0,542.3 433.3,535.0 252.0,730.6" data-t="0.349" data-d="13 11 6"/>
+        <polygon points="433.3,535.0 456.8,739.2 252.0,730.6" data-t="0.168" data-d="6 5 11"/>
+        <polygon points="433.3,535.0 609.3,532.4 608.9,738.1" data-t="0.167" data-d="9 8 8"/>
+        <polygon points="433.3,535.0 608.9,738.1 456.8,739.2" data-t="0.372" data-d="8 7 9"/>
+        <polygon points="609.3,532.4 747.3,599.2 608.9,738.1" data-t="0.400" data-d="4 4 12"/>
+        <polygon points="747.3,599.2 708.9,754.3 608.9,738.1" data-t="0.192" data-d="7 7 10" data-sh="1"/>
+        <polygon points="747.3,599.2 868.4,538.8 865.7,672.2" data-t="0.150" data-d="14 12 5"/>
+        <polygon points="747.3,599.2 865.7,672.2 708.9,754.3" data-t="0.351" data-d="5 5 11"/>
+        <polygon points="868.4,538.8 976.4,591.7 865.7,672.2" data-t="0.295" data-d="6 5 11"/>
+        <polygon points="976.4,591.7 1044.6,707.9 865.7,672.2" data-t="0.149" data-d="5 4 12"/>
+        <polygon points="976.4,591.7 1160.0,578.5 1109.8,722.8" data-t="0.165" data-d="12 10 7"/>
+        <polygon points="976.4,591.7 1109.8,722.8 1044.6,707.9" data-t="0.282" data-d="11 10 7"/>
+        <polygon points="1160.0,578.5 1285.0,543.3 1109.8,722.8" data-t="0.417" data-d="6 5 11" data-sh="1"/>
+        <polygon points="1285.0,543.3 1308.6,742.6 1109.8,722.8" data-t="0.080" data-d="13 11 6"/>
+        <polygon points="1285.0,543.3 1368.9,533.3 1419.6,718.8" data-t="0.392" data-d="6 5 11"/>
+        <polygon points="1285.0,543.3 1419.6,718.8 1308.6,742.6" data-t="0.081" data-d="9 8 8"/>
+        <polygon points="1368.9,533.3 1501.4,571.2 1419.6,718.8" data-t="0.065" data-d="13 11 6"/>
+        <polygon points="1501.4,571.2 1498.5,745.4 1419.6,718.8" data-t="0.068" data-d="7 7 10"/>
+        <polygon points="1501.4,571.2 1600.0,562.7 1600.0,715.3" data-t="0.196" data-d="6 6 11"/>
+        <polygon points="1501.4,571.2 1600.0,715.3 1498.5,745.4" data-t="0.192" data-d="6 5 11" data-sh="1"/>
+        <polygon points="0.0,715.3 171.3,747.5 172.8,875.4" data-t="0.162" data-d="8 7 9"/>
+        <polygon points="0.0,715.3 172.8,875.4 0.0,860.5" data-t="0.491" data-d="9 8 9"/>
+        <polygon points="171.3,747.5 252.0,730.6 172.8,875.4" data-t="0.228" data-d="5 5 11"/>
+        <polygon points="252.0,730.6 272.6,844.6 172.8,875.4" data-t="0.220" data-d="6 5 11"/>
+        <polygon points="252.0,730.6 456.8,739.2 474.0,872.6" data-t="0.111" data-d="12 10 6"/>
+        <polygon points="252.0,730.6 474.0,872.6 272.6,844.6" data-t="0.271" data-d="4 4 12"/>
+        <polygon points="456.8,739.2 608.9,738.1 474.0,872.6" data-t="0.109" data-d="8 7 9" data-sh="1"/>
+        <polygon points="608.9,738.1 609.4,821.2 474.0,872.6" data-t="0.348" data-d="10 8 8"/>
+        <polygon points="608.9,738.1 708.9,754.3 711.3,857.2" data-t="0.394" data-d="5 5 11"/>
+        <polygon points="608.9,738.1 711.3,857.2 609.4,821.2" data-t="0.282" data-d="12 11 6"/>
+        <polygon points="708.9,754.3 865.7,672.2 711.3,857.2" data-t="0.157" data-d="7 6 10"/>
+        <polygon points="865.7,672.2 851.6,892.1 711.3,857.2" data-t="0.050" data-d="13 11 6"/>
+        <polygon points="865.7,672.2 1044.6,707.9 979.1,862.4" data-t="0.265" data-d="12 11 6"/>
+        <polygon points="865.7,672.2 979.1,862.4 851.6,892.1" data-t="0.066" data-d="12 11 6" data-sh="1"/>
+        <polygon points="1044.6,707.9 1109.8,722.8 979.1,862.4" data-t="0.291" data-d="5 5 12"/>
+        <polygon points="1109.8,722.8 1122.3,839.1 979.1,862.4" data-t="0.136" data-d="13 11 6"/>
+        <polygon points="1109.8,722.8 1308.6,742.6 1291.1,843.1" data-t="0.180" data-d="6 5 11"/>
+        <polygon points="1109.8,722.8 1291.1,843.1 1122.3,839.1" data-t="0.236" data-d="9 8 8"/>
+        <polygon points="1308.6,742.6 1419.6,718.8 1291.1,843.1" data-t="0.099" data-d="9 8 9"/>
+        <polygon points="1419.6,718.8 1379.9,883.7 1291.1,843.1" data-t="0.129" data-d="6 5 11"/>
+        <polygon points="1419.6,718.8 1498.5,745.4 1485.9,839.3" data-t="0.086" data-d="14 12 5" data-sh="1"/>
+        <polygon points="1419.6,718.8 1485.9,839.3 1379.9,883.7" data-t="0.256" data-d="14 12 5"/>
+        <polygon points="1498.5,745.4 1600.0,715.3 1485.9,839.3" data-t="0.216" data-d="12 10 6"/>
+        <polygon points="1600.0,715.3 1600.0,860.5 1485.9,839.3" data-t="0.185" data-d="5 4 12"/>
+        <polygon points="0.0,860.5 172.8,875.4 0.0,1000.0" data-t="0.418" data-d="11 10 7"/>
+        <polygon points="172.8,875.4 145.1,1000.0 0.0,1000.0" data-t="0.312" data-d="5 5 11"/>
+        <polygon points="172.8,875.4 272.6,844.6 264.1,1000.0" data-t="0.344" data-d="6 5 11"/>
+        <polygon points="172.8,875.4 264.1,1000.0 145.1,1000.0" data-t="0.415" data-d="13 11 5" data-sh="1"/>
+        <polygon points="272.6,844.6 474.0,872.6 264.1,1000.0" data-t="0.072" data-d="5 5 11"/>
+        <polygon points="474.0,872.6 437.3,1000.0 264.1,1000.0" data-t="0.380" data-d="4 4 12"/>
+        <polygon points="474.0,872.6 609.4,821.2 601.2,1000.0" data-t="0.226" data-d="6 5 11"/>
+        <polygon points="474.0,872.6 601.2,1000.0 437.3,1000.0" data-t="0.230" data-d="12 10 7"/>
+        <polygon points="609.4,821.2 711.3,857.2 601.2,1000.0" data-t="0.213" data-d="7 7 10"/>
+        <polygon points="711.3,857.2 723.2,1000.0 601.2,1000.0" data-t="0.168" data-d="11 9 7"/>
+        <polygon points="711.3,857.2 851.6,892.1 845.6,1000.0" data-t="0.255" data-d="5 5 11" data-sh="1"/>
+        <polygon points="711.3,857.2 845.6,1000.0 723.2,1000.0" data-t="0.177" data-d="11 10 7"/>
+        <polygon points="851.6,892.1 979.1,862.4 845.6,1000.0" data-t="0.141" data-d="11 9 7"/>
+        <polygon points="979.1,862.4 1009.9,1000.0 845.6,1000.0" data-t="0.061" data-d="10 9 8"/>
+        <polygon points="979.1,862.4 1122.3,839.1 1134.3,1000.0" data-t="0.082" data-d="13 11 6"/>
+        <polygon points="979.1,862.4 1134.3,1000.0 1009.9,1000.0" data-t="0.285" data-d="14 12 5"/>
+        <polygon points="1122.3,839.1 1291.1,843.1 1134.3,1000.0" data-t="0.058" data-d="4 4 12"/>
+        <polygon points="1291.1,843.1 1273.7,1000.0 1134.3,1000.0" data-t="0.055" data-d="12 10 7" data-sh="1"/>
+        <polygon points="1291.1,843.1 1379.9,883.7 1393.1,1000.0" data-t="0.055" data-d="6 5 11"/>
+        <polygon points="1291.1,843.1 1393.1,1000.0 1273.7,1000.0" data-t="0.076" data-d="7 6 10"/>
+        <polygon points="1379.9,883.7 1485.9,839.3 1393.1,1000.0" data-t="0.173" data-d="9 8 8"/>
+        <polygon points="1485.9,839.3 1487.5,1000.0 1393.1,1000.0" data-t="0.126" data-d="14 12 5"/>
+        <polygon points="1485.9,839.3 1600.0,860.5 1600.0,1000.0" data-t="0.111" data-d="9 8 8"/>
+        <polygon points="1485.9,839.3 1600.0,1000.0 1487.5,1000.0" data-t="0.103" data-d="14 12 5"/>
+      </svg>
     </div>
-    <div class="loader-task" id="loaderTask">— preparing the room</div>
-  </div>
-  <div class="loader-edition">
-    <span>liquid chrome edition</span>
-    <span class="dot-sep">·</span>
-    <span>26</span>
-  </div>
-</div>
 
-<!-- Custom cursor -->
-<div id="cursor-dot"></div>
-<div id="cursor-ring"></div>
+    <!-- ============================================================================
+         REGION 1 — DARK (overture). Not pinned.
+         INTEGRATION SLOT (2): paste the dark build's hero markup verbatim, including the
+         chrome blob hero and the wordmark element the coalescence drives (data-wordmark).
+         ============================================================================ -->
+    <main id="dark" aria-label="Atheric">
+      <!-- === INTEGRATION SLOT 2: dark build hero — carried verbatim from
+           builds/dark/handoff/renders/atheric-v2-B-aurora-chrome.html (lines 44–107).
+           Scoped to the OVERTURE: nav + hero only. The dark build's lower sections
+           (lede / process / cabinet / marquee / begin / footer) are intentionally NOT
+           mounted — the user lands and stays in the cream resting state below the seam,
+           which carries that content. Inline styles are the dark build's own, unchanged. === -->
+      <!-- The dark build's opaque radial-gradient ground is removed here so the page-level
+           blob shows through behind the hero. The dark ground is now painted by #ground-layer
+           (flat --ground-dark at progress 0); the aurora glow band below is unchanged. -->
+      <div style="min-height:100vh; font-family:'Archivo',system-ui,sans-serif; position:relative; overflow-x:hidden;">
 
-<!-- WebGL chrome canvas -->
-<canvas id="chrome"></canvas>
+        <div id="b-progress" style="position:fixed; top:0; left:0; height:2px; width:0%; background:#ff4d1f; box-shadow:0 0 10px rgba(255,77,31,0.6); z-index:90;"></div>
 
-<!-- Paper grain + scroll progress -->
-<div class="grain"></div>
-<div class="progress" id="progress"></div>
-
-<!-- ============================================================
-     Nav
-     ============================================================ -->
-<nav class="nav" role="navigation" aria-label="primary">
-  <!-- mark cluster: studio name + book sibling that fades in on hover.
-       click Atheric → home (internal navigation, launch gesture).
-       click Under the Code → opens under.atheric.eu in a new tab. -->
-  <div class="mark-cluster">
-    <a href="/" class="mark" data-magnetic data-nav-to="home">
-      <svg class="atheric-mark mark-glyph" aria-hidden="true"><use href="#atheric-mark-symbol"/></svg>
-      <span>Atheric<em>.</em></span>
-    </a>
-    <a href="https://under.atheric.eu" class="mark mark-secondary" target="_blank" rel="noopener" aria-label="Under the Code, opens in a new tab">
-      <span>Under the Code<em>.</em></span>
-      <span class="ext-arrow" aria-hidden="true">↗</span>
-    </a>
-  </div>
-  <ul>
-    <li><a href="/library" class="link" data-nav-to="library">library</a></li>
-    <li><a href="/author" class="link" data-nav-to="author">author</a></li>
-    <li><a href="#" class="link" data-pref-open>preferences</a></li>
-  </ul>
-  <div class="right">
-    <span class="clock" id="navClock"><b>HEL</b> · 00:00:00</span>
-    <button class="audio-toggle" id="audio" aria-pressed="false" aria-label="toggle audio">
-      <span class="bars"><i></i><i></i><i></i></span>
-      <span>Sound</span>
-    </button>
-    <!-- mobile / touch / narrow-viewport menu trigger.
-         hidden on wide desktop with fine pointer; visible elsewhere. -->
-    <button class="nav-burger" type="button" aria-label="open menu" aria-expanded="false" data-menu-open>
-      <span class="burger-bar"></span>
-      <span class="burger-bar"></span>
-      <span class="burger-bar"></span>
-    </button>
-  </div>
-</nav>
-
-<!-- ============================================================
-     Mobile / touch nav menu — slide-out sheet mirroring the
-     preferences-sheet pattern. opens via the hamburger button.
-     ============================================================ -->
-<div id="nav-menu-shell" aria-hidden="true">
-  <div class="nav-menu-overlay"></div>
-  <aside class="nav-menu-panel" role="dialog" aria-modal="true" aria-label="navigation menu" tabindex="-1">
-    <header class="nav-menu-header">
-      <span class="nav-menu-eyebrow">— menu</span>
-      <button class="nav-menu-close" type="button" aria-label="close menu">
-        <span aria-hidden="true">✕</span>
-      </button>
-    </header>
-    <nav class="nav-menu-list" aria-label="primary mobile">
-      <a href="/" class="nav-menu-item" data-nav-to="home" data-menu-link>home</a>
-      <a href="/library" class="nav-menu-item" data-nav-to="library" data-menu-link>library</a>
-      <a href="/author" class="nav-menu-item" data-nav-to="author" data-menu-link>author</a>
-      <a href="#" class="nav-menu-item" data-pref-open data-menu-link>preferences</a>
-    </nav>
-    <div class="nav-menu-foot">
-      <a href="https://under.atheric.eu" class="nav-menu-secondary" target="_blank" rel="noopener">
-        <span>Under the Code<em>.</em></span>
-        <span class="ext-arrow" aria-hidden="true">↗</span>
-      </a>
-      <p class="nav-menu-colophon">Atheric · MMXXVI</p>
-    </div>
-  </aside>
-</div>
-
-<!-- ============================================================
-     Main — multiple views, one is visible at a time. the launch
-     animation handles the visual continuity between them.
-     ============================================================ -->
-<main id="top" data-view="home">
-
-  <!-- ====================== HERO ====================== -->
-  <section class="hero" id="hero">
-    <div class="hero-grid"></div>
-
-    <header class="hero-top" data-reveal>
-      <div class="col-meta">
-        <span>STUDIO ATHERIC</span><br>
-        Finland<br>
-        <span class="arrow">↳</span> est. 2026
-      </div>
-      <div class="col-meta" style="text-align:center">
-        2026 — <span>Liquid Chrome</span><br>
-        Edition № 1<br>
-        <span class="arrow">∞</span> ongoing
-      </div>
-      <div class="col-meta" style="text-align:right">
-        Accepting first commissions<br>
-        <span>Conversations</span> · by appointment<br>
-        <span class="arrow">→</span> write to us
-      </div>
-    </header>
-
-    <div class="hero-headline">
-      <span class="kicker">— a studio for experience businesses</span>
-      <h1 data-split data-hero-headline>we build websites that <em>begin the experience</em>, not just point to it.</h1>
-    </div>
-
-    <div class="hero-bottom">
-      <p class="hero-lede" data-reveal data-reveal-delay="1">
-        Atheric is a studio for experience businesses — saunas, spas, places
-        sold on how they make you feel. We build the website as the <em>first
-        room</em> of that experience, not the door you pass through to reach it.
-        What you're looking at is the proof. Two or three projects at a time.
-        That is the point.
-      </p>
-      <div class="hero-actions" data-reveal data-reveal-delay="2">
-        <a href="#contact" class="cta" data-magnetic data-inquiry-focus>
-          Start a commission
-          <span class="arrow">→</span>
-        </a>
-        <a href="#work" class="cta-ghost">See the work</a>
-      </div>
-    </div>
-
-    <div class="hero-ground">
-      <span><span class="dot-live"></span>Open · accepting first commissions</span>
-      <span>atheric.eu</span>
-      <span class="scroll-hint">
-        Scroll
-        <svg width="10" height="14" viewBox="0 0 10 14" fill="none">
-          <path d="M5 1V13M5 13L1 9M5 13L9 9" stroke="currentColor" stroke-width="1"/>
-        </svg>
-      </span>
-    </div>
-  </section>
-
-  <!-- ====================== WORK / PROOF ====================== -->
-  <!-- Moved up to sit directly after the hero. The cabinet grid + filter
-       are kept as scaffolding; the fictional concept tiles are deliberately
-       not restored as finished proof. Placeholder state until real cases
-       are wired in this week. -->
-  <section id="work">
-    <header class="cabinet-head">
-      <div data-reveal>
-        <span class="kicker">— index № 01 / selected work</span>
-        <h2>the work is the <em>proof</em>.</h2>
-      </div>
-      <div class="filter" data-reveal data-reveal-delay="1">
-        <button class="on" data-filter="all" aria-pressed="true">All</button>
-        <button data-filter="identity" aria-pressed="false">Identity</button>
-        <button data-filter="editorial" aria-pressed="false">Editorial</button>
-        <button data-filter="packaging" aria-pressed="false">Packaging</button>
-      </div>
-    </header>
-
-    <div class="cabinet-grid" id="cabinetGrid" data-reveal data-reveal-delay="2">
-      <div class="work-placeholder">
-        <span class="kicker">— selected work, landing this week</span>
-        <p class="work-placeholder-line">For now, the site you're standing in is the proof.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- ====================== TRIPTYCH (process) ====================== -->
-  <section class="triptych" id="process">
-    <header class="triptych-head">
-      <div data-reveal>
-        <span class="kicker signal">— index № 02 / how we work</span>
-        <h2>three movements; one <em>object</em>.</h2>
-      </div>
-      <p data-reveal data-reveal-delay="1">
-        Every commission moves through the same <em>three rooms</em>. We resist the start-up
-        choreography of sprints and ceremonies. Instead, we work like a small workshop:
-        slowly, in private, until the thing has a <em>weight of its own</em>.
-      </p>
-    </header>
-
-    <!-- pin runway: the figure inside is sticky and scales toward full-bleed
-         as the user scrolls. The .triptych-grid that follows uses negative
-         margin to slide up over the still-pinned figure on exit. -->
-    <div class="triptych-pin" data-pin-stage>
-      <div class="triptych-pin__hold">
-        <figure class="motion-frame motion-frame--triptych motion-frame--pinned"
-                data-motion-embed
-                data-pin-target>
-          <div class="motion-frame__shell">
-            <iframe
-              src="/motion/01-process-v1/Code%20to%20Site.html"
-              loading="lazy"
-              title="motion study — code to site"
-              aria-label="motion study, code to site"
-              tabindex="-1"
-              referrerpolicy="no-referrer"
-              scrolling="no"></iframe>
-            <span class="motion-vignette" aria-hidden="true"></span>
-            <span class="motion-bevel" aria-hidden="true"></span>
-            <span class="motion-progress" aria-hidden="true"></span>
-            <span class="motion-cue" aria-hidden="true">— in view</span>
+        <!-- NAV -->
+        <nav style="position:sticky; top:0; z-index:50; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding:20px clamp(20px,5vw,72px); background:rgba(8,8,8,0.5); backdrop-filter:blur(16px) saturate(140%); -webkit-backdrop-filter:blur(16px) saturate(140%); border-bottom:1px solid rgba(244,241,236,0.08);">
+          <div style="display:flex; align-items:center; gap:11px;">
+            <span style="display:inline-block; width:22px; height:22px; border-radius:50%; background:radial-gradient(circle at 34% 30%, #ffffff 0%, #e7ddcf 18%, #9a9489 46%, #3a3733 72%, #0a0a0a 100%); box-shadow:0 4px 14px rgba(0,0,0,0.5), inset 0 1px 2px rgba(255,255,255,0.6);"></span>
+            <span style="font-family:'Archivo'; font-weight:800; font-size:15px; letter-spacing:-0.015em; color:#f4f1ec;">Atheric<em style="font-family:'Instrument Serif'; font-style:italic; font-weight:400; color:#ff4d1f; margin-left:1px;">.</em></span>
           </div>
-        </figure>
+          <div style="display:flex; align-items:center; gap:30px; font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; justify-self:center;">
+            <a class="b-navlink" href="#b-studio">studio</a>
+            <a class="b-navlink" href="#b-process">process</a>
+            <a class="b-navlink" href="#b-cabinet">cabinet</a>
+          </div>
+          <div style="justify-self:end;">
+            <a class="b-cta" href="#b-begin" style="display:inline-flex; align-items:center; gap:10px; padding:11px 18px; border-radius:999px; border:1px solid rgba(244,241,236,0.25); background:transparent; color:#f4f1ec; font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:500; letter-spacing:0.18em; text-transform:uppercase; text-decoration:none;">
+              <span class="lbl">start a commission</span>
+            </a>
+          </div>
+        </nav>
+
+        <!-- HERO: aurora chrome band, bleeding into black -->
+        <section style="position:relative; min-height:clamp(640px,94vh,1000px); display:flex; flex-direction:column; align-items:center; justify-content:flex-end; text-align:center; padding:0 clamp(20px,6vw,90px) clamp(56px,8vh,96px); overflow:hidden;">
+
+          <!-- aurora glow band (top) -->
+          <div style="position:absolute; top:-12%; left:50%; transform:translateX(-50%); width:170%; height:64%; pointer-events:none; filter:blur(64px); opacity:0.95;">
+            <div style="position:absolute; top:6%; left:2%; width:42%; height:88%; border-radius:50%; background:radial-gradient(circle, rgba(255,180,60,0.9) 0%, rgba(255,140,50,0.4) 44%, transparent 72%); animation:bGlow 14s ease-in-out infinite;"></div>
+            <div style="position:absolute; top:10%; left:30%; width:26%; height:80%; border-radius:50%; background:radial-gradient(circle, rgba(255,77,31,0.7) 0%, rgba(255,77,31,0.2) 50%, transparent 74%); animation:bGlow 11s ease-in-out infinite reverse;"></div>
+            <div style="position:absolute; top:4%; right:2%; width:42%; height:88%; border-radius:50%; background:radial-gradient(circle, rgba(31,59,255,0.78) 0%, rgba(40,80,255,0.28) 46%, transparent 73%); animation:bGlow 16s ease-in-out infinite;"></div>
+            <div style="position:absolute; top:16%; left:44%; width:16%; height:58%; border-radius:50%; background:radial-gradient(circle, rgba(255,250,240,0.7) 0%, transparent 66%); animation:bGlow 9s ease-in-out infinite;"></div>
+          </div>
+          <!-- chrome reflective rim arc -->
+          <div style="position:absolute; top:-30%; left:50%; transform:translateX(-50%); width:150%; height:64%; border-radius:50%; border:1px solid rgba(244,241,236,0.22); box-shadow:inset 0 24px 70px rgba(255,255,255,0.08), 0 0 60px rgba(255,255,255,0.04); pointer-events:none;"></div>
+          <!-- fade to pure black -->
+          <div style="position:absolute; inset:0; background:linear-gradient(180deg, transparent 0%, transparent 30%, #050505 76%); pointer-events:none;"></div>
+
+          <span style="position:relative; z-index:4; display:inline-flex; align-items:center; gap:11px; font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.24em; text-transform:uppercase; color:#ff4d1f; margin-bottom:28px;">
+            <span style="width:7px; height:7px; border-radius:50%; background:#ff4d1f; animation:bPulse 1.4s ease-in-out infinite;"></span>
+            — studio atheric / liquid chrome № 1
+          </span>
+
+          <h1 style="position:relative; z-index:4; font-family:'Archivo'; font-weight:800; text-transform:lowercase; letter-spacing:-0.045em; line-height:0.86; font-size:clamp(46px,8.6vw,132px); color:#f4f1ec; margin:0; max-width:14ch;">we engineer <em style="font-family:'Instrument Serif'; font-style:italic; font-weight:400; color:#ff4d1f;">weightless</em> software.</h1>
+          <p style="position:relative; z-index:4; font-family:'Archivo'; font-size:clamp(15px,1.3vw,18px); line-height:1.5; color:rgba(244,241,236,0.6); max-width:46ch; margin:26px 0 0;">interfaces and systems for clients who care about the <em style="font-family:'Instrument Serif'; font-style:italic; color:#ff4d1f;">difference</em>. two to three at a time. that is the point.</p>
+
+          <!-- floating glass stat pills -->
+          <div style="position:relative; z-index:4; display:flex; flex-wrap:wrap; justify-content:center; gap:14px; margin-top:38px;">
+            <div style="display:flex; align-items:baseline; gap:10px; padding:12px 20px; border-radius:999px; background:rgba(255,255,255,0.04); backdrop-filter:blur(16px) saturate(140%); -webkit-backdrop-filter:blur(16px) saturate(140%); border:1px solid rgba(244,241,236,0.14);">
+              <span style="font-family:'JetBrains Mono',monospace; font-size:18px; font-weight:400; color:#f4f1ec;">2–3</span>
+              <span style="font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:0.2em; text-transform:uppercase; color:rgba(244,241,236,0.5);">commissions / yr</span>
+            </div>
+            <div style="display:flex; align-items:baseline; gap:10px; padding:12px 20px; border-radius:999px; background:rgba(255,255,255,0.04); backdrop-filter:blur(16px) saturate(140%); -webkit-backdrop-filter:blur(16px) saturate(140%); border:1px solid rgba(244,241,236,0.14);">
+              <span style="font-family:'JetBrains Mono',monospace; font-size:18px; font-weight:400; color:#f4f1ec;">∞</span>
+              <span style="font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:0.2em; text-transform:uppercase; color:rgba(244,241,236,0.5);">iterations</span>
+            </div>
+            <div style="display:flex; align-items:baseline; gap:10px; padding:12px 20px; border-radius:999px; background:rgba(255,255,255,0.04); backdrop-filter:blur(16px) saturate(140%); -webkit-backdrop-filter:blur(16px) saturate(140%); border:1px solid rgba(244,241,236,0.14);">
+              <span style="font-family:'JetBrains Mono',monospace; font-size:18px; font-weight:400; color:#f4f1ec;">№ 1</span>
+              <span style="font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:0.2em; text-transform:uppercase; color:rgba(244,241,236,0.5);">edition · mmxxvi</span>
+            </div>
+          </div>
+          <a class="b-cta" href="#b-begin" style="position:relative; z-index:4; display:inline-flex; align-items:center; gap:12px; margin-top:30px; padding:16px 24px 16px 28px; border-radius:999px; background:#f4f1ec; color:#0a0a0a; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:500; letter-spacing:0.16em; text-transform:uppercase; text-decoration:none;">
+            <span class="lbl" style="display:inline-flex; align-items:center; gap:10px;">claim a commission <span style="width:16px; height:16px; border-radius:50%; background:#0a0a0a; color:#f4f1ec; display:inline-flex; align-items:center; justify-content:center; font-family:'Archivo'; font-size:10px;">→</span></span>
+          </a>
+
+          <!-- PART B — "see how the chrome is made": the blob-zoom craft reveal.
+               Imported from v1's inspect lab (atheric-studios/home → liquid-chrome-v2 →
+               inspect.js) and rebuilt in v2's grammar: the trigger launches a camera flight
+               into the LIVE blob (uCamPos/uCamLook/uCamFOV — shader untouched); five
+               explain-dots (fig. 01–05) fly the lens to a region and open a dark-glass
+               readout; the old colophon copy hovers as "the technique" tab. All copy is
+               static here so it reads without JS/motion. (craft.js / craft.css) -->
+          <button type="button" class="craft-open" data-craft-open aria-haspopup="dialog" aria-controls="craft">
+            <span class="craft-open__dot" aria-hidden="true"></span>
+            <span class="craft-open__label">see how the chrome is made</span>
+          </button>
+
+          <dialog id="craft" class="craft" aria-label="how the chrome is made — a study of the live blob">
+            <div class="craft-frame" aria-hidden="true">
+              <!-- the stage is measured: four hairlines scribe the frame clockwise
+                   (the broadsheet's drawn-rule grammar) once the curtains have parted -->
+              <span class="craft-frame__ln craft-frame__ln--t"></span>
+              <span class="craft-frame__ln craft-frame__ln--r"></span>
+              <span class="craft-frame__ln craft-frame__ln--b"></span>
+              <span class="craft-frame__ln craft-frame__ln--l"></span>
+            </div>
+            <span class="craft-meta craft-meta--tl" aria-hidden="true">— liquid chrome № 1 / the making</span>
+            <button type="button" class="craft-close" data-craft-close>
+              <span class="x" aria-hidden="true">✕</span> close
+            </button>
+
+            <!-- the explain-dots — figures set into the chrome, projected onto the live
+                 surface each frame (craft.js). Keys 1–5 select; each toggles its panel. -->
+            <div class="craft-dots">
+              <button type="button" class="craft-dot" style="--di:0" aria-expanded="false" aria-controls="craft-p1" aria-label="fig. 01 — the raymarch">
+                <span class="dot-ring" aria-hidden="true"></span>
+                <span class="dot-core" aria-hidden="true"></span>
+                <span class="dot-fig" aria-hidden="true">01</span>
+              </button>
+              <button type="button" class="craft-dot" style="--di:1" aria-expanded="false" aria-controls="craft-p2" aria-label="fig. 02 — metaballs, fused">
+                <span class="dot-ring" aria-hidden="true"></span>
+                <span class="dot-core" aria-hidden="true"></span>
+                <span class="dot-fig" aria-hidden="true">02</span>
+              </button>
+              <button type="button" class="craft-dot" style="--di:2" aria-expanded="false" aria-controls="craft-p3" aria-label="fig. 03 — thin-film iridescence">
+                <span class="dot-ring" aria-hidden="true"></span>
+                <span class="dot-core" aria-hidden="true"></span>
+                <span class="dot-fig" aria-hidden="true">03</span>
+              </button>
+              <button type="button" class="craft-dot" style="--di:3" aria-expanded="false" aria-controls="craft-p4" aria-label="fig. 04 — the fresnel bloom">
+                <span class="dot-ring" aria-hidden="true"></span>
+                <span class="dot-core" aria-hidden="true"></span>
+                <span class="dot-fig" aria-hidden="true">04</span>
+              </button>
+              <button type="button" class="craft-dot" style="--di:4" aria-expanded="false" aria-controls="craft-p5" aria-label="fig. 05 — orbits, alive">
+                <span class="dot-ring" aria-hidden="true"></span>
+                <span class="dot-core" aria-hidden="true"></span>
+                <span class="dot-fig" aria-hidden="true">05</span>
+              </button>
+            </div>
+
+            <!-- the technique — the colophon's copy, now a hovering tab in the study -->
+            <aside class="craft-tab">
+              <button type="button" class="craft-tab__head" aria-expanded="true" aria-controls="craft-tab-body">
+                — the technique
+              </button>
+              <div class="craft-tab__body" id="craft-tab-body">
+                <p>no mesh. no texture. no photograph. the blob is a <b>signed-distance field</b> — four metaballs fused with a smooth minimum — <b>raymarched in real time</b>, seventy-two steps per pixel, on your gpu.</p>
+                <p>its surface is a <b>thin-film approximation</b>: a spectral ramp keyed to the viewing angle — gold on the faces that meet you, magenta and blue as it curves, violet where it turns away. the bright edge is a <b>fresnel bloom</b>, pushed past the rest so it glows into the dark.</p>
+                <p>one fragment shader — a dozen kilobytes of math — redrawn fresh sixty times a second. it holds perfectly still when you ask it to.</p>
+                <ul class="craft-tab__spec">
+                  <li>sdf · smooth-union metaballs</li>
+                  <li>72-step raymarch</li>
+                  <li>thin-film iridescence</li>
+                  <li>fresnel rim bloom</li>
+                  <li>60 fps · dpr-clamped</li>
+                  <li>reduced-motion aware</li>
+                </ul>
+                <div class="craft-tab__foot">
+                  <span>built by hand, in helsinki</span>
+                  <span>liquid chrome edition · mmxxvi</span>
+                </div>
+              </div>
+            </aside>
+
+            <!-- the figure panels — one dark-glass readout per dot. GLSL quoted verbatim
+                 from the live shader (chrome-blob.js), pre-highlighted: no runtime parser. -->
+            <article class="craft-panel" id="craft-p1" tabindex="-1" role="group" aria-label="fig. 01 — the raymarch" hidden>
+              <button type="button" class="p-x" data-craft-deselect aria-label="close figure, return to the overview">✕</button>
+              <div class="p-text">
+                <div class="p-line" aria-hidden="true"></div>
+                <p class="p-fig">— fig. 01 / 05</p>
+                <h2 class="p-title">the <em>raymarch</em>.</h2>
+                <p class="p-body">no polygons, no mesh. a ray leaves every pixel and steps through space, sampling a distance field until it lands on a surface — seventy-two steps, a 0.85 step factor: close enough to converge, loose enough to stay quick. the whole body lives inside one function, traced per pixel.</p>
+              </div>
+              <div class="p-code">
+                <div class="p-code__bar">chrome.frag · raymarch</div>
+                <pre class="p-code__body"><code><span class="cm-kw">for</span> (<span class="cm-kw">int</span> i = <span class="cm-num">0</span>; i &lt; <span class="cm-num">72</span>; i++) {
+  p = ro + rd * t;
+  <span class="cm-kw">float</span> d = <span class="cm-fn">scene</span>(p);
+  <span class="cm-kw">if</span> (d &lt; <span class="cm-num">0.001</span>) { hit = <span class="cm-kw">true</span>; <span class="cm-kw">break</span>; }
+  t += d * <span class="cm-num">0.85</span>;
+}</code></pre>
+                <p class="p-cap">one ray per pixel — small steps until it finds the chrome.</p>
+              </div>
+            </article>
+
+            <article class="craft-panel" id="craft-p2" tabindex="-1" role="group" aria-label="fig. 02 — metaballs, fused" hidden>
+              <button type="button" class="p-x" data-craft-deselect aria-label="close figure, return to the overview">✕</button>
+              <div class="p-text">
+                <div class="p-line" aria-hidden="true"></div>
+                <p class="p-fig">— fig. 02 / 05</p>
+                <h2 class="p-title">metaballs, <em>fused</em>.</h2>
+                <p class="p-body">four spheres, blended with a smooth-minimum function. k is the surface tension: high, and the chrome holds as one body; drop it, and the marbles un-fuse. the same knob that holds the object together is the one that could let it go.</p>
+              </div>
+              <div class="p-code">
+                <div class="p-code__bar">chrome.frag · smin</div>
+                <pre class="p-code__body"><code><span class="cm-kw">float</span> <span class="cm-fn">smin</span>(<span class="cm-kw">float</span> a, <span class="cm-kw">float</span> b, <span class="cm-kw">float</span> k) {
+  <span class="cm-kw">float</span> h = <span class="cm-fn">clamp</span>(<span class="cm-num">0.5</span> + <span class="cm-num">0.5</span> * (b - a) / k,
+                  <span class="cm-num">0.0</span>, <span class="cm-num">1.0</span>);
+  <span class="cm-kw">return</span> <span class="cm-fn">mix</span>(b, a, h) - k * h * (<span class="cm-num">1.0</span> - h);
+}</code></pre>
+                <p class="p-cap">two distance fields, blended into one. k is the knob.</p>
+              </div>
+            </article>
+
+            <article class="craft-panel" id="craft-p3" tabindex="-1" role="group" aria-label="fig. 03 — thin-film iridescence" hidden>
+              <button type="button" class="p-x" data-craft-deselect aria-label="close figure, return to the overview">✕</button>
+              <div class="p-text">
+                <div class="p-line" aria-hidden="true"></div>
+                <p class="p-fig">— fig. 03 / 05</p>
+                <h2 class="p-title">thin-film <em>iridescence</em>.</h2>
+                <p class="p-body">the colour is not paint. a spectral ramp keyed to the viewing angle — gold on the faces that meet you, magenta and blue as the surface curves away, violet at the rim — with slow noise wobbling the bands so they never sit still. oil on water, computed.</p>
+              </div>
+              <div class="p-code">
+                <div class="p-code__bar">chrome.frag · thinFilm</div>
+                <pre class="p-code__body"><code><span class="cm-co">// gold, then magenta, blue, violet</span>
+<span class="cm-kw">vec3</span> c = cGold;
+c = <span class="cm-fn">mix</span>(c, cMagenta, <span class="cm-fn">smoothstep</span>(<span class="cm-num">0.00</span>, <span class="cm-num">0.30</span>, t));
+c = <span class="cm-fn">mix</span>(c, cBlue,    <span class="cm-fn">smoothstep</span>(<span class="cm-num">0.30</span>, <span class="cm-num">0.55</span>, t));
+c = <span class="cm-fn">mix</span>(c, cViolet,  <span class="cm-fn">smoothstep</span>(<span class="cm-num">0.55</span>, <span class="cm-num">0.82</span>, t));</code></pre>
+                <p class="p-cap">the film reads the angle of your eye — nothing is textured.</p>
+              </div>
+            </article>
+
+            <article class="craft-panel" id="craft-p4" tabindex="-1" role="group" aria-label="fig. 04 — the fresnel bloom" hidden>
+              <button type="button" class="p-x" data-craft-deselect aria-label="close figure, return to the overview">✕</button>
+              <div class="p-text">
+                <div class="p-line" aria-hidden="true"></div>
+                <p class="p-fig">— fig. 04 / 05</p>
+                <h2 class="p-title">the fresnel <em>bloom</em>.</h2>
+                <p class="p-body">at grazing angles every surface reflects more than it should. the rim term is powered twice — a soft glow and a tight bloom — and pushed past white so the edge burns into the dark plane. that asymmetry is why chrome reads as chrome and not as a grey ball.</p>
+              </div>
+              <div class="p-code">
+                <div class="p-code__bar">chrome.frag · rim</div>
+                <pre class="p-code__body"><code><span class="cm-kw">float</span> fres = <span class="cm-num">1.0</span> - <span class="cm-fn">max</span>(<span class="cm-fn">dot</span>(-rd, n), <span class="cm-num">0.0</span>);
+<span class="cm-kw">float</span> rim      = <span class="cm-fn">pow</span>(fres, <span class="cm-num">4.0</span>);
+<span class="cm-kw">float</span> rimBloom = <span class="cm-fn">pow</span>(fres, <span class="cm-num">10.0</span>);
+col += <span class="cm-kw">vec3</span>(<span class="cm-num">1.00</span>, <span class="cm-num">0.97</span>, <span class="cm-num">0.95</span>)
+     * (rim * <span class="cm-num">0.50</span> + rimBloom * <span class="cm-num">1.55</span>);</code></pre>
+                <p class="p-cap">edges reflect more than middles — the rest is restraint.</p>
+              </div>
+            </article>
+
+            <article class="craft-panel" id="craft-p5" tabindex="-1" role="group" aria-label="fig. 05 — orbits, alive" hidden>
+              <button type="button" class="p-x" data-craft-deselect aria-label="close figure, return to the overview">✕</button>
+              <div class="p-text">
+                <div class="p-line" aria-hidden="true"></div>
+                <p class="p-fig">— fig. 05 / 05</p>
+                <h2 class="p-title">orbits, <em>alive</em>.</h2>
+                <p class="p-body">three satellites trace slow orbits in time; the dominant sphere leans toward your cursor. when you scroll on, the page paints the metal out — the chrome sets — and the render loop rests to spare the gpu. scroll back, and it wakes.</p>
+              </div>
+              <div class="p-code">
+                <div class="p-code__bar">chrome.frag · scene</div>
+                <pre class="p-code__body"><code><span class="cm-kw">vec3</span> drift = <span class="cm-kw">vec3</span>(
+  <span class="cm-fn">cos</span>(uTime * <span class="cm-num">0.42</span>) * <span class="cm-num">0.55</span>,
+  <span class="cm-fn">sin</span>(uTime * <span class="cm-num">0.31</span>) * <span class="cm-num">0.38</span>, <span class="cm-num">0.0</span>);
+<span class="cm-kw">vec3</span> c1 = <span class="cm-kw">vec3</span>(uMouse * mouseW, <span class="cm-num">0.0</span>)
+        + drift;</code></pre>
+                <p class="p-cap">quiet orbits, a cursor's pull, and a scheduled rest.</p>
+              </div>
+            </article>
+
+            <div class="craft-meta craft-meta--br">
+              <button type="button" class="craft-page" data-craft-prev aria-label="previous figure">‹</button>
+              <span class="craft-counter">fig. <span data-craft-counter>—</span> / 05</span>
+              <button type="button" class="craft-page" data-craft-next aria-label="next figure">›</button>
+              <span class="esc-hint">to exit</span>
+            </div>
+          </dialog>
+        </section>
+
       </div>
-    </div>
+    </main>
 
-    <div class="triptych-grid">
-      <article class="panel" data-tilt data-reveal data-reveal-delay="1">
-        <div class="step">— I / sculpt</div>
-        <h3>We <em>listen</em>, then we draw the silhouette.</h3>
-        <p>
-          Two weeks in the same room as your team. We take notes on butcher paper, sketch
-          in pencil, never in Figma. The deliverable is a shape — a north star with
-          edges, not a deck.
-        </p>
-        <div class="glyph-art">
-          <svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
-            <defs>
-              <radialGradient id="gA" cx="50%" cy="40%">
-                <stop offset="0%" stop-color="#fff" stop-opacity="0.95"/>
-                <stop offset="60%" stop-color="#bbb" stop-opacity="0.5"/>
-                <stop offset="100%" stop-color="#000" stop-opacity="0.4"/>
-              </radialGradient>
-            </defs>
-            <rect width="400" height="300" fill="#1a1a1a"/>
-            <circle cx="200" cy="150" r="105" fill="url(#gA)"/>
-            <circle cx="200" cy="150" r="105" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="0.5"/>
-            <circle cx="200" cy="150" r="80" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="0.5"/>
-            <circle cx="200" cy="150" r="55" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="0.5"/>
-            <line x1="0" y1="150" x2="400" y2="150" stroke="rgba(255,255,255,0.18)" stroke-dasharray="2 4"/>
-            <line x1="200" y1="0" x2="200" y2="300" stroke="rgba(255,255,255,0.18)" stroke-dasharray="2 4"/>
-            <text x="20" y="285" fill="rgba(255,255,255,0.55)" font-family="JetBrains Mono" font-size="9" letter-spacing="2">FIG. 01 — SILHOUETTE STUDY</text>
-          </svg>
-        </div>
-        <div class="meta-row">
-          <span>2 weeks</span>
-          <span>pencil + paper</span>
-          <span>fig. 01</span>
-        </div>
-      </article>
+    <!-- ============================================================================
+         THE BROADSHEET — everything after the hero (docs/DESIGN.md → "the annealing").
+         The molten chrome above SETS as it leaves; below, the same metal is COOLED and
+         read as the studio's engineering broadsheet — a machinist's document, drawn on the
+         permanent-dark plane and warm-lit from below by the annealing light (#horizon-layer).
+         The only warm objects are the cabinet's two castings: the works the furnace made.
+         Real copy carried from builds/cream (v1) + builds/dark. One <main> already exists
+         (the locked hero); these are following sections, h1 → h2 with no level skips.
+         ============================================================================ -->
+    <div class="broadsheet" id="work">
 
-      <article class="panel" data-tilt data-reveal data-reveal-delay="2">
-        <div class="step">— II / forge</div>
-        <h3>We make <em>one</em> version, well, before another.</h3>
-        <p>
-          Six to twelve weeks at the bench. Code, type, motion, copy — built in the
-          right order, by the same small team. No handoff. Each iteration ships into
-          a private staging room you can visit any morning.
-        </p>
-        <div class="glyph-art">
-          <svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
-            <defs>
-              <linearGradient id="gB" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stop-color="#fff" stop-opacity="0.92"/>
-                <stop offset="55%" stop-color="#888" stop-opacity="0.5"/>
-                <stop offset="100%" stop-color="#000" stop-opacity="0.6"/>
-              </linearGradient>
-            </defs>
-            <rect width="400" height="300" fill="#1a1a1a"/>
-            <rect x="60" y="60" width="280" height="180" rx="8" fill="url(#gB)"/>
-            <rect x="60" y="60" width="280" height="180" rx="8" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="0.5"/>
-            <line x1="60" y1="100" x2="340" y2="100" stroke="rgba(255,255,255,0.25)" stroke-width="0.5"/>
-            <line x1="60" y1="140" x2="340" y2="140" stroke="rgba(255,255,255,0.18)" stroke-width="0.5"/>
-            <line x1="60" y1="180" x2="340" y2="180" stroke="rgba(255,255,255,0.12)" stroke-width="0.5"/>
-            <circle cx="200" cy="150" r="38" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1"/>
-            <text x="20" y="285" fill="rgba(255,255,255,0.55)" font-family="JetBrains Mono" font-size="9" letter-spacing="2">FIG. 02 — FORGING DIAGRAM</text>
-          </svg>
-        </div>
-        <div class="meta-row">
-          <span>6 – 12 weeks</span>
-          <span>build phase</span>
-          <span>fig. 02</span>
-        </div>
-      </article>
+      <!-- THE DARK RUN — a single opaque, full-width backing behind every post-hero DARK section
+           (handoff → studio → process → cabinet). The blob is a fixed layer at NEGATIVE z-index, so
+           only content painting in FRONT of it can hide it; this run is that occluder. The moment
+           any dark section scrolls over the blob it is physically covered — the blob is only ever
+           visible through the hero's transparent viewport, never bleeding through the seam while it
+           fades. The cream close (fracture band + on-cream sections) is deliberately left OUTSIDE
+           this wrapper so the fixed #cream-layer still resolves through it. (body.css → .dark-run) -->
+      <div class="dark-run">
 
-      <article class="panel" data-tilt data-reveal data-reveal-delay="3">
-        <div class="step">— III / polish</div>
-        <h3>We refuse to ship until it <em>feels</em> still.</h3>
-        <p>
-          Two weeks of nothing but small things — kerning, easing curves, copy weights,
-          the loading screen, the empty states. The work either has a <em>quiet hum</em>
-          to it or it doesn't. We wait for the hum.
-        </p>
-        <div class="glyph-art">
-          <svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
-            <defs>
-              <radialGradient id="gC" cx="65%" cy="35%">
-                <stop offset="0%" stop-color="#fff" stop-opacity="1"/>
-                <stop offset="40%" stop-color="#ddd" stop-opacity="0.6"/>
-                <stop offset="100%" stop-color="#1a1a1a" stop-opacity="0.7"/>
-              </radialGradient>
-            </defs>
-            <rect width="400" height="300" fill="#1a1a1a"/>
-            <ellipse cx="200" cy="155" rx="125" ry="95" fill="url(#gC)"/>
-            <ellipse cx="200" cy="155" rx="125" ry="95" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="0.5"/>
-            <ellipse cx="200" cy="155" rx="95" ry="70" fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="0.5"/>
-            <ellipse cx="200" cy="155" rx="60" ry="45" fill="none" stroke="rgba(255,255,255,0.14)" stroke-width="0.5"/>
-            <circle cx="240" cy="125" r="3" fill="rgba(255,255,255,0.95)"/>
-            <text x="20" y="285" fill="rgba(255,255,255,0.55)" font-family="JetBrains Mono" font-size="9" letter-spacing="2">FIG. 03 — POLISHING PASS</text>
-          </svg>
+      <!-- THE HANDOFF — the chrome has set; the document opens. The datum is the broadsheet's
+           first drawn rule. The masthead carries v1's monospace title-block corners verbatim. -->
+      <section class="sheet sheet--open" aria-labelledby="open-h" data-folio="№ 00 / the drawing">
+        <div class="datum" data-rule aria-hidden="true">
+          <span class="datum__label">datum 00 — the chrome has set</span>
         </div>
-        <div class="meta-row">
-          <span>2 weeks</span>
-          <span>waiting for the hum</span>
-          <span>fig. 03</span>
+        <div class="masthead">
+          <div class="masthead__corners">
+            <span class="meta">— studio atheric<br /><b>helsinki, fi</b><br />est. 2026</span>
+            <span class="meta meta--r">
+              <span class="live"><span class="live__dot" aria-hidden="true"></span><span data-clock>hel —:—:—</span></span><br />
+              <b>liquid chrome</b><br />№ 1 · ongoing
+            </span>
+          </div>
+          <!-- FIG. 00 — the studio mark, drawn. The broadsheet's title figure: the mark the spec
+               describes in words (x05 — "a body in orbit") constructs itself as a technical
+               drawing when the masthead enters. The orbit is scribed as a molten iridescent
+               stroke (the chrome, still hot) that cools to a bone hairline as it completes; the
+               ticks extend; the punctum ignites exactly where the compass stroke ended. One-shot,
+               CSS-only, then perfectly still. Decorative (the spec carries the words) → aria-hidden.
+               Desktop only (<900px hides). Reduced motion: presents fully drawn. (body.css) -->
+          <figure class="fig-mark" data-fig aria-hidden="true">
+            <svg viewBox="0 0 192 192" focusable="false">
+              <defs>
+                <!-- brand tokens verbatim: --signal-2 / --signal / --cool (hex — SVG stops) -->
+                <linearGradient id="fig-molten" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0" stop-color="#ffb43c" />
+                  <stop offset="0.55" stop-color="#ff4d1f" />
+                  <stop offset="1" stop-color="#1f3bff" />
+                </linearGradient>
+                <radialGradient id="fig-halo">
+                  <stop offset="0" stop-color="#ff4d1f" stop-opacity="0.5" />
+                  <stop offset="1" stop-color="#ff4d1f" stop-opacity="0" />
+                </radialGradient>
+              </defs>
+              <g class="fig-mark__cross">
+                <line x1="88" y1="96" x2="104" y2="96" />
+                <line x1="96" y1="88" x2="96" y2="104" />
+              </g>
+              <!-- rotate(-45): the circle path starts/ends at the punctum's NE station, so the
+                   scribe departs from — and closes at — the point the punctum will occupy. -->
+              <circle class="fig-mark__orbit" cx="96" cy="96" r="66" pathLength="100" transform="rotate(-45 96 96)" />
+              <circle class="fig-mark__orbit fig-mark__orbit--molten" cx="96" cy="96" r="66" pathLength="100" transform="rotate(-45 96 96)" />
+              <line class="fig-mark__tick fig-mark__tick--w" x1="18" y1="96" x2="66" y2="96" />
+              <line class="fig-mark__tick fig-mark__tick--n" x1="96" y1="18" x2="96" y2="42" />
+              <circle class="fig-mark__halo" cx="144" cy="48" r="34" fill="url(#fig-halo)" />
+              <circle class="fig-mark__punctum" cx="144" cy="48" r="17" />
+            </svg>
+            <figcaption class="fig-mark__cap">fig. 00 — a body in orbit</figcaption>
+          </figure>
+          <p class="kicker"><span class="kicker__dot" aria-hidden="true"></span>— the chrome is the machine</p>
+          <h2 class="display display--xl" id="open-h" data-anneal>
+            <span class="ln"><span class="ln__in">this</span></span>
+            <span class="ln"><span class="ln__in">is the <em>drawing</em>.</span></span>
+          </h2>
+          <p class="lede">
+            the molten thing above is the machine — liquid chrome, alive on your gpu. below it the
+            metal <em>cools</em>, and what remains is the studio, measured: a small practice in
+            helsinki that engineers interfaces and systems, drawn to scale.
+          </p>
         </div>
-      </article>
+      </section>
 
-      <!-- closing coda — ties off the three movements with a slow note +
-           the studio dot mark. Also fills the grid past 100vh so the
-           rising cover panel fully covers the figure beneath at lock-end
-           (otherwise the ink manifesto bg shows below the cards and
-           reads as the figure leaking through). -->
-      <footer class="triptych-coda">
-        <span class="coda-kicker">— atelier note · 2026</span>
-        <p class="coda-line">
-          made slowly, in private, until the website has weight of its own<span class="coda-period">.</span>
-        </p>
-        <div class="coda-mark" aria-hidden="true">
-          <span class="coda-mark-line"></span>
-          <span class="coda-mark-dot"></span>
-          <span class="coda-mark-line"></span>
+      <!-- INDEX № 01 — THE STUDIO. The studio in brief, set as a precise specification: a
+           definition list (term → value), the natural grammar for a spec sheet. v1 "at a glance". -->
+      <section id="b-studio" class="sheet" aria-labelledby="studio-h" data-folio="№ 01 / the studio">
+        <div class="rule rule--ticked" data-rule aria-hidden="true"></div>
+        <header class="sheet__head" data-reveal-group>
+          <span class="index" data-reveal>— index № 01 / the studio</span>
+          <h2 class="display" id="studio-h" data-anneal>
+            <span class="ln"><span class="ln__in">a small studio,</span></span>
+            <span class="ln"><span class="ln__in">a <em>small</em> system.</span></span>
+          </h2>
+        </header>
+        <div class="spec">
+          <p class="spec__lede" data-reveal>
+            we engineer interfaces and systems — code, type, motion and copy, built in the right
+            order, never decorated after. two to three commissions a year. that is the point.
+          </p>
+          <dl class="spec__grid" data-reveal-group>
+            <div class="spec__row" data-reveal>
+              <dt><span class="coord">x01</span> what</dt>
+              <dd><b>premium digital work.</b> identities, websites, editorial systems — for clients who care about the difference.</dd>
+            </div>
+            <div class="spec__row" data-reveal>
+              <dt><span class="coord">x02</span> look</dt>
+              <dd><b>editorial, on paper.</b> bone stock, near-black ink, one hot signal-orange accent. hairlines, not shadows.</dd>
+            </div>
+            <div class="spec__row" data-reveal>
+              <dt><span class="coord">x03</span> voice</dt>
+              <dd><b>quiet, declarative.</b> lowercase, first-person plural, one italic-serif breath per line. no emoji, ever.</dd>
+            </div>
+            <div class="spec__row" data-reveal>
+              <dt><span class="coord">x04</span> type</dt>
+              <dd><b>three families.</b> archivo for display, instrument serif for the breaks, jetbrains mono for labels.</dd>
+            </div>
+            <div class="spec__row" data-reveal>
+              <dt><span class="coord">x05</span> mark</dt>
+              <dd><b>a body in orbit.</b> a hairline ring, structural ticks, and one glowing orange punctum.</dd>
+            </div>
+            <div class="spec__row" data-reveal>
+              <dt><span class="coord">x06</span> motion</dt>
+              <dd><b>slow, eased, weighted.</b> long ease-outs. no bounces, no springs, no parallax. the system is calm.</dd>
+            </div>
+          </dl>
+        </div>
+      </section>
+
+      <!-- INDEX № 02 — HOW WE WORK. Three movements, one object (carried from builds/dark). An
+           ordered list — the sequence is the point — set against drawn dimension lines. -->
+      <section id="b-process" class="sheet" aria-labelledby="process-h" data-folio="№ 02 / how we work">
+        <div class="rule rule--ticked" data-rule aria-hidden="true"></div>
+        <header class="sheet__head" data-reveal-group>
+          <span class="index" data-reveal>— index № 02 / how we work</span>
+          <h2 class="display" id="process-h" data-anneal>
+            <span class="ln"><span class="ln__in">three movements,</span></span>
+            <span class="ln"><span class="ln__in">one <em>object</em>.</span></span>
+          </h2>
+        </header>
+        <ol class="movements" data-reveal-group>
+          <li class="movement" data-reveal>
+            <span class="movement__no">movement i</span>
+            <div class="movement__main">
+              <h3 class="movement__title">sculpt</h3>
+              <p class="movement__body">we listen first, then shape the object in code, type, motion and copy — built in the right order, never decorated after.</p>
+            </div>
+            <span class="movement__dim" aria-hidden="true">
+              <span class="movement__dim-no">i — iii</span>
+              <span class="movement__gauge"><i class="movement__gauge-fill"></i></span>
+            </span>
+          </li>
+          <li class="movement" data-reveal>
+            <span class="movement__no">movement ii</span>
+            <div class="movement__main">
+              <h3 class="movement__title">forge</h3>
+              <p class="movement__body">we pour the system. tokens, surfaces, glass and grain. it runs in the browser the day it is born, not in a deck.</p>
+            </div>
+            <span class="movement__dim" aria-hidden="true">
+              <span class="movement__dim-no">ii — iii</span>
+              <span class="movement__gauge"><i class="movement__gauge-fill"></i></span>
+            </span>
+          </li>
+          <li class="movement" data-reveal>
+            <span class="movement__no">movement iii</span>
+            <div class="movement__main">
+              <h3 class="movement__title">polish</h3>
+              <p class="movement__body">we refuse to ship until it feels still. the hum. a surface you are willing to come back to, twice.</p>
+            </div>
+            <span class="movement__dim" aria-hidden="true">
+              <span class="movement__dim-no">iii — iii</span>
+              <span class="movement__gauge"><i class="movement__gauge-fill"></i></span>
+            </span>
+          </li>
+        </ol>
+      </section>
+
+      <!-- INDEX № 03 — THE CABINET, reworked (2026-07-05): the invented specimens are gone.
+           Two REAL works — clara (gym.atheric.eu) and under the code (under.atheric.eu) — are
+           presented as CASTINGS: faceted shards in the crystallisation band's own grammar
+           (jittered-grid triangulation, the warm-biased dark→paper tone ramp baked into the
+           fills, warm rising bottom-right toward the annealing light, 1px same-colour
+           self-strokes). Facets assemble once on reveal (per-facet transition-delay off the
+           figure's .is-in — opacity only, no rAF); a keeper ember breathes at rest and the
+           ember set ignites on hover/focus-within (signal on the dark plane only). Still the
+           last dark section — the castings' warm facets keep its old role of foreshadowing
+           the cream. Generator kept with the docs, out of the repo; these plates are the
+           artifact. -->
+      <section id="b-cabinet" class="sheet sheet--works" aria-labelledby="cabinet-h" data-folio="№ 03 / the cabinet">
+        <div class="rule rule--ticked" data-rule aria-hidden="true"></div>
+        <header class="sheet__head" data-reveal-group>
+          <span class="index" data-reveal>— index № 03 / the cabinet</span>
+          <h2 class="display" id="cabinet-h" data-anneal>
+            <span class="ln"><span class="ln__in">two works,</span></span>
+            <span class="ln"><span class="ln__in">both <em>live</em>.</span></span>
+          </h2>
+        </header>
+
+        <article class="work" data-reveal-group>
+          <figure class="work__cast" data-reveal aria-hidden="true">
+            <svg class="work__shard" viewBox="0 0 440 560" aria-hidden="true" focusable="false">
+              <polygon class="w-f" points="382,92 210,4 294.2,50.3" fill="#0b0b0b" stroke="#0b0b0b" style="--fd:0.286s"/>
+              <polygon class="w-f" points="150,530 352,548 252.8,536.6" fill="#b5a893" stroke="#b5a893" style="--fd:0.968s"/>
+              <polygon class="w-f" points="210,4 70,120 142.2,61.3" fill="#080808" stroke="#080808" style="--fd:0s"/>
+              <polygon class="w-f" points="210,4 142.2,61.3 147.1,86.5" fill="#070707" stroke="#070707" style="--fd:0.044s"/>
+              <polygon class="w-f" points="142.2,61.3 70,120 147.1,86.5" fill="#060606" stroke="#060606" style="--fd:0.022s"/>
+              <polygon class="w-f" points="294.2,50.3 210,4 237.5,130" fill="#090909" stroke="#090909" style="--fd:0.176s"/>
+              <polygon class="w-f" points="210,4 147.1,86.5 237.5,130" fill="#0e0e0e" stroke="#0e0e0e" style="--fd:0.11s"/>
+              <polygon class="w-f" points="382,92 294.2,50.3 344.9,140.2" fill="#0e0e0e" stroke="#0e0e0e" style="--fd:0.418s"/>
+              <polygon class="w-f" points="294.2,50.3 237.5,130 344.9,140.2" fill="#0b0b0b" stroke="#0b0b0b" style="--fd:0.33s"/>
+              <polygon class="w-f" points="405.8,197.9 382,92 344.9,140.2" fill="#1c150f" stroke="#1c150f" style="--fd:0.616s"/>
+              <polygon class="w-f" points="70,120 60.3,133 173.3,213.6" fill="#0c0c0c" stroke="#0c0c0c" style="--fd:0.066s"/>
+              <polygon class="w-f" points="147.1,86.5 70,120 173.3,213.6" fill="#090909" stroke="#090909" style="--fd:0.088s"/>
+              <polygon class="w-f" points="60.3,133 59.2,246 173.3,213.6" fill="#0e0e0e" stroke="#0e0e0e" style="--fd:0.154s"/>
+              <polygon class="w-f" points="237.5,130 147.1,86.5 173.3,213.6" fill="#070707" stroke="#070707" style="--fd:0.242s"/>
+              <polygon class="w-f" points="59.2,246 57.1,271.3 173.3,213.6" fill="#0c0c0c" stroke="#0c0c0c" style="--fd:0.264s"/>
+              <polygon class="w-f" points="405.8,197.9 344.9,140.2 300.4,199.4" fill="#130f0b" stroke="#130f0b" style="--fd:0.572s"/>
+              <polygon class="w-f" points="344.9,140.2 237.5,130 300.4,199.4" fill="#0b0b0b" stroke="#0b0b0b" style="--fd:0.44s"/>
+              <polygon class="w-f" points="237.5,130 173.3,213.6 300.4,199.4" fill="#090909" stroke="#090909" style="--fd:0.396s"/>
+              <polygon class="w-f" points="405.8,197.9 300.4,199.4 318.8,264.8" fill="#1f1812" stroke="#1f1812" style="--fd:0.66s"/>
+              <polygon class="w-f" points="59.2,246 60.3,133 55.3,284.1" fill="#080808" stroke="#080808" style="--fd:0.132s"/>
+              <polygon class="w-f" points="57.1,271.3 59.2,246 55.3,284.1" fill="#070707" stroke="#070707" style="--fd:0.22s"/>
+              <polygon class="w-f" points="60.3,133 44,368 55.3,284.1" fill="#080808" stroke="#080808" style="--fd:0.198s"/>
+              <polygon class="w-f" points="55.3,284.1 44,368 154.1,331.9" fill="#060606" stroke="#060606" style="--fd:0.374s"/>
+              <polygon class="w-f" points="173.3,213.6 57.1,271.3 154.1,331.9" fill="#070707" stroke="#070707" style="--fd:0.352s"/>
+              <polygon class="w-f" points="57.1,271.3 55.3,284.1 154.1,331.9" fill="#090909" stroke="#090909" style="--fd:0.308s"/>
+              <polygon class="w-f" points="300.4,199.4 173.3,213.6 268.5,316.5" fill="#120e0a" stroke="#120e0a" style="--fd:0.55s"/>
+              <polygon class="w-f" points="318.8,264.8 300.4,199.4 268.5,316.5" fill="#211a14" stroke="#211a14" style="--fd:0.638s"/>
+              <polygon class="w-f" points="173.3,213.6 154.1,331.9 268.5,316.5" fill="#0b0b0b" stroke="#0b0b0b" style="--fd:0.506s"/>
+              <polygon class="w-f" points="430,300 405.8,197.9 376.3,293.8" fill="#3a2f22" stroke="#3a2f22" style="--fd:0.858s"/>
+              <polygon class="w-f" points="405.8,197.9 318.8,264.8 376.3,293.8" fill="#281f15" stroke="#281f15" style="--fd:0.77s"/>
+              <polygon class="w-f" points="391.2,422.1 430,300 376.3,293.8" fill="#4d402f" stroke="#4d402f" style="--fd:0.946s"/>
+              <polygon class="w-f" points="318.8,264.8 268.5,316.5 376.3,293.8" fill="#2b2218" stroke="#2b2218" style="--fd:0.748s"/>
+              <polygon class="w-f" points="44,368 94.6,448.4 88.4,407.9" fill="#0e0e0e" stroke="#0e0e0e" style="--fd:0.484s"/>
+              <polygon class="w-f" points="154.1,331.9 44,368 88.4,407.9" fill="#070707" stroke="#070707" style="--fd:0.462s"/>
+              <polygon class="w-f" points="150,530 252.8,536.6 193.1,431.2" fill="#372b1e" stroke="#372b1e" style="--fd:0.88s"/>
+              <polygon class="w-f" points="94.6,448.4 150,530 193.1,431.2" fill="#1e1711" stroke="#1e1711" style="--fd:0.726s"/>
+              <polygon class="w-f" points="154.1,331.9 88.4,407.9 193.1,431.2" fill="#080808" stroke="#080808" style="--fd:0.528s"/>
+              <polygon class="w-f" points="88.4,407.9 94.6,448.4 193.1,431.2" fill="#16120e" stroke="#16120e" style="--fd:0.594s"/>
+              <polygon class="w-f" points="193.1,431.2 252.8,536.6 262.5,391.1" fill="#2d241a" stroke="#2d241a" style="--fd:0.814s"/>
+              <polygon class="w-f" points="268.5,316.5 154.1,331.9 262.5,391.1" fill="#1e1711" stroke="#1e1711" style="--fd:0.682s"/>
+              <polygon class="w-f" points="154.1,331.9 193.1,431.2 262.5,391.1" fill="#1e1711" stroke="#1e1711" style="--fd:0.704s"/>
+              <polygon class="w-f" points="352,548 391.2,422.1 336.3,386.7" fill="#e8e0cf" stroke="#e8e0cf" style="--fd:1.012s"/>
+              <polygon class="w-f" points="252.8,536.6 352,548 336.3,386.7" fill="#b3a691" stroke="#b3a691" style="--fd:0.99s"/>
+              <polygon class="w-f" points="262.5,391.1 252.8,536.6 336.3,386.7" fill="#382c1f" stroke="#382c1f" style="--fd:0.902s"/>
+              <polygon class="w-f" points="391.2,422.1 376.3,293.8 336.3,386.7" fill="#4d402f" stroke="#4d402f" style="--fd:0.924s"/>
+              <polygon class="w-f" points="376.3,293.8 268.5,316.5 336.3,386.7" fill="#3d3125" stroke="#3d3125" style="--fd:0.836s"/>
+              <polygon class="w-f" points="268.5,316.5 262.5,391.1 336.3,386.7" fill="#2e251c" stroke="#2e251c" style="--fd:0.792s"/>
+              <polygon class="w-e w-e--k" points="262.5,391.1 252.8,536.6 336.3,386.7"/>
+              <polygon class="w-e" points="430,300 405.8,197.9 376.3,293.8"/>
+              <polygon class="w-e" points="391.2,422.1 376.3,293.8 336.3,386.7"/>
+              <polygon class="w-e" points="150,530 252.8,536.6 193.1,431.2"/>
+            </svg>
+            <figcaption class="work__figcap">fig. 07 — clara, cast for the pocket</figcaption>
+          </figure>
+          <div class="work__entry">
+            <p class="work__meta" data-reveal>
+              <span>work № 01 — training log</span>
+              <span class="live"><span class="live__dot"></span>live</span>
+            </p>
+            <h3 class="work__title" data-reveal><a class="work__title-a" href="https://gym.atheric.eu">clara</a></h3>
+            <p class="work__body" data-reveal>a phone-first log for training and the life around it — gym sessions, cardio, eating, bodyweight, recovery — with an assistant that coaches. logged before you forget, between sets.</p>
+            <p class="work__spec" data-reveal>web app · sign-in at the door · in daily use</p>
+            <a class="work__open" href="https://gym.atheric.eu" data-reveal>
+              <span class="work__open-verb">open clara</span>
+              <span class="work__open-url">gym.atheric.eu</span>
+              <span class="work__open-arr" aria-hidden="true">→</span>
+            </a>
+          </div>
+        </article>
+
+        <article class="work work--flip" data-reveal-group>
+          <figure class="work__cast" data-reveal aria-hidden="true">
+            <svg class="work__shard" viewBox="0 0 640 380" aria-hidden="true" focusable="false">
+              <polygon class="w-f" points="470,4 210,18 338.1,11.9" fill="#090909" stroke="#090909" style="--fd:0.2s"/>
+              <polygon class="w-f" points="610,120 470,4 539.1,62.6" fill="#181410" stroke="#181410" style="--fd:0.66s"/>
+              <polygon class="w-f" points="626,268 610,120 615.1,194.1" fill="#4e4131" stroke="#4e4131" style="--fd:0.92s"/>
+              <polygon class="w-f" points="24,206 114.8,110.4 100.6,49.7" fill="#0b0b0b" stroke="#0b0b0b" style="--fd:0s"/>
+              <polygon class="w-f" points="210,18 100.6,49.7 183.5,117.9" fill="#0c0c0c" stroke="#0c0c0c" style="--fd:0.04s"/>
+              <polygon class="w-f" points="100.6,49.7 114.8,110.4 183.5,117.9" fill="#090909" stroke="#090909" style="--fd:0.02s"/>
+              <polygon class="w-f" points="338.1,11.9 210,18 270.7,99.9" fill="#0c0c0c" stroke="#0c0c0c" style="--fd:0.14s"/>
+              <polygon class="w-f" points="210,18 183.5,117.9 270.7,99.9" fill="#090909" stroke="#090909" style="--fd:0.12s"/>
+              <polygon class="w-f" points="338.1,11.9 270.7,99.9 333.3,137.5" fill="#120e0a" stroke="#120e0a" style="--fd:0.54s"/>
+              <polygon class="w-f" points="470,4 338.1,11.9 399.4,78.4" fill="#090909" stroke="#090909" style="--fd:0.3s"/>
+              <polygon class="w-f" points="338.1,11.9 333.3,137.5 399.4,78.4" fill="#070707" stroke="#070707" style="--fd:0.28s"/>
+              <polygon class="w-f" points="610,120 539.1,62.6 507.1,93.1" fill="#1b140e" stroke="#1b140e" style="--fd:0.74s"/>
+              <polygon class="w-f" points="539.1,62.6 470,4 507.1,93.1" fill="#16120e" stroke="#16120e" style="--fd:0.58s"/>
+              <polygon class="w-f" points="470,4 399.4,78.4 507.1,93.1" fill="#060606" stroke="#060606" style="--fd:0.44s"/>
+              <polygon class="w-f" points="114.8,110.4 24,206 122.2,140.7" fill="#0b0b0b" stroke="#0b0b0b" style="--fd:0.06s"/>
+              <polygon class="w-f" points="24,206 74.6,282.5 122.2,140.7" fill="#0a0a0a" stroke="#0a0a0a" style="--fd:0.1s"/>
+              <polygon class="w-f" points="183.5,117.9 114.8,110.4 122.2,140.7" fill="#0d0d0d" stroke="#0d0d0d" style="--fd:0.08s"/>
+              <polygon class="w-f" points="74.6,282.5 130,356 201.5,215.4" fill="#0d0d0d" stroke="#0d0d0d" style="--fd:0.24s"/>
+              <polygon class="w-f" points="270.7,99.9 183.5,117.9 201.5,215.4" fill="#16120e" stroke="#16120e" style="--fd:0.52s"/>
+              <polygon class="w-f" points="183.5,117.9 122.2,140.7 201.5,215.4" fill="#120e0a" stroke="#120e0a" style="--fd:0.5s"/>
+              <polygon class="w-f" points="122.2,140.7 74.6,282.5 201.5,215.4" fill="#0b0b0b" stroke="#0b0b0b" style="--fd:0.18s"/>
+              <polygon class="w-f" points="333.3,137.5 270.7,99.9 263.3,240.8" fill="#0b0b0b" stroke="#0b0b0b" style="--fd:0.32s"/>
+              <polygon class="w-f" points="399.4,78.4 333.3,137.5 377,160.2" fill="#0b0b0b" stroke="#0b0b0b" style="--fd:0.4s"/>
+              <polygon class="w-f" points="333.3,137.5 263.3,240.8 377,160.2" fill="#0a0a0a" stroke="#0a0a0a" style="--fd:0.42s"/>
+              <polygon class="w-f" points="399.4,78.4 377,160.2 426.8,163.9" fill="#0a0a0a" stroke="#0a0a0a" style="--fd:0.46s"/>
+              <polygon class="w-f" points="615.1,194.1 610,120 492.8,149.3" fill="#292016" stroke="#292016" style="--fd:0.8s"/>
+              <polygon class="w-f" points="610,120 507.1,93.1 492.8,149.3" fill="#201913" stroke="#201913" style="--fd:0.76s"/>
+              <polygon class="w-f" points="507.1,93.1 399.4,78.4 492.8,149.3" fill="#0e0e0e" stroke="#0e0e0e" style="--fd:0.48s"/>
+              <polygon class="w-f" points="399.4,78.4 426.8,163.9 492.8,149.3" fill="#130f0b" stroke="#130f0b" style="--fd:0.62s"/>
+              <polygon class="w-f" points="74.6,282.5 24,206 85.5,323.7" fill="#0b0b0b" stroke="#0b0b0b" style="--fd:0.16s"/>
+              <polygon class="w-f" points="130,356 74.6,282.5 85.5,323.7" fill="#0d0d0d" stroke="#0d0d0d" style="--fd:0.22s"/>
+              <polygon class="w-f" points="130,356 280.7,365.3 250,303.9" fill="#231c15" stroke="#231c15" style="--fd:0.68s"/>
+              <polygon class="w-f" points="201.5,215.4 130,356 250,303.9" fill="#0a0a0a" stroke="#0a0a0a" style="--fd:0.38s"/>
+              <polygon class="w-f" points="270.7,99.9 201.5,215.4 242.2,236.8" fill="#090909" stroke="#090909" style="--fd:0.26s"/>
+              <polygon class="w-f" points="263.3,240.8 270.7,99.9 242.2,236.8" fill="#070707" stroke="#070707" style="--fd:0.34s"/>
+              <polygon class="w-f" points="201.5,215.4 250,303.9 242.2,236.8" fill="#080808" stroke="#080808" style="--fd:0.36s"/>
+              <polygon class="w-f" points="250,303.9 263.3,240.8 242.2,236.8" fill="#14100c" stroke="#14100c" style="--fd:0.56s"/>
+              <polygon class="w-f" points="280.7,365.3 430,372 361.5,319.4" fill="#4e4131" stroke="#4e4131" style="--fd:0.9s"/>
+              <polygon class="w-f" points="263.3,240.8 250,303.9 361.5,319.4" fill="#2a2117" stroke="#2a2117" style="--fd:0.78s"/>
+              <polygon class="w-f" points="250,303.9 280.7,365.3 361.5,319.4" fill="#3b3023" stroke="#3b3023" style="--fd:0.82s"/>
+              <polygon class="w-f" points="492.8,149.3 426.8,163.9 417.7,242.2" fill="#211a14" stroke="#211a14" style="--fd:0.72s"/>
+              <polygon class="w-f" points="377,160.2 263.3,240.8 417.7,242.2" fill="#15110d" stroke="#15110d" style="--fd:0.6s"/>
+              <polygon class="w-f" points="263.3,240.8 361.5,319.4 417.7,242.2" fill="#1c150f" stroke="#1c150f" style="--fd:0.7s"/>
+              <polygon class="w-f" points="430,372 530.8,322.8 417.7,242.2" fill="#b4a792" stroke="#b4a792" style="--fd:0.96s"/>
+              <polygon class="w-f" points="361.5,319.4 430,372 417.7,242.2" fill="#372b1e" stroke="#372b1e" style="--fd:0.86s"/>
+              <polygon class="w-f" points="426.8,163.9 377,160.2 417.7,242.2" fill="#15110d" stroke="#15110d" style="--fd:0.64s"/>
+              <polygon class="w-f" points="626,268 615.1,194.1 540.6,291.6" fill="#b4a893" stroke="#b4a893" style="--fd:0.98s"/>
+              <polygon class="w-f" points="530.8,322.8 626,268 540.6,291.6" fill="#e8e0cf" stroke="#e8e0cf" style="--fd:1s"/>
+              <polygon class="w-f" points="615.1,194.1 492.8,149.3 540.6,291.6" fill="#3d3125" stroke="#3d3125" style="--fd:0.88s"/>
+              <polygon class="w-f" points="492.8,149.3 417.7,242.2 540.6,291.6" fill="#3d3125" stroke="#3d3125" style="--fd:0.84s"/>
+              <polygon class="w-f" points="417.7,242.2 530.8,322.8 540.6,291.6" fill="#655643" stroke="#655643" style="--fd:0.94s"/>
+              <polygon class="w-e w-e--k" points="615.1,194.1 492.8,149.3 540.6,291.6"/>
+              <polygon class="w-e" points="250,303.9 280.7,365.3 361.5,319.4"/>
+              <polygon class="w-e" points="361.5,319.4 430,372 417.7,242.2"/>
+              <polygon class="w-e" points="417.7,242.2 530.8,322.8 540.6,291.6"/>
+            </svg>
+            <figcaption class="work__figcap">fig. 08 — under the code, sand → civilization</figcaption>
+          </figure>
+          <div class="work__entry">
+            <p class="work__meta" data-reveal>
+              <span>work № 02 — interactive book</span>
+              <span class="live"><span class="live__dot"></span>live</span>
+            </p>
+            <h3 class="work__title" data-reveal><a class="work__title-a" href="https://under.atheric.eu">under the code</a></h3>
+            <p class="work__body" data-reveal>an interactive book on how computers actually work — from the transistor up through software, networks, data and security, to the modern machine. every chapter drawn to move; it began as a co-authored study log and set into a whole theory.</p>
+            <p class="work__spec" data-reveal>5 parts · 18 chapters · 242 figures · self-contained</p>
+            <a class="work__open" href="https://under.atheric.eu" data-reveal>
+              <span class="work__open-verb">begin reading</span>
+              <span class="work__open-url">under.atheric.eu</span>
+              <span class="work__open-arr" aria-hidden="true">→</span>
+            </a>
+          </div>
+        </article>
+
+        <p class="works__stand" data-reveal>nothing here is speculative — both doors <em>open</em>.</p>
+      </section>
+
+      </div>
+      <!-- /.dark-run — the opaque backing ends here; from the fracture band on, the world stays
+           transparent so the fixed cream/fracture layers resolve dark → paper. -->
+
+      <!-- THE FRACTURE — the cooling completes: the dark computational plane crystallises into the
+           cream cast (v1's paper home). A text-free transition band; the fixed #fracture-layer
+           renders the facets, this band only supplies the scroll distance so the mixed-facet middle
+           never shares the screen with type. --fracture (body.js) ramps 0→1 across it. -->
+      <section class="fracture" aria-hidden="true" data-fracture-band data-folio="dark → cream">
+        <p class="fracture__note"><span class="kicker__dot"></span>the chrome crystallises — into paper</p>
+        <!-- THE SET-SEAL, fig. 06 — the casting's TITLE BLOCK, the crystallisation's coda.
+             What an engineering drawing carries at the sheet's corner: the certification tab
+             of the cast — a hairline frame that scribes itself clockwise (the craft stage's
+             drawn-rule grammar), a mono ledger that sets row by row, and the studio mark
+             fig. 00 drew at the masthead now APPLIED — stamped last, punctum last of all
+             (flat accent, no glow on paper). Entirely CSS off --fracture (no JS, no timers,
+             fully scroll-reversible), staged 0.66→0.96 across the band's cream half; sticky,
+             so it holds the emptiness the resolve leaves behind, ink only ever on resolved
+             ground. Same construction grammar as fig. 00: rotate(-45) starts the scribe at
+             the punctum's NE station. (fracture.css → .fracture__seal) -->
+        <div class="fracture__seal">
+          <div class="seal__box">
+            <span class="seal__edge seal__edge--t"></span>
+            <span class="seal__edge seal__edge--r"></span>
+            <span class="seal__edge seal__edge--b"></span>
+            <span class="seal__edge seal__edge--l"></span>
+            <div class="seal__stamp">
+              <svg class="seal__mark" viewBox="0 0 48 48" focusable="false">
+                <circle class="seal__orbit" cx="24" cy="24" r="16" pathLength="100" transform="rotate(-45 24 24)" />
+                <line class="seal__tick" x1="4.5" y1="24" x2="16.5" y2="24" />
+                <line class="seal__tick" x1="24" y1="4.5" x2="24" y2="10.5" />
+                <circle class="seal__punctum" cx="36" cy="12" r="4.25" />
+              </svg>
+            </div>
+            <div class="seal__ledger">
+              <p class="seal__row">material — liquid chrome, cooled</p>
+              <p class="seal__row">finish — paper, cream</p>
+              <p class="seal__row">scale — 1 : 1</p>
+              <p class="seal__row seal__row--set">set solid — hel · mmxxvi</p>
+            </div>
+          </div>
+          <p class="seal__cap">fig. 06 — the cast, certified</p>
+        </div>
+      </section>
+
+      <!-- INDEX № 04 — VOICE. The line the studio is built around leads at chapter scale; the
+           do / do-not ledger sits quieter beneath. Carried from builds/cream. The cream close
+           begins here (.on-cream): dark ink on Atheric's paper. -->
+      <section class="sheet sheet--voice on-cream" aria-labelledby="voice-h" data-folio="№ 04 / voice">
+        <div class="rule rule--ticked" data-rule aria-hidden="true"></div>
+        <header class="sheet__head" data-reveal-group>
+          <span class="index" data-reveal>— index № 04 / voice</span>
+          <h2 class="display" id="voice-h" data-anneal>
+            <span class="ln"><span class="ln__in">quiet, on</span></span>
+            <span class="ln"><span class="ln__in"><em>purpose</em>.</span></span>
+          </h2>
+        </header>
+        <blockquote class="pull" data-reveal>a surface should feel like a <em>room</em> you are willing to come back to, twice.</blockquote>
+        <div class="dd" data-reveal-group>
+          <div class="dd__col" data-reveal>
+            <h3 class="dd__h">+ do</h3>
+            <ul>
+              <li>lowercase headlines — capitals are for mono labels and proper nouns.</li>
+              <li>one italic-serif <em>word</em> per heading — the breath.</li>
+              <li>em-dashes as punctuation; roman numerals for editions.</li>
+              <li>first-person plural — &ldquo;we sculpt&rdquo;, &ldquo;we listen&rdquo;.</li>
+            </ul>
+          </div>
+          <div class="dd__col dd__col--dont" data-reveal>
+            <h3 class="dd__h">— do not</h3>
+            <ul>
+              <li>title case or shouting capitals.</li>
+              <li>exclamation marks. ever.</li>
+              <li>&ldquo;solutions&rdquo;, &ldquo;leverage&rdquo;, &ldquo;scale&rdquo;, &ldquo;world-class&rdquo;.</li>
+              <li>emoji of any kind — typographic glyphs only.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- THE CLOSE — the invitation, mirroring the hero. Here the annealing light pools
+           brightest: the furnace's mouth, where the chrome's heat rests. (#b-begin — the nav CTA
+           target.) -->
+      <section id="b-begin" class="begin on-cream" aria-labelledby="begin-h" data-folio="let’s begin">
+        <div class="rule rule--ticked" data-rule aria-hidden="true"></div>
+        <div class="begin__glow" data-ambient aria-hidden="true"></div>
+        <div class="begin__inner" data-reveal-group>
+          <span class="index index--center" data-reveal>— let's begin</span>
+          <!-- The document's final mark: the lines rise WITHOUT their full stop; a beat later the
+               period arrives warm (flat signal — no glow on paper, per the materials law) and
+               cools to ink. The last ember of the machine, set deliberately. (body.css .fin-dot) -->
+          <h2 class="display display--xl begin__h" id="begin-h" data-anneal>
+            <span class="ln"><span class="ln__in">a small thing,</span></span>
+            <span class="ln"><span class="ln__in"><em>and</em> finish it well<span class="fin-dot">.</span></span></span>
+          </h2>
+          <a class="b-cta begin__cta" href="mailto:hello@atheric.eu" data-reveal>
+            <span class="lbl">write to us <span class="begin__cta-mark" aria-hidden="true">→</span></span>
+          </a>
+          <!-- the address in hand — the CTA above opens a mail client; this control serves
+               everyone whose machine has none: click copies the address, the verb answers
+               "copied" for a breath (body.js → the copy instrument). -->
+          <div data-reveal>
+            <button type="button" class="begin__copy" data-copy="hello@atheric.eu" aria-label="copy hello@atheric.eu to the clipboard">
+              <span class="begin__copy-addr">hello@atheric.eu</span>
+              <span class="begin__copy-act" aria-hidden="true"><span class="copy-tick">copy</span></span>
+            </button>
+          </div>
+          <p class="begin__note" data-reveal>quiet, on purpose. no retainers, on principle.</p>
+        </div>
+      </section>
+
+      <!-- THE CAST'S EDGE — the reverse seam, closing the loop. The entry band crystallised
+           the dark INTO cream in motion; here the cream sheet simply ENDS on the dark bench —
+           the same triangular grammar and the same warm-biased tonal ramp (body.js §2b's curve,
+           baked), but STATIC: no scroll signal, no shimmer, no motion of any kind — a fixed
+           composition, identical under reduced motion, zero runtime cost. Tones step
+           --paper → --bone #efece4 (the reserved darker cream, finally used) → the cooling
+           greys → the bench's #050505, on the entry band's own diagonal grain (dark deepest
+           top-left, cream surviving lowest bottom-right). Two authored plates so facet
+           proportions hold at both sheet sizes; facets laying an edge on the strip's top are
+           exact paper, on its bottom exact ground-dark — both meets are seamless and the
+           fragmentation carries the whole transition. No text ever enters the strip.
+           (fracture.css → .cast-edge) -->
+      <div class="cast-edge" aria-hidden="true">
+        <svg class="cast-edge__plate cast-edge__plate--wide" viewBox="0 0 1600 230" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+          <polygon points="0.0,0.0 129.8,0.0 0.0,47.8" fill="#f7f1e2" stroke="#f7f1e2"/>
+          <polygon points="129.8,0.0 135.4,71.6 0.0,47.8" fill="#d5cbb8" stroke="#d5cbb8"/>
+          <polygon points="129.8,0.0 306.2,0.0 135.4,71.6" fill="#f7f1e2" stroke="#f7f1e2"/>
+          <polygon points="306.2,0.0 308.1,71.5 135.4,71.6" fill="#aea189" stroke="#aea189"/>
+          <polygon points="306.2,0.0 486.9,0.0 308.1,71.5" fill="#f7f1e2" stroke="#f7f1e2"/>
+          <polygon points="486.9,0.0 475.5,64.0 308.1,71.5" fill="#d4cab9" stroke="#d4cab9"/>
+          <polygon points="486.9,0.0 613.1,0.0 514.7,14.4" fill="#f7f1e2" stroke="#f7f1e2"/>
+          <polygon points="613.1,0.0 619.3,43.9 514.7,14.4" fill="#efece4" stroke="#efece4"/>
+          <polygon points="619.3,43.9 475.5,64.0 514.7,14.4" fill="#efece4" stroke="#efece4"/>
+          <polygon points="475.5,64.0 486.9,0.0 514.7,14.4" fill="#f7f1e2" stroke="#f7f1e2"/>
+          <polygon points="613.1,0.0 747.4,0.0 733.0,46.7" fill="#f7f1e2" stroke="#f7f1e2"/>
+          <polygon points="613.1,0.0 733.0,46.7 619.3,43.9" fill="#f7f1e2" stroke="#f7f1e2"/>
+          <polygon points="747.4,0.0 891.0,0.0 865.8,42.3" fill="#f7f1e2" stroke="#f7f1e2"/>
+          <polygon points="747.4,0.0 865.8,42.3 733.0,46.7" fill="#f7f1e2" stroke="#f7f1e2"/>
+          <polygon points="891.0,0.0 1043.3,0.0 963.2,26.9" fill="#f7f1e2" stroke="#f7f1e2"/>
+          <polygon points="1043.3,0.0 1009.5,50.4 963.2,26.9" fill="#f7f1e2" stroke="#f7f1e2"/>
+          <polygon points="1009.5,50.4 865.8,42.3 963.2,26.9" fill="#d4cab9" stroke="#d4cab9"/>
+          <polygon points="865.8,42.3 891.0,0.0 963.2,26.9" fill="#d5cbb8" stroke="#d5cbb8"/>
+          <polygon points="1043.3,0.0 1167.3,0.0 1096.4,23.4" fill="#f7f1e2" stroke="#f7f1e2"/>
+          <polygon points="1167.3,0.0 1213.4,51.0 1096.4,23.4" fill="#d5cbb8" stroke="#d5cbb8"/>
+          <polygon points="1213.4,51.0 1009.5,50.4 1096.4,23.4" fill="#f7f1e2" stroke="#f7f1e2"/>
+          <polygon points="1009.5,50.4 1043.3,0.0 1096.4,23.4" fill="#f7f1e2" stroke="#f7f1e2"/>
+          <polygon points="1167.3,0.0 1341.1,0.0 1213.4,51.0" fill="#f7f1e2" stroke="#f7f1e2"/>
+          <polygon points="1341.1,0.0 1322.9,72.2 1213.4,51.0" fill="#efece4" stroke="#efece4"/>
+          <polygon points="1341.1,0.0 1455.6,0.0 1322.9,72.2" fill="#f7f1e2" stroke="#f7f1e2"/>
+          <polygon points="1455.6,0.0 1454.7,41.5 1322.9,72.2" fill="#f4eede" stroke="#f4eede"/>
+          <polygon points="1455.6,0.0 1600.0,0.0 1600.0,39.9" fill="#f7f1e2" stroke="#f7f1e2"/>
+          <polygon points="1455.6,0.0 1600.0,39.9 1454.7,41.5" fill="#f7f1e2" stroke="#f7f1e2"/>
+          <polygon points="0.0,47.8 135.4,71.6 45.3,95.9" fill="#ab9e8c" stroke="#ab9e8c"/>
+          <polygon points="135.4,71.6 156.7,116.2 45.3,95.9" fill="#81725e" stroke="#81725e"/>
+          <polygon points="156.7,116.2 0.0,102.3 45.3,95.9" fill="#554639" stroke="#554639"/>
+          <polygon points="0.0,102.3 0.0,47.8 45.3,95.9" fill="#84745c" stroke="#84745c"/>
+          <polygon points="135.4,71.6 308.1,71.5 156.7,116.2" fill="#81725f" stroke="#81725f"/>
+          <polygon points="308.1,71.5 298.1,95.8 156.7,116.2" fill="#81725e" stroke="#81725e"/>
+          <polygon points="308.1,71.5 475.5,64.0 298.1,95.8" fill="#ada08a" stroke="#ada08a"/>
+          <polygon points="475.5,64.0 457.8,109.3 298.1,95.8" fill="#54463a" stroke="#54463a"/>
+          <polygon points="475.5,64.0 619.3,43.9 457.8,109.3" fill="#d5cbb8" stroke="#d5cbb8"/>
+          <polygon points="619.3,43.9 594.7,99.4 457.8,109.3" fill="#aea08a" stroke="#aea08a"/>
+          <polygon points="619.3,43.9 733.0,46.7 754.5,98.3" fill="#ada08a" stroke="#ada08a"/>
+          <polygon points="619.3,43.9 754.5,98.3 594.7,99.4" fill="#aea189" stroke="#aea189"/>
+          <polygon points="733.0,46.7 865.8,42.3 909.6,117.2" fill="#d5cbb8" stroke="#d5cbb8"/>
+          <polygon points="733.0,46.7 909.6,117.2 754.5,98.3" fill="#d5cbb8" stroke="#d5cbb8"/>
+          <polygon points="865.8,42.3 1009.5,50.4 967.4,89.4" fill="#ada08a" stroke="#ada08a"/>
+          <polygon points="1009.5,50.4 1082.1,108.8 967.4,89.4" fill="#d5cbb8" stroke="#d5cbb8"/>
+          <polygon points="1082.1,108.8 909.6,117.2 967.4,89.4" fill="#84755c" stroke="#84755c"/>
+          <polygon points="909.6,117.2 865.8,42.3 967.4,89.4" fill="#84755c" stroke="#84755c"/>
+          <polygon points="1009.5,50.4 1213.4,51.0 1163.7,107.5" fill="#ac9f8b" stroke="#ac9f8b"/>
+          <polygon points="1009.5,50.4 1163.7,107.5 1082.1,108.8" fill="#aea08a" stroke="#aea08a"/>
+          <polygon points="1213.4,51.0 1322.9,72.2 1360.6,107.6" fill="#f7f1e2" stroke="#f7f1e2"/>
+          <polygon points="1213.4,51.0 1360.6,107.6 1163.7,107.5" fill="#ac9f8b" stroke="#ac9f8b"/>
+          <polygon points="1322.9,72.2 1454.7,41.5 1486.9,100.2" fill="#ac9e8b" stroke="#ac9e8b"/>
+          <polygon points="1322.9,72.2 1486.9,100.2 1360.6,107.6" fill="#f4eedf" stroke="#f4eedf"/>
+          <polygon points="1454.7,41.5 1600.0,39.9 1486.9,100.2" fill="#aea189" stroke="#aea189"/>
+          <polygon points="1600.0,39.9 1600.0,127.1 1486.9,100.2" fill="#ada08a" stroke="#ada08a"/>
+          <polygon points="0.0,102.3 156.7,116.2 52.5,153.4" fill="#807160" stroke="#807160"/>
+          <polygon points="156.7,116.2 143.8,168.8 52.5,153.4" fill="#0d0b06" stroke="#0d0b06"/>
+          <polygon points="143.8,168.8 0.0,182.1 52.5,153.4" fill="#0e0c05" stroke="#0e0c05"/>
+          <polygon points="0.0,182.1 0.0,102.3 52.5,153.4" fill="#0e0c05" stroke="#0e0c05"/>
+          <polygon points="156.7,116.2 298.1,95.8 315.3,182.8" fill="#84745c" stroke="#84745c"/>
+          <polygon points="156.7,116.2 315.3,182.8 143.8,168.8" fill="#332719" stroke="#332719"/>
+          <polygon points="298.1,95.8 457.8,109.3 315.3,182.8" fill="#594a36" stroke="#594a36"/>
+          <polygon points="457.8,109.3 440.9,180.6 315.3,182.8" fill="#090808" stroke="#090808"/>
+          <polygon points="457.8,109.3 594.7,99.4 525.4,128.8" fill="#83745d" stroke="#83745d"/>
+          <polygon points="594.7,99.4 621.2,173.7 525.4,128.8" fill="#83745d" stroke="#83745d"/>
+          <polygon points="621.2,173.7 440.9,180.6 525.4,128.8" fill="#594a36" stroke="#594a36"/>
+          <polygon points="440.9,180.6 457.8,109.3 525.4,128.8" fill="#211911" stroke="#211911"/>
+          <polygon points="594.7,99.4 754.5,98.3 717.6,161.0" fill="#84745c" stroke="#84745c"/>
+          <polygon points="594.7,99.4 717.6,161.0 621.2,173.7" fill="#0d0b06" stroke="#0d0b06"/>
+          <polygon points="754.5,98.3 909.6,117.2 717.6,161.0" fill="#080709" stroke="#080709"/>
+          <polygon points="909.6,117.2 905.0,181.8 717.6,161.0" fill="#0a0908" stroke="#0a0908"/>
+          <polygon points="909.6,117.2 1082.1,108.8 905.0,181.8" fill="#ada08a" stroke="#ada08a"/>
+          <polygon points="1082.1,108.8 1045.8,166.9 905.0,181.8" fill="#594a36" stroke="#594a36"/>
+          <polygon points="1082.1,108.8 1163.7,107.5 1111.0,124.8" fill="#ada08a" stroke="#ada08a"/>
+          <polygon points="1163.7,107.5 1167.1,161.6 1111.0,124.8" fill="#83745d" stroke="#83745d"/>
+          <polygon points="1167.1,161.6 1045.8,166.9 1111.0,124.8" fill="#5b4b34" stroke="#5b4b34"/>
+          <polygon points="1045.8,166.9 1082.1,108.8 1111.0,124.8" fill="#807160" stroke="#807160"/>
+          <polygon points="1163.7,107.5 1360.6,107.6 1167.1,161.6" fill="#574837" stroke="#574837"/>
+          <polygon points="1360.6,107.6 1321.3,156.4 1167.1,161.6" fill="#54463a" stroke="#54463a"/>
+          <polygon points="1360.6,107.6 1486.9,100.2 1497.1,157.8" fill="#0a0908" stroke="#0a0908"/>
+          <polygon points="1360.6,107.6 1497.1,157.8 1321.3,156.4" fill="#05050b" stroke="#05050b"/>
+          <polygon points="1486.9,100.2 1600.0,127.1 1497.1,157.8" fill="#83745d" stroke="#83745d"/>
+          <polygon points="1600.0,127.1 1600.0,185.7 1497.1,157.8" fill="#5a4b35" stroke="#5a4b35"/>
+          <polygon points="0.0,182.1 143.8,168.8 152.6,230.0" fill="#05050b" stroke="#05050b"/>
+          <polygon points="0.0,182.1 152.6,230.0 0.0,230.0" fill="#050505" stroke="#050505"/>
+          <polygon points="143.8,168.8 315.3,182.8 277.0,230.0" fill="#080709" stroke="#080709"/>
+          <polygon points="143.8,168.8 277.0,230.0 152.6,230.0" fill="#050505" stroke="#050505"/>
+          <polygon points="315.3,182.8 440.9,180.6 277.0,230.0" fill="#30251a" stroke="#30251a"/>
+          <polygon points="440.9,180.6 471.0,230.0 277.0,230.0" fill="#050505" stroke="#050505"/>
+          <polygon points="440.9,180.6 621.2,173.7 471.0,230.0" fill="#0a0908" stroke="#0a0908"/>
+          <polygon points="621.2,173.7 584.3,230.0 471.0,230.0" fill="#050505" stroke="#050505"/>
+          <polygon points="621.2,173.7 717.6,161.0 733.2,230.0" fill="#080709" stroke="#080709"/>
+          <polygon points="621.2,173.7 733.2,230.0 584.3,230.0" fill="#050505" stroke="#050505"/>
+          <polygon points="717.6,161.0 905.0,181.8 879.7,230.0" fill="#0a0908" stroke="#0a0908"/>
+          <polygon points="717.6,161.0 879.7,230.0 733.2,230.0" fill="#050505" stroke="#050505"/>
+          <polygon points="905.0,181.8 1045.8,166.9 953.4,189.8" fill="#30251a" stroke="#30251a"/>
+          <polygon points="1045.8,166.9 1046.8,230.0 953.4,189.8" fill="#04040c" stroke="#04040c"/>
+          <polygon points="1046.8,230.0 879.7,230.0 953.4,189.8" fill="#050505" stroke="#050505"/>
+          <polygon points="879.7,230.0 905.0,181.8 953.4,189.8" fill="#0a0908" stroke="#0a0908"/>
+          <polygon points="1045.8,166.9 1167.1,161.6 1046.8,230.0" fill="#06060a" stroke="#06060a"/>
+          <polygon points="1167.1,161.6 1163.6,230.0 1046.8,230.0" fill="#050505" stroke="#050505"/>
+          <polygon points="1167.1,161.6 1321.3,156.4 1163.6,230.0" fill="#594a36" stroke="#594a36"/>
+          <polygon points="1321.3,156.4 1316.9,230.0 1163.6,230.0" fill="#050505" stroke="#050505"/>
+          <polygon points="1321.3,156.4 1497.1,157.8 1316.9,230.0" fill="#0d0b06" stroke="#0d0b06"/>
+          <polygon points="1497.1,157.8 1452.2,230.0 1316.9,230.0" fill="#050505" stroke="#050505"/>
+          <polygon points="1497.1,157.8 1600.0,185.7 1452.2,230.0" fill="#0a0908" stroke="#0a0908"/>
+          <polygon points="1600.0,185.7 1600.0,230.0 1452.2,230.0" fill="#050505" stroke="#050505"/>
+        </svg>
+        <svg class="cast-edge__plate cast-edge__plate--narrow" viewBox="0 0 800 200" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+          <polygon points="0.0,0.0 134.4,0.0 125.2,40.6" fill="#f7f1e2" stroke="#f7f1e2"/>
+          <polygon points="0.0,0.0 125.2,40.6 0.0,55.4" fill="#ada08a" stroke="#ada08a"/>
+          <polygon points="134.4,0.0 272.4,0.0 287.4,42.5" fill="#f7f1e2" stroke="#f7f1e2"/>
+          <polygon points="134.4,0.0 287.4,42.5 125.2,40.6" fill="#f7f1e2" stroke="#f7f1e2"/>
+          <polygon points="272.4,0.0 395.4,0.0 287.4,42.5" fill="#f7f1e2" stroke="#f7f1e2"/>
+          <polygon points="395.4,0.0 406.7,61.4 287.4,42.5" fill="#f7f1e2" stroke="#f7f1e2"/>
+          <polygon points="395.4,0.0 504.7,0.0 497.9,63.0" fill="#f7f1e2" stroke="#f7f1e2"/>
+          <polygon points="395.4,0.0 497.9,63.0 406.7,61.4" fill="#f7f1e2" stroke="#f7f1e2"/>
+          <polygon points="504.7,0.0 658.7,0.0 497.9,63.0" fill="#f7f1e2" stroke="#f7f1e2"/>
+          <polygon points="658.7,0.0 688.1,57.4 497.9,63.0" fill="#f4eede" stroke="#f4eede"/>
+          <polygon points="658.7,0.0 800.0,0.0 800.0,37.5" fill="#f7f1e2" stroke="#f7f1e2"/>
+          <polygon points="658.7,0.0 800.0,37.5 688.1,57.4" fill="#f7f1e2" stroke="#f7f1e2"/>
+          <polygon points="0.0,55.4 125.2,40.6 0.0,104.2" fill="#83745d" stroke="#83745d"/>
+          <polygon points="125.2,40.6 154.5,99.8 0.0,104.2" fill="#efece4" stroke="#efece4"/>
+          <polygon points="125.2,40.6 287.4,42.5 177.1,75.6" fill="#807160" stroke="#807160"/>
+          <polygon points="287.4,42.5 267.7,89.3 177.1,75.6" fill="#ada08a" stroke="#ada08a"/>
+          <polygon points="267.7,89.3 154.5,99.8 177.1,75.6" fill="#322719" stroke="#322719"/>
+          <polygon points="154.5,99.8 125.2,40.6 177.1,75.6" fill="#81725e" stroke="#81725e"/>
+          <polygon points="287.4,42.5 406.7,61.4 422.0,109.5" fill="#83745d" stroke="#83745d"/>
+          <polygon points="287.4,42.5 422.0,109.5 267.7,89.3" fill="#ac9f8b" stroke="#ac9f8b"/>
+          <polygon points="406.7,61.4 497.9,63.0 465.0,88.4" fill="#f7f1e2" stroke="#f7f1e2"/>
+          <polygon points="497.9,63.0 499.1,92.3 465.0,88.4" fill="#201811" stroke="#201811"/>
+          <polygon points="499.1,92.3 422.0,109.5 465.0,88.4" fill="#aea08a" stroke="#aea08a"/>
+          <polygon points="422.0,109.5 406.7,61.4 465.0,88.4" fill="#807160" stroke="#807160"/>
+          <polygon points="497.9,63.0 688.1,57.4 662.3,111.2" fill="#aea08a" stroke="#aea08a"/>
+          <polygon points="497.9,63.0 662.3,111.2 499.1,92.3" fill="#ab9e8c" stroke="#ab9e8c"/>
+          <polygon points="688.1,57.4 800.0,37.5 662.3,111.2" fill="#d6ccb7" stroke="#d6ccb7"/>
+          <polygon points="800.0,37.5 800.0,112.9 662.3,111.2" fill="#d4cab9" stroke="#d4cab9"/>
+          <polygon points="0.0,104.2 154.5,99.8 79.1,131.2" fill="#251b0e" stroke="#251b0e"/>
+          <polygon points="154.5,99.8 145.3,159.4 79.1,131.2" fill="#05050b" stroke="#05050b"/>
+          <polygon points="145.3,159.4 0.0,139.2 79.1,131.2" fill="#05050b" stroke="#05050b"/>
+          <polygon points="0.0,139.2 0.0,104.2 79.1,131.2" fill="#0e0c05" stroke="#0e0c05"/>
+          <polygon points="154.5,99.8 267.7,89.3 145.3,159.4" fill="#554639" stroke="#554639"/>
+          <polygon points="267.7,89.3 234.0,162.6 145.3,159.4" fill="#090808" stroke="#090808"/>
+          <polygon points="267.7,89.3 422.0,109.5 234.0,162.6" fill="#05050b" stroke="#05050b"/>
+          <polygon points="422.0,109.5 384.1,146.2 234.0,162.6" fill="#05050b" stroke="#05050b"/>
+          <polygon points="422.0,109.5 499.1,92.3 516.7,157.6" fill="#201811" stroke="#201811"/>
+          <polygon points="422.0,109.5 516.7,157.6 384.1,146.2" fill="#0b0a07" stroke="#0b0a07"/>
+          <polygon points="499.1,92.3 662.3,111.2 561.0,119.5" fill="#554639" stroke="#554639"/>
+          <polygon points="662.3,111.2 655.9,163.8 561.0,119.5" fill="#0e0c05" stroke="#0e0c05"/>
+          <polygon points="655.9,163.8 516.7,157.6 561.0,119.5" fill="#84745c" stroke="#84745c"/>
+          <polygon points="516.7,157.6 499.1,92.3 561.0,119.5" fill="#80715f" stroke="#80715f"/>
+          <polygon points="662.3,111.2 800.0,112.9 751.6,137.6" fill="#31261a" stroke="#31261a"/>
+          <polygon points="800.0,112.9 800.0,158.2 751.6,137.6" fill="#ac9e8b" stroke="#ac9e8b"/>
+          <polygon points="800.0,158.2 655.9,163.8 751.6,137.6" fill="#2c221e" stroke="#2c221e"/>
+          <polygon points="655.9,163.8 662.3,111.2 751.6,137.6" fill="#574837" stroke="#574837"/>
+          <polygon points="0.0,139.2 145.3,159.4 0.0,200.0" fill="#04040c" stroke="#04040c"/>
+          <polygon points="145.3,159.4 141.7,200.0 0.0,200.0" fill="#050505" stroke="#050505"/>
+          <polygon points="145.3,159.4 234.0,162.6 253.3,200.0" fill="#82735d" stroke="#82735d"/>
+          <polygon points="145.3,159.4 253.3,200.0 141.7,200.0" fill="#050505" stroke="#050505"/>
+          <polygon points="234.0,162.6 384.1,146.2 415.6,200.0" fill="#06060a" stroke="#06060a"/>
+          <polygon points="234.0,162.6 415.6,200.0 253.3,200.0" fill="#050505" stroke="#050505"/>
+          <polygon points="384.1,146.2 516.7,157.6 415.6,200.0" fill="#05050b" stroke="#05050b"/>
+          <polygon points="516.7,157.6 546.7,200.0 415.6,200.0" fill="#050505" stroke="#050505"/>
+          <polygon points="516.7,157.6 655.9,163.8 665.1,200.0" fill="#554738" stroke="#554738"/>
+          <polygon points="516.7,157.6 665.1,200.0 546.7,200.0" fill="#050505" stroke="#050505"/>
+          <polygon points="655.9,163.8 800.0,158.2 703.5,184.6" fill="#1b1414" stroke="#1b1414"/>
+          <polygon points="800.0,158.2 800.0,200.0 703.5,184.6" fill="#0d0b06" stroke="#0d0b06"/>
+          <polygon points="800.0,200.0 665.1,200.0 703.5,184.6" fill="#050505" stroke="#050505"/>
+          <polygon points="665.1,200.0 655.9,163.8 703.5,184.6" fill="#251b0e" stroke="#251b0e"/>
+        </svg>
+      </div>
+
+      <!-- FOOTER — THE BENCH, AT NIGHT. The document closes and the reader is returned to the
+           dark plane it was drawn on: a full-bleed end panel in the machine's own tone carries
+           the preferences ledger + the colophon title block, set directly into the cooled dark
+           (materials law). Low at its foot, the banked furnace — the annealing light's last,
+           faint warmth. The ledger carries v1's preferences sheet's studio section (source /
+           legal / contact) recast in the broadsheet's coordinate-ledger grammar. v1's
+           motion·sound·lab toggles are not carried: v2 has no sound and no lab, and motion
+           follows the OS reduce-motion setting throughout — the ledger says so instead of
+           offering a control. -->
+      <footer class="foot" data-folio="preferences / colophon">
+        <div class="foot__in">
+        <div class="rule rule--ticked" data-rule aria-hidden="true"></div>
+        <section class="foot__prefs" aria-labelledby="prefs-h">
+          <h2 class="index foot__prefs-h" id="prefs-h" data-reveal>— preferences / colophon</h2>
+          <dl class="foot__ledger" data-reveal-group>
+            <div class="foot__ledger-row" data-reveal>
+              <dt>motion</dt>
+              <dd>follows your system's reduce-motion setting — nothing stored, nothing to manage.</dd>
+            </div>
+            <div class="foot__ledger-row" data-reveal>
+              <dt>source</dt>
+              <dd><a href="https://github.com/atheric-studios/atheric-exhibition" rel="noopener" target="_blank">read the source on github&nbsp;↗</a> — published for transparency, not for redistribution.</dd>
+            </div>
+            <div class="foot__ledger-row" data-reveal>
+              <dt>legal</dt>
+              <dd><a href="/privacy">privacy notice</a> · <a href="/privacy#imprint">imprint &amp; licence</a> — YDT Holdings Oy, Y-tunnus 3608568-3.</dd>
+            </div>
+            <div class="foot__ledger-row" data-reveal>
+              <dt>contact</dt>
+              <dd><a href="mailto:hello@atheric.eu">hello@atheric.eu</a><button type="button" class="foot__copybtn" data-copy="hello@atheric.eu" aria-label="copy hello@atheric.eu to the clipboard"><span class="copy-tick">copy</span></button></dd>
+            </div>
+          </dl>
+        </section>
+        <div class="foot__row" data-reveal-group>
+          <div class="foot__brand" data-reveal>
+            <span class="foot__mark" aria-hidden="true"></span>
+            <span class="foot__name">Atheric<em>.</em></span>
+          </div>
+          <span class="foot__meta" data-reveal>helsinki · liquid chrome edition · mmxxvi</span>
+          <nav class="foot__links" aria-label="Legal" data-reveal>
+            <a href="/privacy">privacy &amp; imprint</a>
+            <span class="foot__copy">© mmxxvi · ydt holdings oy</span>
+          </nav>
+        </div>
         </div>
       </footer>
-    </div>
-  </section>
 
-  <!-- ====================== MANIFESTO ====================== -->
-  <section class="manifesto" id="manifesto" data-tone="dark">
-    <span class="kicker">— Atheric / a small manifesto</span>
-    <blockquote data-split>a website should feel like a <em>room</em> you are willing to come back to, twice.</blockquote>
-    <cite>
-      <b>— Atheric</b>
-      <span class="rule"></span>
-      <span>Studio note, 2026</span>
-    </cite>
-  </section>
-
-  <!-- ====================== TRUST ====================== -->
-  <!-- A light beat before contact: the engagement posture already stated
-       in the footer + an availability line. Posture only, no numbers. -->
-  <section class="trust" id="trust">
-    <div class="trust-inner" data-reveal>
-      <span class="kicker signal">— working together</span>
-      <h2>a single <em>number</em>, a clear scope.</h2>
-      <ul class="trust-points">
-        <li>Project-based — no retainers, no hourly billing.</li>
-        <li>One agreed number, the scope drawn before we start.</li>
-        <li>Two or three projects at a time.</li>
-      </ul>
-      <p class="trust-avail"><span class="dot-live"></span> Accepting first commissions</p>
-    </div>
-  </section>
-
-  <!-- ====================== CONTACT / FOOTER ====================== -->
-  <section class="contact" id="contact" data-tone="dark">
-    <div class="contact-content">
-      <span class="kicker">— index № 03 / contact</span>
-
-      <!-- Real inquiry form — replaces the decorative compose mockup.
-           Posts JSON to /api/inquiry; with no backend configured it
-           falls back to a prefilled mailto so it works immediately.
-           Behaviour lives in src/js/inquiry.js. -->
-      <form class="inquiry" id="inquiry" novalidate data-reveal data-reveal-delay="1">
-        <h2 class="inquiry-title">start a commission<span class="inquiry-period">.</span></h2>
-        <p class="inquiry-lede">Two to three projects at a time. Tell us about yours.</p>
-
-        <div class="inquiry-grid">
-          <div class="field">
-            <label for="iq-name">Name</label>
-            <input id="iq-name" name="name" type="text" autocomplete="name" required>
-          </div>
-          <div class="field">
-            <label for="iq-email">Email</label>
-            <input id="iq-email" name="email" type="email" autocomplete="email" required>
-          </div>
-          <div class="field">
-            <label for="iq-project">Project</label>
-            <select id="iq-project" name="project" required>
-              <option value="" disabled selected>— select</option>
-              <option>Website</option>
-              <option>Brand &amp; identity</option>
-              <option>Web app / interface</option>
-              <option>Something else</option>
-            </select>
-          </div>
-          <div class="field">
-            <label for="iq-budget">Budget</label>
-            <select id="iq-budget" name="budget" required>
-              <option value="" disabled selected>— select</option>
-              <option>a focused piece</option>
-              <option>a full site</option>
-              <option>a larger system</option>
-              <option>prefer to discuss</option>
-            </select>
-          </div>
-          <div class="field field--wide">
-            <label for="iq-timeline">Timeline</label>
-            <input id="iq-timeline" name="timeline" type="text" placeholder="when would you like to start?" autocomplete="off">
-          </div>
-          <div class="field field--wide">
-            <label for="iq-message">Message</label>
-            <textarea id="iq-message" name="message" rows="4" required></textarea>
-          </div>
-        </div>
-
-        <div class="inquiry-foot">
-          <button type="submit" class="inquiry-send" data-magnetic>
-            Send inquiry
-            <span class="arrow">→</span>
-          </button>
-          <span class="inquiry-note">— or write directly to hello@atheric.eu</span>
-        </div>
-
-        <p class="inquiry-status" role="status" aria-live="polite"></p>
-      </form>
-
-      <!-- Confirmation state — revealed on success, the form is hidden.
-           tabindex so focus can move here for screen-reader announce. -->
-      <div class="inquiry-done" id="inquiry-done" hidden tabindex="-1">
-        <span class="kicker signal">— received</span>
-        <h2 class="inquiry-title">thank you<span class="inquiry-period">.</span></h2>
-        <p class="inquiry-lede" data-done-line></p>
-        <button type="button" class="inquiry-again" data-inquiry-reset>— send another</button>
-      </div>
-
-      <a href="mailto:hello@atheric.eu" class="mail" data-magnetic data-reveal data-reveal-delay="2">
-        hello@atheric.eu
-        <span class="arrow">↗</span>
-      </a>
-
-    <div class="contact-grid">
-      <div class="contact-col" data-reveal data-reveal-delay="1">
-        <h4>Studio — Finland</h4>
-        <ul>
-          <li>Atheric</li>
-          <li>YDT Holdings Oy</li>
-          <li class="muted">Conversations by appointment</li>
-          <li><a href="mailto:hello@atheric.eu">hello@atheric.eu ↗</a></li>
-        </ul>
-      </div>
-
-      <div class="contact-col" data-reveal data-reveal-delay="2">
-        <h4>How we work</h4>
-        <ul>
-          <li>Project-based pricing</li>
-          <li>Two to three projects at a time</li>
-          <li class="muted">No retainers, no hourly billing</li>
-          <li class="muted">A single number, a clear scope</li>
-        </ul>
-      </div>
-
-      <div class="contact-col" data-reveal data-reveal-delay="3">
-        <h4>Now</h4>
-        <div class="city-clocks">
-          <div class="city-clock"><span class="city">Helsinki</span><span class="time" data-tz="Europe/Helsinki">—</span></div>
-        </div>
-      </div>
-
-      <div class="contact-col" data-reveal data-reveal-delay="4">
-        <h4>Elsewhere</h4>
-        <ul>
-          <li class="muted">Quiet, on purpose.</li>
-          <li><a href="https://github.com/Lawyki" target="_blank" rel="noopener">GitHub ↗</a></li>
-          <li><a href="https://x.com/lawyk1" target="_blank" rel="noopener">X ↗</a></li>
-          <li class="muted">No LinkedIn, on principle.</li>
-        </ul>
-      </div>
     </div>
 
-    <div class="footer-marquee">
-      <div class="footer-marquee-track">
-        <span>Atheric · liquid chrome edition <span class="glyph"></span> a small studio · Finland <span class="glyph"></span> accepting first commissions <span class="glyph"></span> conversations by appointment <span class="glyph"></span> hello@atheric.eu <span class="glyph"></span></span>
-        <span>Atheric · liquid chrome edition <span class="glyph"></span> a small studio · Finland <span class="glyph"></span> accepting first commissions <span class="glyph"></span> conversations by appointment <span class="glyph"></span> hello@atheric.eu <span class="glyph"></span></span>
-      </div>
+    <!-- THE RUNNING FOLIO — the broadsheet's sheet-corner. A fixed mono line low in the left
+         gutter naming the sheet under the reader (№ 01 / the studio …), fed by the sections'
+         data-folio labels (body.js, one centre-band IntersectionObserver). It fades in exactly
+         as the chrome sets (opacity = --set) and re-inks itself per ground (bone on the dark
+         plane, near-black on cream; through the fracture band it follows --fracture). Label
+         changes tick through a letterpress mask. Decorative duplicate of the index labels →
+         aria-hidden; desktop only (<900px hides). (body.css → .folio) -->
+    <div class="folio" aria-hidden="true">
+      <span class="folio__line">№ 00 / the drawing</span>
     </div>
 
-    <div class="footer-end">
-      <span>© Atheric · MMXXVI</span>
-      <span class="seal">
-        <svg viewBox="0 0 70 70">
-          <defs>
-            <path id="circ" d="M35,35 m-26,0 a26,26 0 1,1 52,0 a26,26 0 1,1 -52,0"/>
-          </defs>
-          <text font-family="JetBrains Mono" font-size="6" letter-spacing="3" fill="rgba(244,241,236,0.55)">
-            <textPath href="#circ">ATHERIC · LIQUID · CHROME · EDITION · 26 · </textPath>
-          </text>
-        </svg>
-      </span>
-      <span class="colophon">Built by hand, in Finland</span>
-    </div>
-    </div><!-- /.contact-content -->
-  </section>
-
-  <!-- ====================== WORLD HUB (ambient — demoted below contact) ====================== -->
-  <!-- a single thin band, everything rolling continuously: cities,
-       live times (HH:MM), weather glyphs, temperatures, coordinates,
-       and small italic-serif fragments. nothing anchored, nothing
-       declarative. just an ambient stream the studio passes through. -->
-  <section class="hub" aria-label="world hub" data-tone="dark">
-    <div class="hub-stream">
-      <div class="hub-stream-track">
-        <span class="hub-stream-pass">
-          <span class="hs-city" data-city="helsinki">
-            <span class="hs-name">Helsinki</span>
-            <span class="hs-time">--:--</span>
-            <span class="hs-glyph" aria-hidden="true"></span>
-            <span class="hs-temp">—</span>
-          </span>
-          <span class="hs-sep">·</span>
-          <span class="hs-coord">60.17°N 24.94°E</span>
-          <span class="hs-sep">·</span>
-          <span class="hs-frag">in code, in light</span>
-          <span class="hs-sep">·</span>
-          <span class="hs-city" data-city="london">
-            <span class="hs-name">London</span>
-            <span class="hs-time">--:--</span>
-            <span class="hs-glyph" aria-hidden="true"></span>
-            <span class="hs-temp">—</span>
-          </span>
-          <span class="hs-sep">·</span>
-          <span class="hs-coord">51.51°N 0.13°W</span>
-          <span class="hs-sep">·</span>
-          <span class="hs-frag">the small hours</span>
-          <span class="hs-sep">·</span>
-          <span class="hs-city" data-city="newyork">
-            <span class="hs-name">New York</span>
-            <span class="hs-time">--:--</span>
-            <span class="hs-glyph" aria-hidden="true"></span>
-            <span class="hs-temp">—</span>
-          </span>
-          <span class="hs-sep">·</span>
-          <span class="hs-coord">40.71°N 74.01°W</span>
-          <span class="hs-sep">·</span>
-          <span class="hs-frag">made slowly</span>
-          <span class="hs-sep">·</span>
-          <span class="hs-city" data-city="tokyo">
-            <span class="hs-name">Tokyo</span>
-            <span class="hs-time">--:--</span>
-            <span class="hs-glyph" aria-hidden="true"></span>
-            <span class="hs-temp">—</span>
-          </span>
-          <span class="hs-sep">·</span>
-          <span class="hs-coord">35.69°N 139.69°E</span>
-          <span class="hs-sep">·</span>
-          <span class="hs-frag">matter, weightless</span>
-          <span class="hs-sep">·</span>
-        </span>
-        <span class="hub-stream-pass" aria-hidden="true">
-          <span class="hs-city" data-city="helsinki">
-            <span class="hs-name">Helsinki</span>
-            <span class="hs-time">--:--</span>
-            <span class="hs-glyph"></span>
-            <span class="hs-temp">—</span>
-          </span>
-          <span class="hs-sep">·</span>
-          <span class="hs-coord">60.17°N 24.94°E</span>
-          <span class="hs-sep">·</span>
-          <span class="hs-frag">in code, in light</span>
-          <span class="hs-sep">·</span>
-          <span class="hs-city" data-city="london">
-            <span class="hs-name">London</span>
-            <span class="hs-time">--:--</span>
-            <span class="hs-glyph"></span>
-            <span class="hs-temp">—</span>
-          </span>
-          <span class="hs-sep">·</span>
-          <span class="hs-coord">51.51°N 0.13°W</span>
-          <span class="hs-sep">·</span>
-          <span class="hs-frag">the small hours</span>
-          <span class="hs-sep">·</span>
-          <span class="hs-city" data-city="newyork">
-            <span class="hs-name">New York</span>
-            <span class="hs-time">--:--</span>
-            <span class="hs-glyph"></span>
-            <span class="hs-temp">—</span>
-          </span>
-          <span class="hs-sep">·</span>
-          <span class="hs-coord">40.71°N 74.01°W</span>
-          <span class="hs-sep">·</span>
-          <span class="hs-frag">made slowly</span>
-          <span class="hs-sep">·</span>
-          <span class="hs-city" data-city="tokyo">
-            <span class="hs-name">Tokyo</span>
-            <span class="hs-time">--:--</span>
-            <span class="hs-glyph"></span>
-            <span class="hs-temp">—</span>
-          </span>
-          <span class="hs-sep">·</span>
-          <span class="hs-coord">35.69°N 139.69°E</span>
-          <span class="hs-sep">·</span>
-          <span class="hs-frag">matter, weightless</span>
-          <span class="hs-sep">·</span>
-        </span>
-      </div>
-    </div>
-  </section>
-
-</main>
-
-<!-- ============================================================
-     Author view — studio voice, factual, visual. portrait slot
-     on the left, short paragraph + details on the right.
-     ============================================================ -->
-<main data-view="author" hidden>
-  <header class="page-header">
-    <h1 class="page-title">author</h1>
-    <p class="page-kicker">— Atheric, by hand</p>
-  </header>
-  <section class="author-body">
-    <div class="author-portrait" aria-hidden="true">
-      <span class="portrait-placeholder">portrait</span>
-    </div>
-    <div class="author-content">
-      <p class="author-prose">
-        Most studios treat a website as a signpost. For an experience
-        business it should be part of the <em>experience itself</em> —
-        the reason Atheric exists.
-      </p>
-
-      <div class="author-notes">
-        <p class="author-note">
-          Built by hand — the shader, the interactions, the inspect mode
-          you're looking at — no frameworks, no page builders. The client
-          brings direction and what they hope for; the full pass, design
-          and engineering both, is mine. One person, the whole object.
-        </p>
-        <p class="author-note">
-          Curious how it's built?
-          <button type="button" class="author-link" data-inspect-open>Open inspect mode</button>,
-          or <a class="author-link" href="https://github.com/atheric-studios/atheric-exhibition" target="_blank" rel="noopener">read the source <span class="ext-arrow" aria-hidden="true">↗</span></a>.
-        </p>
-        <p class="author-person">Yki Lähteenmäki — Finland, founded 2026.</p>
-      </div>
-
-      <dl class="author-details">
-        <dt>Email</dt>        <dd><a href="mailto:hello@atheric.eu">hello@atheric.eu</a></dd>
-        <dt>GitHub</dt>       <dd><a href="https://github.com/Lawyki" target="_blank" rel="noopener">github.com/Lawyki <span class="ext-arrow" aria-hidden="true">↗</span></a></dd>
-        <dt>X</dt>            <dd><a href="https://x.com/lawyk1" target="_blank" rel="noopener">x.com/lawyk1 <span class="ext-arrow" aria-hidden="true">↗</span></a></dd>
-      </dl>
-    </div>
-  </section>
-</main>
-
-<!-- ============================================================
-     Privacy view — its own URL (/privacy) so it stays stable when
-     cited in contracts, email footers, the Finnish DPA controller
-     register, and Article 13 disclosure replies. Page-header pattern
-     mirrors /author and /library; content is plain restrained prose
-     with dl/ul lists where structure helps. Imprint stays in the
-     preferences panel (compliance-at-a-glance); this is the long
-     form notice.
-     ============================================================ -->
-<main data-view="privacy" hidden>
-  <header class="page-header">
-    <h1 class="page-title">privacy</h1>
-    <p class="page-kicker">— what we collect, what we don't, what we do with it</p>
-  </header>
-
-  <section class="privacy-body">
-    <p class="privacy-lede">
-      Short version — we collect only what you send us. No analytics,
-      no tracking, no advertising. Fonts are self-hosted. You can ask
-      for a copy or a deletion at any time.
-    </p>
-
-    <h2>— controller</h2>
-    <dl>
-      <dt>Operator</dt>
-      <dd>YDT Holdings Oy · Y-tunnus 3608568-3 · Finland</dd>
-      <dt>Trade name</dt>
-      <dd>Atheric — a planned aputoiminimi of YDT Holdings Oy, now accepting its first commissions. A postal address will be published as commercial activity formalises under this name.</dd>
-      <dt>VAT</dt>
-      <dd>Not VAT-registered.</dd>
-      <dt>Contact</dt>
-      <dd><a href="mailto:hello@atheric.eu">hello@atheric.eu</a></dd>
-    </dl>
-
-    <h2>— what we collect</h2>
-    <dl>
-      <dt>Email correspondence</dt>
-      <dd>If you write to <a href="mailto:hello@atheric.eu">hello@atheric.eu</a>, we receive your message and your sending address. That is the only direct channel.</dd>
-      <dt>Server logs</dt>
-      <dd>Our host (Vercel) records standard HTTP request data — IP address, timestamp, user agent — for routing, abuse prevention, and HTTPS. Retained per the host's policy.</dd>
-      <dt>Local preferences</dt>
-      <dd>The site stores your motion, sound, and lab choices in your browser's <code>localStorage</code>. Not transmitted, not personal data — they live on your machine and never reach us. Cleared when you clear browser data.</dd>
-    </dl>
-
-    <h2>— what we don't collect</h2>
-    <ul>
-      <li>No analytics — no Google Analytics, Plausible, Fathom, Umami, or similar.</li>
-      <li>No advertising or marketing pixels.</li>
-      <li>No tracking cookies. The site sets no cookies of its own.</li>
-      <li>No third-party fonts — Archivo, Instrument Serif, and JetBrains Mono are self-hosted under <code>/fonts/</code>.</li>
-      <li>No third-party iframes. The motion-graphic embeds are local to the site.</li>
-    </ul>
-
-    <h2>— lawful basis</h2>
-    <p>
-      Processing your email correspondence rests on Article 6(1)(f) GDPR — legitimate interest in replying to people who write to us. If correspondence becomes part of a commission inquiry, the basis shifts to Article 6(1)(b) — pre-contractual steps at your request.
-    </p>
-
-    <h2>— how long we keep things</h2>
-    <p>
-      Inquiry emails are retained until the conversation has been resolved and a reasonable correspondence-record period has passed (typically twelve months). If you ask us to delete earlier, we will. Server logs are retained per the host's standard policy. Browser-local preferences are not held by us.
-    </p>
-
-    <h2>— international transfers</h2>
-    <p>
-      Our host, Vercel, is based in the United States. Transfer protections rest on the EU-US Data Privacy Framework adequacy decision (July 2023). Email transit may pass through similar infrastructure; the contents are encrypted in transit (TLS).
-    </p>
-
-    <h2>— your rights</h2>
-    <ul>
-      <li><em>Access</em> — ask for a copy of what we hold.</li>
-      <li><em>Rectification</em> — ask us to correct it.</li>
-      <li><em>Erasure</em> — ask us to delete it.</li>
-      <li><em>Restriction</em> — ask us to limit processing.</li>
-      <li><em>Portability</em> — receive what we hold in a machine-readable form.</li>
-      <li><em>Objection</em> — object to processing on legitimate-interest grounds.</li>
-    </ul>
-    <p>
-      Exercise any of these by writing to <a href="mailto:hello@atheric.eu">hello@atheric.eu</a>. We will respond within thirty days.
-    </p>
-
-    <h2>— complaints</h2>
-    <p>
-      If you believe your data has been mishandled, you can lodge a complaint with the Finnish Data Protection Ombudsman — <a href="https://tietosuoja.fi" target="_blank" rel="noopener">tietosuoja.fi <span class="ext-arrow" aria-hidden="true">↗</span></a>.
-    </p>
-
-    <h2>— changes</h2>
-    <p>
-      This notice will be revised when the Atheric aputoiminimi is registered, when VAT registration is added, or when the site begins commercial operation. The version date below reflects the last revision.
-    </p>
-
-    <p class="privacy-version">— version: 2026-05-08</p>
-  </section>
-</main>
-
-<!-- ============================================================
-     Library view — the page header pattern. "library" + the two
-     chrome dots that act as its typographic period. content is
-     placeholder for now; phase 4 fills in case studies.
-     ============================================================ -->
-<main data-view="library" hidden>
-  <header class="page-header">
-    <h1 class="page-title">library</h1>
-    <p class="page-kicker">— concept studies, ongoing</p>
-  </header>
-  <section class="page-body">
-    <div class="library-grid">
-      <a href="/library/1" class="library-tile library-tile--alive" data-nav-to="library-1">
-        <span class="lib-tile-num">01</span>
-        <span class="lib-tile-name">Aevum</span>
-        <span class="lib-tile-meta">— spa &amp; sensory</span>
-      </a>
-      <a href="/library/2" class="library-tile library-tile--alive" data-nav-to="library-2">
-        <span class="lib-tile-num">02</span>
-        <span class="lib-tile-name">Forma</span>
-        <span class="lib-tile-meta">— architecture studio</span>
-      </a>
-      <a href="/library/3" class="library-tile library-tile--alive" data-nav-to="library-3">
-        <span class="lib-tile-num">03</span>
-        <span class="lib-tile-name">Codon</span>
-        <span class="lib-tile-meta">— gene editing therapeutics</span>
-      </a>
-      <span class="library-tile library-tile--quiet" aria-disabled="true">
-        <span class="lib-tile-num">04</span>
-        <span class="lib-tile-name">—</span>
-        <span class="lib-tile-meta">in development</span>
-      </span>
-      <span class="library-tile library-tile--quiet" aria-disabled="true">
-        <span class="lib-tile-num">05</span>
-        <span class="lib-tile-name">—</span>
-        <span class="lib-tile-meta">in development</span>
-      </span>
-    </div>
-  </section>
-</main>
-
-<!-- Case studies — each one gets its own <main> + own scene + own
-     dark-themed body class. visible only when the route lands on
-     /library/{1,2,3}. -->
-
-<main data-view="library-1" hidden>
-  <header class="page-header">
-    <span class="cs-tag">— case study 01</span>
-    <h1 class="page-title">aevum</h1>
-    <p class="page-kicker">— a sensory spa, in development</p>
-  </header>
-  <section class="page-body">
-    <p class="page-prose">In progress.</p>
-  </section>
-</main>
-
-<main data-view="library-2" hidden>
-  <header class="page-header">
-    <span class="cs-tag">— case study 02</span>
-    <h1 class="page-title">forma</h1>
-    <p class="page-kicker">— an architecture studio, in development</p>
-  </header>
-  <section class="page-body">
-    <p class="page-prose">In progress.</p>
-  </section>
-</main>
-
-<main data-view="library-3" hidden>
-  <header class="page-header">
-    <span class="cs-tag">— case study 03</span>
-    <h1 class="page-title">codon</h1>
-    <p class="page-kicker">— gene editing therapeutics</p>
-  </header>
-  <section class="page-body">
-    <p class="page-prose">
-      A therapeutics company turning rare-disease genetics into
-      clinical programs. The brief: a brand and design language
-      that reads as <em>scientific</em> without reading as
-      <em>clinical-cold</em>.
-    </p>
-    <p class="page-prose">
-      The full case study lives at its own subdomain — a deployable
-      design system, dark indigo, with the helix as its centre.
-    </p>
-    <a class="cs-visit cs-visit--soon" href="https://codon.atheric.eu" aria-disabled="true" tabindex="-1">
-      <span>codon.atheric.eu</span>
-      <span class="ext-arrow" aria-hidden="true">↗</span>
-      <span class="cs-visit-soon-tag">— soon</span>
-    </a>
-  </section>
-</main>
-
-<script type="module" src="/src/main.js"></script>
-
-</body>
+    <!-- Dark hero behaviors (top progress bar, magnetic CTAs). LOCKED — carried verbatim. -->
+    <script type="module" src="src/scripts/dark.js?v=8"></script>
+    <!-- The blob lifecycle: mount + the scroll-coupled "set" dissolve (paint the blob out into
+         black gradually, idle the render loop once covered, restore on scroll-up). -->
+    <script type="module" src="src/scripts/main.js?v=11"></script>
+    <!-- The post-hero broadsheet: annealing light, diegetic reveals, the hel clock, AND the
+         fracture (crystallisation) scroll signal. Passive scroll→rAF. -->
+    <script type="module" src="src/scripts/body.js?v=14"></script>
+    <!-- The blob craft-reveal: the zoom study (camera flights over the live blob, explain-dots,
+         technique tab, figure panels). Native <dialog>; one rAF only while the study is open. -->
+    <script type="module" src="src/scripts/craft.js?v=13"></script>
+  </body>
 </html>

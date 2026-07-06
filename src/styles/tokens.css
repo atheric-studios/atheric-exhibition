@@ -1,0 +1,92 @@
+/* tokens.css — brand tokens, carried over from BOTH builds (do not invent values).
+ *
+ * Values below are lifted from:
+ *   - cream v1 ("Original Atheric"): builds/cream/atheric-brand-offline.html + handoff/design.md §2
+ *   - dark V2 ("Liquid Chrome"):     builds/dark/handoff/design.md §4 + README "Design tokens"
+ *
+ * The brand spine is identical across both grounds: Archivo (lowercase display) /
+ * Instrument Serif (italic break) / JetBrains Mono (labels), and one signal-orange accent.
+ * Only the ground inverts. Verify against builds/dark/handoff/source/_ds/colors_and_type.css
+ * before treating any value as final.
+ */
+
+:root {
+  /* --- Shared accent + type (constant across the inversion) ----------------------------- */
+  --signal: #ff4d1f; /* THE accent: italic serif words, kickers, live-dot, wordmark period */
+  --signal-2: #ffb43c; /* warm aurora secondary (dark only) */
+  --cool: #1f3bff; /* cool aurora breath (dark only) */
+
+  --font-display: 'Archivo', system-ui, sans-serif; /* lowercase, letter-spacing ~-0.045em */
+  --font-break: 'Instrument Serif', Georgia, serif; /* italic only, colored --signal */
+  --font-label: 'JetBrains Mono', ui-monospace, monospace; /* UPPERCASE, 0.18–0.24em tracking */
+
+  /* --- Ground: DARK (off-black overture) — dark V2 -------------------------------------- */
+  --ground-dark: #050505;
+  --ground-dark-raised: #0a0a0a;
+  --ink-on-dark: #f4f1ec; /* bone, inverted */
+  --ink-on-dark-dim: rgba(244, 241, 236, 0.62);
+  --rule-on-dark: rgba(244, 241, 236, 0.1);
+
+  /* --- CREAM / PAPER — no longer a ground. In the permanent-dark model (docs/DESIGN.md) the
+     world never turns cream; cream exists ONLY as physical PAPER objects on the dark plane.
+     These are the stock + ink/rule values used INSIDE a paper object. --------------------- */
+  --paper: #f7f1e2; /* The cream paper tone. Based on v1's --paper #f7f4ec (atheric-studios/home →
+                       liquid-chrome-v2/src/css/styles.css), warmed a touch toward yellow per the
+                       brand owner for a creamier read (still a light paper white, not a new hue).
+                       v1 also has --bone #efece4 (its body ground). The canvas cream constant in
+                       body.js mirrors this (247 241 226). */
+  --bone: #efece4; /* v1's body ground, kept for reference / darker cream if needed */
+  --ink-on-cream: #0a0a0a; /* near-black ink, on paper */
+  --ink-on-cream-dim: rgba(10, 10, 10, 0.62);
+  --rule-on-cream: rgba(10, 10, 10, 0.1);
+
+  /* --- Scroll signal — how far the reader has descended through the cooled broadsheet, 0 at
+     the hero foot → 1 at the page foot. Set by body.js (one passive scroll → rAF). Drives the
+     annealing light's swell (base.css). Replaces the old --seam-progress; the seam is gone. -- */
+  --descent: 0;
+
+  /* --- The "set" signal — how far the molten chrome has cooled/dissolved, 0 while the hero
+     headline is on screen → 1 once the blob is fully painted over (≈ a half-viewport past the
+     headline). Set by main.js. Drives the black set-veil in front of the blob and the fade-in of
+     the annealing light, so the chrome dissolves gradually instead of popping. ---------------- */
+  --set: 0;
+
+  /* --- The "fracture" signal — the crystallisation front, 0 across the dark sections → 1 once the
+     world has resolved into the cream close. Ramps only across the (text-free) fracture band. Set
+     by body.js (runs even under reduced motion — the resolve is scroll colour, not decorative
+     motion; only the facet shimmer freezes). Drives fracture.css. ---------------------------- */
+  --fracture: 0;
+
+  /* ===========================================================================================
+     THE BROADSHEET — three-layer tokens (primitive above → semantic → component) for the
+     post-hero "annealing" world. No new brand colours or fonts: every value resolves to the
+     primitives above (--signal, --paper, the ink/ground families, the three type families).
+     =========================================================================================== */
+
+  /* — Semantic: roles on the cooled dark plane — */
+  --surface: var(--ground-dark); /* the plane the document is drawn on */
+  --ink: var(--ink-on-dark); /* bone, primary text */
+  --ink-dim: rgba(244, 241, 236, 0.6); /* secondary text / stand-firsts */
+  --ink-faint: rgba(244, 241, 236, 0.38); /* mono labels, captions, dimension marks */
+  --rule: rgba(244, 241, 236, 0.12); /* hairline rules, dividers */
+  --rule-strong: rgba(244, 241, 236, 0.22);
+  --accent: var(--signal); /* the one hot orange — ticks, breaths, the live dot */
+  --accent-soft: rgba(255, 77, 31, 0.5);
+
+  /* — Component: broadsheet measures + rhythm — */
+  --page-x: clamp(20px, 5vw, 72px); /* outer gutter, matched to the hero nav padding */
+  --measure: min(1180px, 92vw); /* content column max */
+  --bay: clamp(92px, 14vh, 168px); /* vertical space between sheets */
+  --tick-gap: 13px; /* spacing of the machinist tick marks on a drawn rule */
+
+  /* — Component: motion. --ease is the hero/dark build's own curve, reused so body motion and
+     hero motion share one rhythm (the hero's reveals run ~1s with 0.09s staggers; the body sits
+     just under that). All durations are short; nothing lingers. — */
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --dur-rise: 0.75s; /* block reveal */
+  --dur-line: 0.95s; /* heading line-rise — type setting into the sheet, near the hero's 1s */
+  --dur-rule: 1.05s; /* a drawn dimension line extending */
+
+  /* (The specimen-plate stock/ink/tint tokens are retired with the invented specimens —
+     the cabinet's two castings bake the crystallisation ramp into their SVG fills.) */
+}

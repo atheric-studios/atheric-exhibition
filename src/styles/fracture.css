@@ -1,0 +1,340 @@
+/* fracture.css — THE CRYSTALLISATION (dark → cream).
+ *
+ * The cooling that began at the hero completes here: the dark computational plane fractures into a
+ * low-poly, crystalline facet field and resolves into Atheric's cream — the brand's paper home (v1
+ * editorial). One scroll signal, --fracture (0→1, body.js), drives everything. It stays 0 across
+ * the dark sections and 1 across the cream close; it only ramps across a TEXT-FREE band, so the
+ * busy mixed-facet zone never fights type. This is the readability strategy, made structural.
+ *
+ * Layers (both fixed, z-index 0 — in front of the dark backdrop stack at negative z-index, behind
+ * all content at z-index ≥ 1):
+ *   #cream-layer    solid --paper, floods in during the latter transition → guarantees the cream
+ *                   close (robust even if color-mix is unsupported) and backs the facets so the
+ *                   facet shimmer is invisible once resolved.
+ *   #fracture-layer the SVG facet field, on top of the cream layer; each facet resolves its own
+ *                   near-black tone → cream as --fracture passes the facet's --t.
+ */
+
+/* ── The cream ground ─────────────────────────────────────────────────────────────────────── */
+#cream-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: var(--paper);
+  /* floods in during the second half of the transition, then holds for the cream close */
+  opacity: clamp(0, calc((var(--fracture, 0) - 0.25) / 0.6), 1);
+}
+
+/* ── The facet field ──────────────────────────────────────────────────────────────────────────
+   Rendered on a <canvas> by body.js, NOT per-facet CSS: driving 192 polygon fills off a root
+   custom property forces a full style recalc every scroll frame (~33ms → 30fps). Canvas keeps the
+   same crafted geometry (read from the hidden #fracture-geo <svg>, which stays as the slot-in
+   source) but repaints in one cheap pass → 60fps. The facet dark→cream resolve, the tonal spread,
+   and the in-place shimmer all live in body.js's draw. */
+#fracture-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  /* Always opaque as a layer. The field's entry is spatial, not temporal: the canvas clears
+     itself on the dark (curF ≤ 0.001 — the dark sections stay pristine) and the PRESENCE FADE
+     in the draw (body.js §2b) sinks every facet to the cover's own opaque black at the
+     .dark-run's bottom edge, gaining true tone over a long falloff below. This also lets the
+     near-edge paint occlude the annealing pool, so the cover edge can't cut the glow as a
+     straight line. (The old opacity ramp off --fracture left the canvas translucent through
+     the band's entry, exposing exactly that cut.) */
+}
+#fracture-layer canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ── The transition band ──────────────────────────────────────────────────────────────────────
+   A tall, text-free section between the cabinet and the cream close. It supplies the scroll
+   distance for the ramp; being taller than the viewport guarantees the mixed-facet midpoint never
+   shares the screen with type. Its only contents are two quiet artifacts, each only ever on
+   resolved ground: the entry note (dark side — shown early, faded well before the busy middle)
+   and the set-seal (cream side — see below). */
+.fracture {
+  position: relative;
+  height: 138vh;
+}
+.fracture__note {
+  position: sticky;
+  top: 40vh;
+  margin: 0 auto;
+  width: max-content;
+  max-width: 90vw;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  font-family: var(--font-label);
+  font-size: 0.69rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  text-align: center;
+  /* visible while the facets are still dark, gone before they brighten */
+  opacity: clamp(0, calc((0.32 - var(--fracture, 0)) / 0.16), 1);
+}
+
+/* ── The set-seal, fig. 06 — the casting's title block (the crystallisation's coda) ───────────
+   What a machinist's drawing carries at the sheet's corner: the certification tab of the cast.
+   It holds the cream emptiness the resolve leaves in the band's second half. Driven entirely by
+   --fracture in CSS — no JS, no timers, fully scroll-reversible — staged like drafting, not
+   like a reveal: the frame's four hairlines scribe themselves CLOCKWISE (the craft stage's own
+   drawn-rule grammar), the divider sets, the ledger inks row by row, then the studio mark
+   fig. 00 drew at the masthead is APPLIED — the stamp presses in, its orbit scribes, ticks
+   extend, the punctum arrives last of all — FLAT accent (the wordmark's period): no glow on
+   paper, per the materials law. The fig. caption inks beneath once certified. By --fracture
+   0.66 the tab's station (52vh, centred) is solid cream at every tested width, so ink only
+   ever sits on resolved ground. */
+.fracture__seal {
+  /* the score — each part's window on the one scroll signal */
+  --fo: clamp(0, calc((var(--fracture, 0) - 0.66) / 0.08), 1); /* arrival (container) */
+  --ft: clamp(0, calc((var(--fracture, 0) - 0.66) / 0.06), 1); /* frame: top, L→R */
+  --fr: clamp(0, calc((var(--fracture, 0) - 0.7) / 0.06), 1); /* frame: right, T→B */
+  --fb: clamp(0, calc((var(--fracture, 0) - 0.74) / 0.06), 1); /* frame: bottom, R→L */
+  --fl: clamp(0, calc((var(--fracture, 0) - 0.78) / 0.06), 1); /* frame: left, B→T */
+  --fd: clamp(0, calc((var(--fracture, 0) - 0.8) / 0.04), 1); /* the divider */
+  --fm: clamp(0, calc((var(--fracture, 0) - 0.8) / 0.06), 1); /* the stamp: press + orbit */
+  --fk: clamp(0, calc((var(--fracture, 0) - 0.85) / 0.03), 1); /* the ticks extend */
+  --fp: clamp(0, calc((var(--fracture, 0) - 0.875) / 0.03), 1); /* the punctum, last */
+  --fc: clamp(0, calc((var(--fracture, 0) - 0.9) / 0.03), 1); /* the fig. caption */
+  position: sticky;
+  top: 52vh;
+  margin: 0 auto;
+  width: max-content;
+  max-width: 92vw;
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  opacity: var(--fo);
+}
+/* the boxed tab itself — the caption sits in flow BELOW it (inside the sticky footprint, so
+   the assembly can never overhang the band into the voice section's datum rule) */
+.seal__box {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  gap: 0 26px;
+  padding: 19px 26px;
+}
+/* the frame — four hairlines that scribe clockwise (transform-only) */
+.seal__edge {
+  position: absolute;
+  background: rgba(10, 10, 10, 0.32);
+}
+.seal__edge--t {
+  top: 0; left: 0; width: 100%; height: 1px;
+  transform: scaleX(var(--ft));
+  transform-origin: left center;
+}
+.seal__edge--r {
+  top: 0; right: 0; width: 1px; height: 100%;
+  transform: scaleY(var(--fr));
+  transform-origin: center top;
+}
+.seal__edge--b {
+  bottom: 0; left: 0; width: 100%; height: 1px;
+  transform: scaleX(var(--fb));
+  transform-origin: right center;
+}
+.seal__edge--l {
+  top: 0; left: 0; width: 1px; height: 100%;
+  transform: scaleY(var(--fl));
+  transform-origin: center bottom;
+}
+/* the stamp cell — pressed in while the sheet is still warm */
+.seal__stamp {
+  transform: scale(calc(1.06 - 0.06 * var(--fm)));
+}
+.seal__mark {
+  display: block;
+  width: 46px;
+  height: 46px;
+  overflow: visible;
+}
+.seal__orbit {
+  fill: none;
+  stroke: rgba(10, 10, 10, 0.55);
+  stroke-width: 1;
+  /* no vector-effect here: non-scaling-stroke computes dashes in screen space and breaks the
+     pathLength=100 normalisation (an ~8% seam at the NE station even fully scribed). The mark
+     renders at a fixed 46px, so the scaled hairline is correct anyway. */
+  stroke-dasharray: 100;
+  stroke-dashoffset: calc(100 - 100 * var(--fm));
+}
+.seal__tick {
+  stroke: rgba(10, 10, 10, 0.38);
+  stroke-width: 1;
+  opacity: var(--fk);
+}
+.seal__punctum {
+  fill: var(--accent); /* flat — no glow/blur on paper, ever */
+  opacity: var(--fp);
+}
+/* the ledger — the cast's record, inked row by row */
+.seal__ledger {
+  position: relative;
+  display: grid;
+  gap: 7px;
+}
+.seal__ledger::before {
+  /* the divider between stamp and record; the -19px reach spans the container padding so it
+     meets the frame's top and bottom hairlines */
+  content: '';
+  position: absolute;
+  left: -14px;
+  top: -19px;
+  bottom: -19px;
+  width: 1px;
+  background: rgba(10, 10, 10, 0.22);
+  transform: scaleY(var(--fd));
+  transform-origin: center top;
+}
+.seal__row {
+  --w: 0;
+  margin: 0;
+  font-family: var(--font-label);
+  font-size: 0.64rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-on-cream-dim);
+  opacity: var(--w);
+  transform: translateY(calc(6px * (1 - var(--w))));
+}
+.seal__row:nth-child(1) { --w: clamp(0, calc((var(--fracture, 0) - 0.76) / 0.05), 1); }
+.seal__row:nth-child(2) { --w: clamp(0, calc((var(--fracture, 0) - 0.79) / 0.05), 1); }
+.seal__row:nth-child(3) { --w: clamp(0, calc((var(--fracture, 0) - 0.82) / 0.05), 1); }
+.seal__row:nth-child(4) { --w: clamp(0, calc((var(--fracture, 0) - 0.85) / 0.05), 1); }
+.seal__row--set {
+  color: rgba(10, 10, 10, 0.78); /* the certifying line carries a touch more ink */
+}
+/* small screens: tighten the tab's measure so every ledger row holds one line */
+@media (max-width: 600px) {
+  .seal__box {
+    gap: 0 18px;
+    padding: 16px 18px;
+  }
+  .seal__ledger::before {
+    left: -9px;
+    top: -16px;
+    bottom: -16px;
+  }
+  .seal__row {
+    font-size: 0.58rem;
+    letter-spacing: 0.13em;
+  }
+  .seal__mark {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+/* the fig. caption — below the frame, inked once the cast is certified */
+.seal__cap {
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-label);
+  font-size: 0.62rem;
+  letter-spacing: 0.2em; /* matched to fig. 00's caption tracking — one fig. voice */
+  color: rgba(10, 10, 10, 0.5);
+  opacity: var(--fc);
+}
+
+/* ── The cream close (voice → begin → footer) ─────────────────────────────────────────────────
+   Elegant flip: body.css reads semantic tokens everywhere, so redefining the ink/rule roles on
+   .on-cream re-inks every heading, lede, list and hairline to near-black on cream automatically.
+   The one hot orange accent (--accent) is untouched — it belongs on cream (v1). */
+.on-cream {
+  --ink: var(--ink-on-cream);
+  --ink-dim: var(--ink-on-cream-dim);
+  --ink-faint: rgba(10, 10, 10, 0.52); /* small mono on paper needs a touch more ink than bone-on-dark */
+  --rule: var(--rule-on-cream);
+  --rule-strong: rgba(10, 10, 10, 0.22);
+  position: relative;
+  z-index: 1; /* above the fixed cream/fracture layers (also via .broadsheet, but be explicit) */
+  color: var(--ink);
+}
+/* the hairline between do/do-not items is a hardcoded bone rgba in body.css — re-ink on cream */
+.on-cream .dd li {
+  border-top-color: rgba(10, 10, 10, 0.08);
+}
+/* the invitation CTA becomes v1's dark pill on cream (base is a bone pill for the dark plane) */
+.on-cream .begin__cta {
+  background: var(--ink-on-cream);
+  color: var(--paper);
+}
+.on-cream .begin__cta-mark {
+  background: var(--paper);
+  color: var(--ink-on-cream);
+}
+/* the warm computational glow belongs to the dark plane, not the cream — the cream IS the resolve */
+.on-cream .begin__glow {
+  display: none;
+}
+
+/* ── The cast's edge — cream → dark, the loop closed (static) ─────────────────────────────────
+   The reverse seam. The entry band crystallised the dark INTO cream in motion; here the cast
+   sheet simply ENDS on the dark bench — the same triangular grammar, the same warm-biased tonal
+   ramp (body.js §2b's curve, baked into the fills), and NO motion of any kind: a fixed inline-SVG
+   composition, identical under reduced motion, zero runtime cost. The tones step --paper →
+   --bone #efece4 → warm greys → #050505; facets laying an edge on the strip's top are exact
+   paper and on its bottom exact ground-dark, so both meets are seamless and the fragmentation
+   carries the whole transition. Two authored plates keep facet proportions in the entry field's
+   family at both sheet sizes (preserveAspectRatio="none" stretch stays near-uniform within each
+   plate's width range). No text ever enters the strip; the begin section's bottom padding and
+   the footer's top padding hold the neighbours clear. */
+.cast-edge {
+  position: relative;
+  z-index: 1; /* above the fixed cream/fracture layers, like all content */
+  font-size: 0; /* no inline-svg baseline slack — the plates butt both grounds exactly */
+}
+.cast-edge__plate {
+  display: block;
+  width: 100%;
+}
+/* ≈ the authored 1600×230 proportion at 1440 (15vw ≈ 230/1600) */
+.cast-edge__plate--wide {
+  height: clamp(150px, 15vw, 300px);
+}
+.cast-edge__plate--narrow {
+  display: none;
+  height: clamp(120px, 26vw, 200px);
+}
+@media (max-width: 860px) {
+  .cast-edge__plate--wide {
+    display: none;
+  }
+  .cast-edge__plate--narrow {
+    display: block;
+  }
+}
+
+/* Reduced motion: the field's life is frozen in body.js (no rAF loop, no nucleation inertia, no
+   ember cracks, no glint, no shimmer — the field is drawn once per scroll position, static); the
+   black→cream resolve still tracks scroll, as the brief requires. The unveil gate (facets stay
+   dark near the .dark-run's receding bottom edge) applies there too — it is spatial correctness,
+   not motion. The set-seal title block presents composed (no scribing frame, no row stagger,
+   no press, no staged stamp); like the facets, its appearance still tracks scroll. */
+@media (prefers-reduced-motion: reduce) {
+  .seal__edge,
+  .seal__ledger::before,
+  .seal__stamp,
+  .seal__row {
+    transform: none;
+  }
+  .seal__orbit {
+    stroke-dashoffset: 0;
+  }
+  .seal__tick,
+  .seal__punctum,
+  .seal__row,
+  .seal__cap {
+    opacity: 1; /* the container's scroll-tracked opacity governs */
+  }
+}

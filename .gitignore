@@ -1,4 +1,2 @@
-node_modules
-dist
-.vite
-*.log
+.DS_Store
+Thumbs.db

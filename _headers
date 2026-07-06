@@ -1,0 +1,29 @@
+# Security headers for every path (Cloudflare Pages consumes this file; it is not served).
+# CSP notes — the site is fully self-contained (self-hosted fonts, no analytics, no fetch):
+#   script-src 'self'        — all four scripts are external ES modules, no inline <script>.
+#   style-src 'unsafe-inline' — index.html carries inline style="" attributes (reveal/tilt
+#                               plumbing) and privacy.html a page <style> block.
+#   img-src data:            — the inline SVG favicon data: URI.
+# HSTS deliberately has no includeSubDomains (gym.atheric.eu and other subdomains are out of
+# scope for this deploy) and no preload.
+/*
+  Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'
+  Strict-Transport-Security: max-age=31536000
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+
+# Caching (2026-07-05). Every /src/* and /fonts/* URL is VERSIONED (?v=N in the referencing
+# HTML/CSS/JS), so the bytes behind a given URL never change — immutable is safe and repeat
+# visits stop revalidating 25 subresources. HTML deliberately carries NO rule here: it keeps
+# the platform's max-age=0/must-revalidate, which is what lets a ?v bump ship instantly.
+# LAW: never change a /src/* or /fonts/* file without bumping its ?v stamp EVERYWHERE it is
+# referenced — index.html, privacy.html, 404.html, the fonts.css src urls, the index.html
+# font preloads, and the module import specifiers (blob.js/chrome-blob.js chain, incl. the
+# two modulepreload hints). A changed file under an unbumped URL is pinned for a year.
+/src/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable

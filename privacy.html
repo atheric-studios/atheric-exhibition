@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Atheric — privacy &amp; imprint</title>
+    <meta name="description" content="Privacy notice and imprint for Atheric (atheric.eu), operated by YDT Holdings Oy." />
+    <meta name="theme-color" content="#050505" />
+
+    <!-- Canonical + share card — the apex is canonical (www serves the same content);
+         the card assets are shared with index.html. -->
+    <link rel="canonical" href="https://atheric.eu/privacy" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Atheric" />
+    <meta property="og:title" content="Atheric — privacy &amp; imprint" />
+    <meta property="og:description" content="Privacy notice and imprint for Atheric (atheric.eu), operated by YDT Holdings Oy." />
+    <meta property="og:url" content="https://atheric.eu/privacy" />
+    <meta property="og:image" content="https://atheric.eu/og.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="we engineer weightless software — the Atheric hero, the iridescent chrome blob behind the headline" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- The Atheric mark as an inline favicon — same as index.html; also removes the
+         auto-requested favicon.ico 404. -->
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23050505'/%3E%3Ccircle cx='32' cy='32' r='22' fill='none' stroke='%23f4f1ec' stroke-width='1.6'/%3E%3Cline x1='6' y1='32' x2='22' y2='32' stroke='%23f4f1ec' stroke-width='1.3' opacity='0.55'/%3E%3Cline x1='32' y1='6' x2='32' y2='14' stroke='%23f4f1ec' stroke-width='1.3' opacity='0.55'/%3E%3Ccircle cx='48' cy='16' r='6' fill='%23ff4d1f'/%3E%3C/svg%3E"
+    />
+
+    <!-- Brand type, self-hosted under /fonts/ (see src/styles/fonts.css) — no third-party
+         font requests. -->
+    <link rel="stylesheet" href="src/styles/fonts.css?v=2" />
+
+    <!-- Same brand tokens + base as the main site (permanent-dark world, brand type).
+         ?v= matches index.html's cache stamp — these assets carry a long max-age. -->
+    <link rel="stylesheet" href="src/styles/tokens.css?v=9" />
+    <link rel="stylesheet" href="src/styles/base.css?v=10" />
+
+    <style>
+      /* Legal surface — a CALM, separate, readable page (not the cinematic scroll). The dark
+         computational plane carries one cream PAPER reading sheet (the only solid thing). For
+         long-form legibility this sheet stays calm: cream stock, hairline edge, soft ambient
+         shadow — no deckle/morph/glow. Brand tokens exact (--paper #f7f1e2, the established type). */
+      body {
+        min-height: 100dvh;
+        background: var(--ground-dark);
+        color: var(--ink-on-dark);
+      }
+
+      .legal-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 22px clamp(20px, 6vw, 72px);
+        border-bottom: 1px solid var(--rule-on-dark);
+      }
+      .legal-brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 11px;
+        text-decoration: none;
+      }
+      .legal-brand__mark {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 34% 30%, #fff 0%, #e7ddcf 18%, #9a9489 46%, #3a3733 72%, #0a0a0a 100%);
+        box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.6);
+      }
+      .legal-brand__name {
+        font-family: var(--font-display);
+        font-weight: 800;
+        font-size: 14px;
+        letter-spacing: -0.015em;
+        color: var(--ink-on-dark);
+      }
+      .legal-brand__name em {
+        font-family: var(--font-break);
+        font-style: italic;
+        font-weight: 400;
+        color: var(--signal);
+      }
+      .legal-top__label {
+        font-family: var(--font-label);
+        font-size: 10px;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--ink-on-dark-dim);
+      }
+
+      .legal-stage {
+        display: flex;
+        justify-content: center;
+        padding: clamp(48px, 9vh, 110px) clamp(20px, 6vw, 90px) clamp(60px, 10vh, 120px);
+      }
+
+      /* the cream reading sheet */
+      .legal {
+        width: min(760px, 100%);
+        padding: clamp(34px, 5vw, 72px) clamp(28px, 5vw, 68px);
+        border-radius: 3px;
+        background: var(--paper);
+        color: var(--ink-on-cream);
+        box-shadow:
+          0 0 0 1px rgba(0, 0, 0, 0.4),
+          0 2px 4px rgba(0, 0, 0, 0.45),
+          0 30px 60px rgba(0, 0, 0, 0.5);
+      }
+
+      .legal__kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-family: var(--font-label);
+        font-size: 11px;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--signal);
+      }
+      .legal h1 {
+        margin: 20px 0 0;
+        font-family: var(--font-display);
+        font-weight: 800;
+        text-transform: lowercase;
+        letter-spacing: -0.04em;
+        line-height: 0.94;
+        font-size: clamp(34px, 5.4vw, 56px);
+        color: var(--ink-on-cream);
+      }
+      .legal h1 em,
+      .legal h2 em {
+        font-family: var(--font-break);
+        font-style: italic;
+        font-weight: 400;
+        color: var(--signal);
+      }
+      .legal__stand {
+        margin: 20px 0 0;
+        max-width: 60ch;
+        font-family: var(--font-display);
+        font-size: clamp(15px, 1.3vw, 17px);
+        line-height: 1.55;
+        color: var(--ink-on-cream-dim);
+      }
+
+      .legal__rule {
+        height: 1px;
+        margin: clamp(34px, 5vw, 52px) 0;
+        border: 0;
+        background: var(--rule-on-cream);
+      }
+
+      .legal section {
+        scroll-margin-top: 90px;
+      }
+      .legal h2 {
+        margin: 0 0 4px;
+        font-family: var(--font-display);
+        font-weight: 700;
+        text-transform: lowercase;
+        letter-spacing: -0.025em;
+        line-height: 1.05;
+        font-size: clamp(24px, 3.4vw, 34px);
+        color: var(--ink-on-cream);
+      }
+      .legal h3 {
+        margin: 26px 0 8px;
+        font-family: var(--font-label);
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--ink-on-cream);
+      }
+      .legal p,
+      .legal li {
+        font-family: var(--font-display);
+        font-size: 15.5px;
+        line-height: 1.66;
+        color: var(--ink-on-cream-dim);
+        max-width: 66ch;
+      }
+      .legal p {
+        margin: 12px 0 0;
+      }
+      .legal ul {
+        margin: 12px 0 0;
+        padding-left: 1.1em;
+      }
+      .legal li {
+        margin: 6px 0;
+      }
+      .legal a {
+        color: var(--signal);
+        text-decoration: underline;
+        text-underline-offset: 2px;
+        text-decoration-thickness: 1px;
+      }
+      .legal strong {
+        font-weight: 600;
+        color: var(--ink-on-cream);
+      }
+      .legal li em {
+        font-family: var(--font-break);
+        font-style: italic;
+        color: var(--ink-on-cream);
+      }
+
+      /* imprint identity block — mono labels, a small ledger of who we are */
+      .legal__id {
+        margin: 18px 0 0;
+        display: grid;
+        grid-template-columns: 13rem 1fr;
+        border-top: 1px solid var(--rule-on-cream);
+      }
+      .legal__id dt {
+        padding: 12px 16px 12px 0;
+        border-bottom: 1px solid var(--rule-on-cream);
+        font-family: var(--font-label);
+        font-size: 10px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--ink-on-cream-dim);
+      }
+      .legal__id dd {
+        margin: 0;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--rule-on-cream);
+        font-family: var(--font-display);
+        font-size: 15px;
+        line-height: 1.5;
+        color: var(--ink-on-cream);
+      }
+      .legal__id dd b {
+        font-weight: 600;
+      }
+      @media (max-width: 560px) {
+        .legal__id {
+          grid-template-columns: 1fr;
+        }
+        .legal__id dt {
+          padding-bottom: 2px;
+          border-bottom: 0;
+        }
+        .legal__id dd {
+          padding-top: 2px;
+        }
+      }
+
+      .legal__updated {
+        margin-top: clamp(34px, 5vw, 52px);
+        font-family: var(--font-label);
+        font-size: 10px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--ink-on-cream-dim);
+      }
+
+      .legal-foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+        padding: 26px clamp(20px, 6vw, 72px);
+        border-top: 1px solid var(--rule-on-dark);
+        font-family: var(--font-label);
+        font-size: 9px;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: rgba(244, 241, 236, 0.4);
+      }
+      .legal-foot a {
+        color: rgba(244, 241, 236, 0.55);
+        text-decoration: none;
+      }
+      .legal-foot a:hover {
+        color: var(--ink-on-dark);
+      }
+    </style>
+  </head>
+
+  <body>
+    <header class="legal-top">
+      <a class="legal-brand" href="/" aria-label="Atheric — home">
+        <span class="legal-brand__mark" aria-hidden="true"></span>
+        <span class="legal-brand__name">Atheric<em>.</em></span>
+      </a>
+      <span class="legal-top__label">privacy &amp; imprint</span>
+    </header>
+
+    <main class="legal-stage">
+      <article class="legal">
+        <span class="legal__kicker">— atheric / legal</span>
+        <h1>privacy &amp; <em>imprint</em>.</h1>
+        <p class="legal__stand">
+          Atheric is a small studio site. We keep it that way here too: no accounts, no
+          tracking, no cookies of our own. This page names who runs it and what little data
+          the web inevitably touches.
+        </p>
+
+        <hr class="legal__rule" />
+
+        <!-- ============================ IMPRINT ============================ -->
+        <section id="imprint" aria-labelledby="imprint-h">
+          <h2 id="imprint-h">imprint.</h2>
+          <p>
+            <strong>atheric.eu</strong> is the studio site of Atheric, operated by the company
+            below. It is the data controller for this site.
+          </p>
+          <dl class="legal__id">
+            <dt>Operator / controller</dt>
+            <dd><b>YDT Holdings Oy</b></dd>
+            <dt>Business ID (Y-tunnus)</dt>
+            <dd>3608568-3</dd>
+            <dt>VAT ID</dt>
+            <dd>FI36085683</dd>
+            <dt>Registered</dt>
+            <dd>Hämeenlinna, Finland</dd>
+            <dt>Registered address</dt>
+            <dd>Kankaistenkatu 22, 13220 Hämeenlinna, Finland</dd>
+            <dt>Responsible person</dt>
+            <dd>Yki Lähteenmäki</dd>
+            <dt>Trade name</dt>
+            <dd>Atheric — planned as an aputoiminimi of YDT Holdings Oy, now accepting its first commissions</dd>
+            <dt>Service</dt>
+            <dd>Atheric — atheric.eu</dd>
+            <dt>Contact</dt>
+            <dd><a href="mailto:hello@atheric.eu">hello@atheric.eu</a></dd>
+          </dl>
+          <p>
+            As registered in the Finnish Business Information System —
+            <a href="https://tietopalvelu.ytj.fi/yritys/3608568-3" rel="noopener" target="_blank">YTJ registry entry&nbsp;↗</a>
+            ·
+            <a href="https://www.finder.fi/Holding-yhti%C3%B6/YDT+Holdings+Oy/H%C3%A4meenlinna/yhteystiedot/4284881" rel="noopener" target="_blank">finder.fi&nbsp;↗</a>.
+          </p>
+
+          <h3>Licence</h3>
+          <p>
+            © 2026 Atheric. All rights reserved. This site's source is published for
+            transparency, not for redistribution — reading is welcome; copying, modifying,
+            and republishing are not. Read it at
+            <a href="https://github.com/atheric-studios/atheric-exhibition" rel="noopener" target="_blank">github.com/atheric-studios/atheric-exhibition&nbsp;↗</a>.
+          </p>
+        </section>
+
+        <hr class="legal__rule" />
+
+        <!-- ============================ PRIVACY ============================ -->
+        <section id="privacy" aria-labelledby="privacy-h">
+          <h2 id="privacy-h">privacy <em>notice</em>.</h2>
+          <p>
+            Short version — we collect only what you send us. This is a static brochure site:
+            no analytics, no advertising, no tracking, and the site sets
+            <strong>no cookies of its own</strong>. The data described below is the minimum
+            the open web touches when a page is served, and you can ask for a copy or a
+            deletion at any time.
+          </p>
+
+          <h3>Who is responsible</h3>
+          <p>
+            The controller is <strong>YDT Holdings Oy</strong> (Y-tunnus 3608568-3),
+            Kankaistenkatu 22, 13220 Hämeenlinna, Finland — reachable at
+            <a href="mailto:hello@atheric.eu">hello@atheric.eu</a>.
+          </p>
+
+          <h3>Hosting &amp; server logs</h3>
+          <p>
+            The site is hosted on <strong>Cloudflare Pages</strong>. To deliver pages and keep
+            the service secure, our hosting provider processes standard technical data on our
+            behalf — such as your IP address, browser user-agent, and request timestamps. This
+            is processed as a service provider (processor) for us; legal basis: our legitimate
+            interest in operating and securing the site (GDPR Art. 6(1)(f)).
+          </p>
+
+          <h3>If you email us</h3>
+          <p>
+            If you write to <a href="mailto:hello@atheric.eu">hello@atheric.eu</a>, we receive
+            your message and your sending address, and process them solely to read and reply,
+            and to keep necessary records. That is the only direct channel. Legal basis:
+            legitimate interest in replying to people who write to us (Art. 6(1)(f)); if
+            correspondence becomes part of a commission inquiry, the basis shifts to
+            pre-contractual steps at your request (Art. 6(1)(b)).
+          </p>
+
+          <h3>What we don't collect</h3>
+          <ul>
+            <li>No analytics — no Google Analytics, Plausible, Fathom, Umami, or similar.</li>
+            <li>No advertising or marketing pixels.</li>
+            <li>No cookies — the site sets no cookies of its own.</li>
+            <li>No third-party fonts — Archivo, Instrument Serif, and JetBrains Mono are
+              self-hosted under <strong>/fonts/</strong>.</li>
+            <li>No third-party iframes or embeds.</li>
+            <li>Nothing stored in your browser — the site keeps no local storage or other
+              client-side state.</li>
+          </ul>
+
+          <h3>How long we keep things</h3>
+          <p>
+            Inquiry emails are retained until the conversation has been resolved and a
+            reasonable correspondence-record period has passed (typically twelve months). If
+            you ask us to delete earlier, we will. Server logs are retained per the host's
+            standard policy.
+          </p>
+
+          <h3>International transfers</h3>
+          <p>
+            Our host, Cloudflare, is based in the United States. Transfer protections rest on
+            the EU-US Data Privacy Framework adequacy decision. Email transit may pass through
+            similar infrastructure; the contents are encrypted in transit (TLS).
+          </p>
+
+          <h3>Your rights</h3>
+          <ul>
+            <li><em>Access</em> — ask for a copy of what we hold.</li>
+            <li><em>Rectification</em> — ask us to correct it.</li>
+            <li><em>Erasure</em> — ask us to delete it.</li>
+            <li><em>Restriction</em> — ask us to limit processing.</li>
+            <li><em>Portability</em> — receive what we hold in a machine-readable form.</li>
+            <li><em>Objection</em> — object to processing on legitimate-interest grounds.</li>
+          </ul>
+          <p>
+            Exercise any of these by writing to
+            <a href="mailto:hello@atheric.eu">hello@atheric.eu</a>. We will respond within
+            thirty days.
+          </p>
+
+          <h3>Complaints</h3>
+          <p>
+            If you believe your data has been mishandled, you can lodge a complaint with the
+            Finnish Data Protection Ombudsman —
+            <a href="https://tietosuoja.fi/en" rel="noopener" target="_blank">tietosuoja.fi</a>.
+          </p>
+
+          <h3>Changes</h3>
+          <p>
+            This notice will be revised when the Atheric aputoiminimi is registered or when
+            commercial activity formalises under the name. The date below reflects the last
+            revision.
+          </p>
+
+          <p class="legal__updated">Last updated · July 2026 · mmxxvi</p>
+        </section>
+      </article>
+    </main>
+
+    <footer class="legal-foot">
+      <span>© mmxxvi · YDT Holdings Oy · atheric</span>
+      <a href="https://github.com/atheric-studios/atheric-exhibition" rel="noopener" target="_blank">read the source ↗</a>
+      <a href="/">← back to atheric.eu</a>
+    </footer>
+  </body>
+</html>
