@@ -800,3 +800,35 @@ non-equal shots reproduce in A/A control runs of the unchanged build — harness
 - **Owner action (dashboard, not repo):** Cloudflare's Email Address Obfuscation injects
   `email-decode.min.js` (+1 request, HTML mutation) into every page. Turning it off in the
   zone (Scrape Shield) removes it; the site's mailto links render identically without it.
+
+## The philosophy layer (2026-07-06) — /thought, the author, careers
+
+Three additions in one deploy, extending the broadsheet without touching the LOCKED
+hero/blob/study or the fracture/cabinet machinery.
+
+- **/thought (thought.html) — the exhibition of ideas.** One page, three theses (the owner's
+  lines, typeset and minimally extended; each support paragraph must stay *paraphrasable* —
+  no unfalsifiable ornament), one screen each (`min-height:100svh`, flex-centred), in order:
+  `№ 01 not learned, used.` / `№ 02 weightless software.` / `№ 03 built in the right order.`
+  Set directly into the permanently dark plane in the broadsheet's own grammar — drawn ticked
+  rules, mono coordinate labels (`— thesis № 0n / iii`), lowercase Archivo display with the
+  one italic-serif breath, Instrument Serif roman for each core line. **No blob** (the blob is
+  hero-only, LOCKED); no paper objects — all ink on the plane. Thesis 02 steps off the shared
+  left axis ≥861px (the score's off-measure bar). Page-owned styles live in a `<style>` block
+  (CSP already allows it — the privacy.html precedent); reveals are `src/scripts/thought.js?v=1`,
+  one IntersectionObserver at the body's 0.09s cadence, `.is-in` pinned on under reduced
+  motion (mirrors body.js), plus a `<noscript>` override so the sheet presents fully formed
+  without JS. Canonical `https://atheric.eu/thought`, og/meta mirroring index, sitemap entry.
+- **The author — the coda of /thought (`#author`), linked from the footer colophon.**
+  Register: mission and craft, no résumé, no mythology. "atheric is authored by one person."
+  → the practice (mathematics, software, design combined into systems that reduce friction;
+  first principles; every interaction must justify interrupting a human) → "this is the
+  first *work*." + mono signature `yki lähteenmäki · helsinki, fi` (the name is already
+  public in the imprint). Footer ledger gains `author → /thought#author`.
+- **Careers — one footer ledger row.** `careers — no open positions. if you're exceptional,
+  write to us.` (the existing mailto). Sits between author and legal.
+- **Nav: the fourth link.** The hero nav gains `thought` (→ /thought) after cabinet — a page
+  link among the three anchors; total stays restrained. The <660px two-row nav in base.css
+  gains `flex-wrap:wrap` + a tighter gap clamp (`12px clamp(18px, 7vw, 40px)`) so four links
+  hold one row from ~360px and wrap gracefully below — **base.css ?v=11 → 12** (bumped in
+  index.html + privacy.html; 404.html does not reference base.css).
