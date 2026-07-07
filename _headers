@@ -27,3 +27,9 @@
 
 /fonts/*
   Cache-Control: public, max-age=31536000, immutable
+
+# /img/* follows the same law: the author plate is referenced as author.webp?v=1 / author.jpg?v=1
+# from thought.html, so the bytes behind each URL are immutable — bump the ?v stamp there if the
+# image is ever re-exported.
+/img/*
+  Cache-Control: public, max-age=31536000, immutable
