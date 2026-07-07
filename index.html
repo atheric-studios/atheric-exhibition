@@ -48,7 +48,7 @@
     <!-- ?v= busts the CDN/browser cache when these assets change (they carry a long max-age;
          index.html itself is served uncached, so bumping the stamp ships changes immediately). -->
     <link rel="stylesheet" href="src/styles/tokens.css?v=9" />
-    <link rel="stylesheet" href="src/styles/base.css?v=12" />
+    <link rel="stylesheet" href="src/styles/base.css?v=13" />
     <!-- The dark hero: keyframes + interaction classes. LOCKED — carried verbatim. -->
     <link rel="stylesheet" href="src/styles/dark.css?v=8" />
     <!-- The post-hero body: the cooled-chrome engineering broadsheet (docs/DESIGN.md). -->
@@ -68,6 +68,24 @@
   </head>
 
   <body>
+    <!-- THE SCROLL-UP NAV — a liquid-glass panel that carries all five destinations. The hero's
+         own nav is only present at the top of the page; once the reader is past the hero this
+         panel appears on any scroll-UP (and hides on scroll-down), so any section — Author
+         included — is one tap away from mid-page without a return to the top. Distinct from the
+         hero nav, in-grammar (glass + brand tokens + the mono type). Fixed, ≥44px targets,
+         keyboard-reachable and focus-visible; hidden from tab order + AT until shown. The state
+         is toggled by body.js (§7); the orange scroll-progress indicator is untouched.
+         Reduced motion: it appears without motion (no slide — base.css kills the transform). -->
+    <nav class="scrollnav" aria-label="Sections" data-scrollnav aria-hidden="true">
+      <div class="scrollnav__pill">
+        <a class="scrollnav__link" href="#b-studio">studio</a>
+        <a class="scrollnav__link" href="#b-process">process</a>
+        <a class="scrollnav__link" href="#b-cabinet">cabinet</a>
+        <a class="scrollnav__link" href="/thought">thought</a>
+        <a class="scrollnav__link" href="/thought#author">author</a>
+      </div>
+    </nav>
+
     <!-- ============================================================================
          PAGE BACKDROP — three fixed, pointer-inert layers behind EVERY region (permanent-dark
          model, docs/DESIGN.md):
@@ -338,6 +356,7 @@
             <a class="b-navlink" href="#b-process">process</a>
             <a class="b-navlink" href="#b-cabinet">cabinet</a>
             <a class="b-navlink" href="/thought">thought</a>
+            <a class="b-navlink" href="/thought#author">author</a>
           </div>
           <div style="justify-self:end;">
             <a class="b-cta" href="#b-begin" style="display:inline-flex; align-items:center; gap:10px; padding:11px 18px; border-radius:999px; border:1px solid rgba(244,241,236,0.25); background:transparent; color:#f4f1ec; font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:500; letter-spacing:0.18em; text-transform:uppercase; text-decoration:none;">
@@ -1335,7 +1354,7 @@ col += <span class="cm-kw">vec3</span>(<span class="cm-num">1.00</span>, <span c
     <script type="module" src="src/scripts/main.js?v=12"></script>
     <!-- The post-hero broadsheet: annealing light, diegetic reveals, the hel clock, AND the
          fracture (crystallisation) scroll signal. Passive scroll→rAF. -->
-    <script type="module" src="src/scripts/body.js?v=16"></script>
+    <script type="module" src="src/scripts/body.js?v=17"></script>
     <!-- The blob craft-reveal: the zoom study (camera flights over the live blob, explain-dots,
          technique tab, figure panels). Native <dialog>; one rAF only while the study is open. -->
     <script type="module" src="src/scripts/craft.js?v=15"></script>

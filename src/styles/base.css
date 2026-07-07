@@ -221,6 +221,88 @@ body.craft-active #dark section::after {
   }
 }
 
+/* ── The scroll-up nav — a liquid-glass section panel ─────────────────────────────────────────
+   The hero's own nav is present only at the top of the page; past the hero this panel appears on
+   any scroll-UP and hides on scroll-down (body.js §7 toggles .is-up), so every destination —
+   Author included — is one tap away from mid-page without a return to the top. Distinct from the
+   hero nav but in-grammar: glass, the brand tokens, the mono type. Fixed; ≥44px targets;
+   keyboard-reachable + focus-visible; removed from the tab order + AT (visibility:hidden) until
+   shown. It sits BELOW the orange progress line (z 90) — that indicator is never touched. */
+.scrollnav {
+  position: fixed;
+  top: 14px;
+  left: 50%;
+  z-index: 89;
+  display: flex;
+  justify-content: center;
+  width: max-content;
+  max-width: calc(100vw - 24px);
+  opacity: 0;
+  visibility: hidden;
+  transform: translate(-50%, -150%);
+  transition: opacity 0.42s var(--ease, cubic-bezier(0.2, 0.8, 0.2, 1)),
+    transform 0.42s var(--ease, cubic-bezier(0.2, 0.8, 0.2, 1)), visibility 0s linear 0.42s;
+  pointer-events: none;
+}
+.scrollnav.is-up {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0);
+  transition: opacity 0.42s var(--ease, cubic-bezier(0.2, 0.8, 0.2, 1)),
+    transform 0.42s var(--ease, cubic-bezier(0.2, 0.8, 0.2, 1)), visibility 0s;
+  pointer-events: auto;
+}
+.scrollnav__pill {
+  display: flex;
+  align-items: center;
+  gap: clamp(2px, 1.2vw, 18px);
+  padding: 5px clamp(8px, 1.4vw, 15px);
+  border-radius: 999px;
+  background: rgba(10, 10, 10, 0.52);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  backdrop-filter: blur(20px) saturate(150%);
+  border: 1px solid rgba(244, 241, 236, 0.14);
+  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.09);
+}
+.scrollnav__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 clamp(7px, 1vw, 12px);
+  border-radius: 999px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(244, 241, 236, 0.6);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 0.32s var(--ease, cubic-bezier(0.2, 0.8, 0.2, 1)),
+    background-color 0.32s var(--ease, cubic-bezier(0.2, 0.8, 0.2, 1));
+}
+.scrollnav__link:hover {
+  color: #f4f1ec;
+  background: rgba(244, 241, 236, 0.06);
+}
+.scrollnav__link:focus-visible {
+  outline: 2px solid #ff4d1f;
+  outline-offset: 2px;
+  color: #f4f1ec;
+}
+/* narrow viewports — tighten type + gaps so all five hold one row down to ~320px */
+@media (max-width: 620px) {
+  .scrollnav__pill {
+    gap: 1px;
+    padding: 4px 7px;
+  }
+  .scrollnav__link {
+    padding: 0 6px;
+    font-size: 9px;
+    letter-spacing: 0.08em;
+  }
+}
+
 /* ── Reduced motion ───────────────────────────────────────────────────────────────────────
    No smooth scroll, no ambient loops, and the blob departure + annealing handoff cut instantly
    (no crossfade, no scroll-scored swell). The page presents fully formed. */
@@ -239,5 +321,11 @@ body.craft-active #dark section::after {
     transition: none;
     transform: none;
     opacity: 0.5;
+  }
+  /* the scroll-up nav appears WITHOUT motion — no slide, no fade; simply present or absent */
+  .scrollnav,
+  .scrollnav.is-up {
+    transform: translate(-50%, 0) !important;
+    transition: visibility 0s linear !important;
   }
 }

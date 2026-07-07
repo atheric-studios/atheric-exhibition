@@ -580,3 +580,43 @@ if (copyBtns.length) {
     });
   });
 }
+
+// ── 7. The scroll-up nav ──────────────────────────────────────────────────────────────────────
+// The hero's own nav leaves the viewport with the hero; past the hero this liquid-glass panel
+// appears on any scroll-UP (and hides on scroll-down), so any destination — Author included — is
+// one tap away from mid-page without a return to the top. State only: the glass look and the
+// no-motion reduced-motion presentation live in base.css. One passive scroll listener → rAF (the
+// annealing light's own pattern). The orange progress indicator is independent and untouched.
+const scrollnav = document.querySelector('[data-scrollnav]');
+if (scrollnav) {
+  const heroSection = document.querySelector('#dark section'); // the hero (first section)
+  let showAfter = window.innerHeight; // past the hero — recomputed from its true height
+  const measure = () => {
+    if (heroSection) {
+      const r = heroSection.getBoundingClientRect();
+      showAfter = Math.max(120, r.bottom + window.scrollY - 80); // absolute doc Y of the hero foot
+    }
+  };
+  let lastY = window.scrollY;
+  let shown = false;
+  let raf = 0;
+  const setShown = (on) => {
+    if (on === shown) return;
+    shown = on;
+    scrollnav.classList.toggle('is-up', on);
+    scrollnav.setAttribute('aria-hidden', on ? 'false' : 'true');
+  };
+  const apply = () => {
+    raf = 0;
+    const y = window.scrollY;
+    const dy = y - lastY;
+    if (y <= showAfter) setShown(false); // in/near the hero — its own nav is present
+    else if (dy < -4) setShown(true); //     scrolling up  → reveal
+    else if (dy > 4) setShown(false); //     scrolling down → hide
+    lastY = y; // (a jitter < 4px keeps the current state — no flicker)
+  };
+  const onScroll = () => { if (!raf) raf = requestAnimationFrame(apply); };
+  measure();
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', () => { measure(); onScroll(); }, { passive: true });
+}
