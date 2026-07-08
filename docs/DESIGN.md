@@ -875,3 +875,90 @@ in thought.html's own `<style>` block, no shared-asset stamps touched). Verified
 zero overflow, stones present/hidden per width, split only under full motion (21 word
 masks), RM presents everything composed, no-JS composed, zero console errors; scroll-through
 with reveals firing 386 frames avg 8.3ms worst 9.4ms, **zero frames >25ms**.
+
+## The illumination pass (2026-07-06) — light, not paint
+
+A four-commit pass (`3fdd4b7` → `4644854` → `38669ba` → `ca76378`) that fixes one law across
+every warm surface: **illumination must read as *light*, never as paint** — it lives on the
+permanently dark plane only (per *Materials & physics law*), never on paper or cream, and it is
+laid *additively over* a finished surface, not filled *into* it. Three surfaces were re-set to it.
+
+- **Clara casts her own light — the cabinet's fig. 07 (`3fdd4b7`).** The `clara` casting is
+  rebranded to its subject's identity: its accents are **WHITE** (Clara's cloud-white canvas),
+  never the furnace orange. Her candy gradient `#claraCandy` carries the mark's own stops (the
+  gym-log `--candy-a/-b/-c`); an opaque shard reads as light escaping past the silhouette. The
+  seam-light is real: `.w-seam` strokes laid on **actual mesh edges radiating from a hub**, each a
+  wide faint **halo** + a thin near-white **core**, both stroking the one candy gradient, breathing
+  out of phase (`--sp`). This is the **fig. 07 seam-light vocabulary** the /thought author plate
+  and the backlit stones later reuse (`#authorSeam` is its sibling). **Work № 02 stays orange by
+  design** — the furnace's own casting; only Clara carries her own light.
+- **The fracture cracks go neon (`4644854`).** In the crystallisation band the parted seam is no
+  longer a painted line — it is stroked **ADDITIVELY** as a small neon panel (body.js's *neon
+  pass*), a wide faint halo + a thin near-white core, drawn **after** the field is finished so the
+  crack's light is unmistakable. Each ring is clipped to a chase window near where the seam is
+  *actually* parting (keyed to its remaining chase distance), so the fixed field can never show a
+  hard lit edge sliding out from under it. The illumination inside the fracture stays the
+  `--signal`/pool family, dimmed by `× (1 − 0.6·--fracture)` so late cracks are dark hairlines on
+  cream, not hot outlines — the law holds through the whole ramp.
+- **The hero light field re-set (`38669ba` → `ca76378`).** The hero's warmth becomes an **ambient
+  wash with no visible sources** — then the aurora pools return at their **original energy, edges
+  re-set as light** rather than as a shape with a painted rim. The `.anneal-pool` warm amber pool
+  brightens and swells with scroll depth (`--descent`); dark plane only, never on paper. No new
+  law — the existing annealing light, held to the same "light, not paint" standard as the cracks.
+
+## The author gains a face (2026-07-07) — the plate, the backlit stones, the scroll-up nav
+
+Three additions across `c5f4df2` → `2fa599a` → `fd7c688`, all on /thought (except the nav, which
+is index-only) and all in the fig. 07 illumination grammar above. `base.css ?v=12 → 13` (index +
+privacy + thought), `body.js ?v=16 → 17`, `thought.js ?v=2`.
+
+- **The author's plate — the photograph becomes a crystal (`#author`).** Seated in the coda's
+  counter-field, exactly where each thesis sets a stone: a **triangulated photo panel**. One
+  continuous photograph, masked to an irregular crystalline boundary and tessellated into **98
+  facets** whose seams vanish at rest. Every facet is **filled AND self-stroked from ONE photo** via
+  a `userSpaceOnUse <pattern>` (`#authorPhoto`) — so the image stays coherent and is **never
+  tinted** (unlike the tone-ramped stones/shards); the 0.75 self-stroke seals the antialiasing seam
+  (the cabinet's `.w-f` trick). Geometry is generated — `docs/generators/gen-author-panel.js`
+  (jittered ring → Delaunay → shared-edge seam network, seeded, **edge-weighted**; never hand-edit
+  the polygons). The SVG viewBox reserves the box → **no CLS**; `role=img` (alt kept), keyboard
+  focusable. **Float-in reveal:** thought.js adds `.is-in` on `[data-fig]` as the panel enters and
+  each facet eases from its `--fx/--fy` offset to its seat, centre-out via `--fd` (`apfFloat` 0.7s,
+  `backwards` fill releasing control back to the base — the site's own `lightArrive` pattern). Under
+  the hand the facets **LIFT** (radial `--lx/--ly`) and the **candy seam-light reveals between
+  them** (`.author__seam` halo+core on `#authorSeam`, breathing `authorSeamBreath`). **The
+  back-glow (`fd7c688`):** `.author__glow` is a *true* backlight from behind the whole plate (not
+  only between the cracks) — `isolation:isolate` on `.author__panel` seats it behind the mesh (z 0,
+  above the plane); off at rest, it blooms (opacity 0 → 0.82) and grows (scale 0.72 → 1.08) on
+  hover/focus, the candy palette on the dark plane only. The plate's refinement over the stones'
+  seams: a real backlight, not just lit edges. The sheet's right-side meta gains a visible
+  `author ↓` jump to the coda. RM/no-JS: assembled, coherent, no float/lift/seam-light.
+- **The stones, lit from behind — the backlight breath.** This **updates the handcraft pass**: the
+  thesis stones no longer sit dark-still ("no embers, no breath, nothing loops"). Each now carries a
+  **constant, subtle, always-on candy backlight** — light on the dark plane only, the
+  `#authorSeam`/claraCandy palette, no new light invented. `.t-stone::before` is the breath
+  (`tStoneGlow`, opacity 0.06↔0.16, scale 1↔1.05), with per-stone phase `--g-delay` and rate
+  `--g-dur` (6.4 / 8.1 / 7.2s) so the three **never beat in unison**. `.t-stone::after` is the
+  hand's answer: off at rest, on hover/`:focus-within` it **STRENGTHENS** (opacity → 0.5),
+  **GROWS** (scale 0.85 → 1.12), and the breath speeds up (`--g-dur × 0.55`, amplitude unchanged —
+  no pop). The pseudos seat at z-index -1 inside the stone's transform stacking context (behind the
+  facets, above the plane); the facets keep their own one-shot float-in above it. The stones now
+  answer the hand (`pointer-events:auto` in the empty counter-field). ≥900px only (the figure is
+  `display:none` below).
+- **The scroll-up nav — every destination one tap from mid-page (`.scrollnav`, index-only).** The
+  hero's own nav leaves the viewport with the hero; past the hero this **fixed liquid-glass pill**
+  appears on any **scroll-UP** and hides on scroll-down, so any destination — Author included — is
+  one tap away without a return to the top. In-grammar but distinct: glass, brand tokens, mono
+  type. State lives in body.js **§7** — one passive scroll listener → rAF (the annealing light's own
+  pattern): it measures the hero's foot (`showAfter`), holds hidden while ≤ it (the hero nav is
+  present there), reveals on `dy < −4`, hides on `dy > 4`, and a <4px jitter keeps the current state
+  (no flicker); it toggles `.is-up` + `aria-hidden`. It sits at **z-index 89 — below the orange
+  progress line (z 90)**, which is never touched. It is **out of the tab order and off AT until
+  shown** (`visibility:hidden` at rest, delayed off the transition; `visible` on `.is-up`); ≥44px
+  targets, keyboard-reachable, focus-visible ring. RM: it appears **without motion** — no slide, no
+  fade; simply present or absent. **The fifth link:** both the hero nav and the pill gain
+  `author → /thought#author` after `thought` (three anchors + two page links; the total stays
+  restrained).
+- **The overflow-x guardrail.** `.thesis` and `.author` on /thought take `overflow-x: clip` +
+  `overflow-y: visible`, so the stone and author back-glows can bloom outward (negative `inset` +
+  hover `scale`) **without ever opening a horizontal scrollbar** — `clip`, not `hidden`, so no new
+  scroll container is created and the vertical flow is untouched.
