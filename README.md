@@ -1,7 +1,8 @@
 # Atheric.
 
 Source for [atheric.eu](https://atheric.eu) — a small software studio in
-Helsinki. This is **v2**, frozen as `v2.0.0` on 2026-07-06.
+Helsinki. This is **v2** — tagged `v2.0.0` on 2026-07-06 and mirrored
+from the working repo as the live site evolves.
 
 This repository is published for transparency and inspection, not for
 redistribution. You may read it. You may not copy, modify, or republish
@@ -13,7 +14,7 @@ is kept in sync with the live site.
 
 ## The concept — the chrome cools
 
-One page, one material, one process. The hero is **molten chrome**: an
+One material, one process. The home page's hero is **molten chrome**: an
 iridescent thin-film blob, raymarched live on the GPU (72-step raymarch,
 SDF metaballs, thin-film interference material). As the reader scrolls
 past, the chrome **sets** — the blob dissolves into the permanent dark
@@ -34,6 +35,10 @@ Along the way:
 - **The cabinet** — the studio's two live works presented as castings:
   [clara](https://gym.atheric.eu) and
   [under the code](https://under.atheric.eu).
+- **The thought page** — `/thought`: three working theses (software
+  should be used, not learned; software is the bridge, not the meaning;
+  structure before ornament) and the author's note at `/thought#author`,
+  reachable from the glass nav and the footer colophon.
 - A full reduced-motion presentation, keyboard operability throughout,
   and self-hosted type (no request leaves the origin).
 
@@ -49,7 +54,8 @@ requests at runtime. Deployed on Cloudflare Pages.
 ## Structure
 
 ```
-index.html            ← the whole document (hero + broadsheet + inline SVG artifacts)
+index.html            ← the home document (hero + broadsheet + inline SVG artifacts)
+thought.html          ← the theses + the author's note (/thought)
 privacy.html          ← privacy notice + imprint (/privacy)
 404.html              ← the lost-address sheet
 _headers              ← CSP + security headers + immutable caching law
@@ -71,7 +77,8 @@ src/
     ├── main.js        ← blob lifecycle: the scroll-coupled dissolve
     ├── dark.js        ← hero behaviours (locked)
     ├── body.js        ← reveals, scroll score, fracture canvas, folio, clock
-    └── craft.js       ← the craft study: camera flights, curtain, pager
+    ├── craft.js       ← the craft study: camera flights, curtain, pager
+    └── thought.js     ← the thought page: reveals + the thesis word-split
 docs/
 ├── DESIGN.md          ← the design law (canonical home is this repo)
 └── generators/
