@@ -54,7 +54,7 @@
     <!-- The post-hero body: the cooled-chrome engineering broadsheet (docs/DESIGN.md). -->
     <link rel="stylesheet" href="src/styles/body.css?v=19" />
     <!-- The crystallisation: the dark plane fractures into the cream editorial close (docs/DESIGN.md). -->
-    <link rel="stylesheet" href="src/styles/fracture.css?v=14" />
+    <link rel="stylesheet" href="src/styles/fracture.css?v=15" />
     <!-- The blob craft-reveal ("see how the chrome is made") — the zoom study over the live
          blob: trigger, hero recede, shell, explain-dots, technique tab, figure panels. -->
     <link rel="stylesheet" href="src/styles/craft.css?v=12" />
@@ -249,7 +249,7 @@
         <polygon points="433.3,535.0 456.8,739.2 252.0,730.6" data-t="0.168" data-d="6 5 11"/>
         <polygon points="433.3,535.0 609.3,532.4 608.9,738.1" data-t="0.167" data-d="9 8 8"/>
         <polygon points="433.3,535.0 608.9,738.1 456.8,739.2" data-t="0.372" data-d="8 7 9"/>
-        <polygon points="609.3,532.4 747.3,599.2 608.9,738.1" data-t="0.400" data-d="4 4 12"/>
+        <polygon points="609.3,532.4 747.3,599.2 608.9,738.1" data-t="0.400" data-d="4 4 12" data-key=""/>
         <polygon points="747.3,599.2 708.9,754.3 608.9,738.1" data-t="0.192" data-d="7 7 10" data-sh="1"/>
         <polygon points="747.3,599.2 868.4,538.8 865.7,672.2" data-t="0.150" data-d="14 12 5"/>
         <polygon points="747.3,599.2 865.7,672.2 708.9,754.3" data-t="0.351" data-d="5 5 11"/>
@@ -991,6 +991,19 @@ col += <span class="cm-kw">vec3</span>(<span class="cm-num">1.00</span>, <span c
            cream cast (v1's paper home). A text-free transition band; the fixed #fracture-layer
            renders the facets, this band only supplies the scroll distance so the mixed-facet middle
            never shares the screen with type. --fracture (body.js) ramps 0→1 across it. -->
+
+      <!-- THE LOOSE FACET — the band's one secret. One crystal of the field (marked data-key in
+           #fracture-geo above) never quite set: while it is still dark and unveiled it carries a
+           sub-perceptual warm breath — the only hint that exists. This button IS that facet: its
+           screen triangle (position + clip-path) is written by body.js §2b from the same parsed
+           polygon, it is focusable when live (Enter springs it; the focus ring is a hairline
+           drawn on the canvas around the true triangle), and outside the live window it is
+           invisible, unfocusable and inert. The click springs the seam — the candy light
+           (Clara's illumination, № 03's own gradient) escapes through the facet grammar, holds,
+           and is drawn back as the crystal seats. The resting page is untouched before and after.
+           (fracture.css → .facet-key; body.js §2b → the loose facet.) -->
+      <button class="facet-key" type="button" tabindex="-1" data-facet-key aria-label="a loose facet, breathing"></button>
+
       <section class="fracture" aria-hidden="true" data-fracture-band data-folio="dark → cream">
         <p class="fracture__note"><span class="kicker__dot"></span>the chrome crystallises — into paper</p>
         <!-- THE SET-SEAL, fig. 06 — the casting's TITLE BLOCK, the crystallisation's coda.
@@ -1354,7 +1367,7 @@ col += <span class="cm-kw">vec3</span>(<span class="cm-num">1.00</span>, <span c
     <script type="module" src="src/scripts/main.js?v=12"></script>
     <!-- The post-hero broadsheet: annealing light, diegetic reveals, the hel clock, AND the
          fracture (crystallisation) scroll signal. Passive scroll→rAF. -->
-    <script type="module" src="src/scripts/body.js?v=17"></script>
+    <script type="module" src="src/scripts/body.js?v=18"></script>
     <!-- The blob craft-reveal: the zoom study (camera flights over the live blob, explain-dots,
          technique tab, figure panels). Native <dialog>; one rAF only while the study is open. -->
     <script type="module" src="src/scripts/craft.js?v=15"></script>

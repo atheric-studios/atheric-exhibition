@@ -259,6 +259,40 @@
   opacity: var(--fc);
 }
 
+/* ── The loose facet — the band's one secret ──────────────────────────────────────────────────
+   ONE crystal of the field never quite set. While it is still dark and unveiled it carries a
+   sub-perceptual warm breath in its own tone (canvas-drawn, body.js §2b; off under reduced
+   motion) — the only hint that exists anywhere. This button IS the facet: its fixed position and
+   clip-path are written by body.js from the same parsed polygon, so the hit area is exactly the
+   triangle. It is live ONLY while the band covers it, the .dark-run's cover has cleared
+   (presence), and the crystal is un-set — outside that window it is invisible, unfocusable and
+   inert, so it can never sit over type or any other control. Activation (click / Enter) springs
+   the seam: the one-shot candy-lit escape, drawn on the field's own canvas, resolving back to
+   the exact resting band. No outline: the focus indicator is drawn diegetically on the canvas —
+   a bone hairline around the true triangle (a CSS ring could only trace the bounding box). */
+.facet-key {
+  position: fixed;
+  z-index: 2; /* above the field (z 0); the live window keeps it inside the text-free band */
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  appearance: none;
+  cursor: pointer; /* the one permitted affordance: it is clickable, nothing more */
+  -webkit-tap-highlight-color: transparent; /* no grey flash betraying the shape on touch */
+  touch-action: manipulation;
+  visibility: hidden;
+  pointer-events: none;
+}
+.facet-key--live {
+  visibility: visible;
+  pointer-events: auto;
+}
+.facet-key:focus,
+.facet-key:focus-visible {
+  outline: none; /* replaced, not removed — body.js strokes the facet itself on :focus-visible */
+}
+
 /* ── The cream close (voice → begin → footer) ─────────────────────────────────────────────────
    Elegant flip: body.css reads semantic tokens everywhere, so redefining the ink/rule roles on
    .on-cream re-inks every heading, lede, list and hairline to near-black on cream automatically.
