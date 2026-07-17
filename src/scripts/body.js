@@ -255,48 +255,38 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
   const neon = new Float32Array(facets.length * 10); // x1 y1 x2 y2 x3 y3 r g b a
   let neonN = 0;
 
-  // ── THE LOOSE FACET — the band's one secret (2026-07-12) ──────────────────────────────────
-  // ONE crystal of the field never quite set. Everything here is an overlay on the same canvas:
-  // the field's state (fa.cur / fa.tgt) is never touched, so the moment ends by simply not being
-  // drawn — the next ordinary frame IS the resting band. The resolve back is structural.
+  // ── THE LOOSE FACET & THE HOLLOW — the band's one secret (rebuilt 2026-07-17) ──────────────
+  // ONE crystal of the field never quite set — and it is a DOOR. Behind it lies the hollow:
+  // the casting's hidden room (a native <dialog>, markup in index.html, dress in fracture.css).
+  // Everything on the canvas here is overlay only: the field's state (fa.cur / fa.tgt) is never
+  // touched, so when the room lets go, the next ordinary frame IS the resting band.
   //
   //   the hint    while the key facet is dark, unveiled and covered by the band, its tone
   //               carries a sub-perceptual warm breath (≈ +3% luminance, 4.5 s cycle, shaped
   //               like breathing — quick swell, long settle), painted in the field's own frame
-  //               (the life loop always runs mid-band, which the live window guarantees) and
-  //               sunk by the same presence fade. Off under reduced motion. Nothing else
+  //               and sunk by the same presence fade. Off under reduced motion. Nothing else
   //               anywhere on the site hints.
   //   the button  [data-facet-key] is fixed and clipped to the facet's exact screen triangle
-  //               (placeKey), so the hit area IS the facet. Live only inside the window above —
-  //               outside it the button is invisible, unfocusable, inert (it can never sit over
-  //               type). Enter = click; :focus-visible strokes a bone hairline around the true
-  //               triangle on the canvas (a CSS ring could only betray the bounding box).
-  //   the escape  activation springs the seam — one ~3.4 s arc, Clara's candy illumination
-  //               (№ 03's own gradient, #ff2e88 → #ff9e2e → #5f7bff) escaping through the
-  //               site's facet grammar:
-  //                 pry     the crystal levers open about its centroid (the crack behaviour at
-  //                         full depth); the parted gap floods candy; three triangular shock
-  //                         rings — the pry's pressure waves — run outward.
-  //                 escape  104 shard triangles erupt in three chromatic waves (pink core →
-  //                         tangerine mid → periwinkle rim: the gradient performed in time AND
-  //                         in radius), fanned up-left into the still-dark plane, each an
-  //                         additive candy fill + wide halo + near-white core (the neon pass's
-  //                         own grammar), streaked while fast. Small shards leap first, broad
-  //                         plates carry mass — the field's own inertia law.
-  //                 hold    the constellation hangs a breath and twinkles; one sparkle sweep
-  //                         runs outward through it — the chord change before the return.
-  //                 return  the light obeys the law (it cannot live on the plane): the shards
-  //                         spiral home small-first, alpha dying as each enters the seam; the
-  //                         pane drinks them, the crystal seats with the field's set-glint,
-  //                         the seam seals. Perfectly still.
-  //               Ground guard: the moment exists only while 0.02 < --fracture < 0.65 — it owns
-  //               the band's dark plane and can never ride into the cream close or back onto
-  //               the covered dark sections. Scroll is never blocked; scrolling away ends it.
-  //   reduced     activation yields the composed constellation as a static bloom that fades
-  //               (~1.5 s): no cascade, no spin, no twinkle, no streaks.
-  // Zero per-frame allocation: one Float32Array of shard parameters; positions are closed-form
-  // functions of the master phase m (pure — which is also what makes the static RM pose free);
-  // colour sampling reuses one scratch triple, like the field's own iridAt.
+  //               (placeKey), so the hit area IS the facet. Live only while the band covers it,
+  //               the cover has cleared and the crystal is un-set — outside that window it is
+  //               invisible, unfocusable, inert. Enter = click; :focus-visible strokes a bone
+  //               hairline around the true triangle on the canvas.
+  //   the way in  activation answers the SAME FRAME: the seam flares candy pink on the canvas
+  //               (drawSeamFX), the dialog opens, and the IRIS — the facet's own triangle,
+  //               positioned and clipped to its live screen coordinates — flies: it scales up
+  //               about its own centroid until it swallows the viewport, its candy face
+  //               crossfading to the room's black mid-flight. You slip through the gap. The
+  //               room then composes beneath it on the estate cadence (fracture.css).
+  //   inside      the hollow — see fracture.css → THE HOLLOW. Scroll is held still (wheel /
+  //               touchmove / scroll-key guards; a scrollbar drag simply closes the room), the
+  //               background is inert (modal), focus is trapped by the dialog itself.
+  //   the way out [ seal the seam ], Esc, or a scrollbar drag. The designed exit reverses the
+  //               flight: the room lets go fast, the iris re-covers and shrinks home to the
+  //               facet, black cooling back to candy — and as it lands, the seam's afterglow
+  //               dies on the canvas (the coda) and the crystal is still. Scroll position,
+  //               band state, focus: byte-identical (nothing was ever moved).
+  //   reduced     no flight, no breathing, no stagger: the room fades in composed and still,
+  //               fully experiencable; the exit is the same quiet fade.
   const keyBtn = document.querySelector('[data-facet-key]');
   const keyFa = facets.find((fa) => fa.key) || null;
   const CANDY = [[255, 46, 136], [255, 158, 46], [95, 123, 255]]; // Clara's stops: 0 / 0.52 / 1
@@ -314,36 +304,18 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
   const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
   const sstep = (v) => { v = clamp01(v); return v * v * (3 - 2 * v); };
 
-  // the cast of shards — parameters only; every position is a pure function of the phase
-  const PN = 104, PS = 12; // delay θ0 Rfrac size spin rot0 colT twPh retJit j0 j1 j2
-  const P = new Float32Array(PN * PS);
-  if (keyFa) {
-    for (let i = 0; i < PN; i++) {
-      const q = i * PS;
-      const wave = i < 38 ? 0 : i < 72 ? 1 : 2; // pink core → tangerine mid → periwinkle rim
-      const size = i % 9 === 0 ? 17 + 13 * Math.random() : 4.5 + 9 * Math.random() * Math.random();
-      const sizeN = (size - 4.5) / 25.5;
-      P[q] = 0.02 + wave * 0.045 + 0.05 * sizeN + 0.025 * Math.random(); // waves; small first
-      P[q + 1] = -2.36 + (Math.random() - 0.5) * 2.6; // the fan: up-left, into the dark
-      P[q + 2] = wave === 0 ? 0.11 + 0.15 * Math.random()
-        : wave === 1 ? 0.19 + 0.18 * Math.random()
-        : 0.27 + 0.27 * Math.random(); // reach (× min viewport dim) — the gradient in radius
-      P[q + 3] = size;
-      P[q + 4] = ((Math.random() - 0.5) * 3.4) / (1 + sizeN * 1.6); // spin; plates tumble slow
-      P[q + 5] = Math.random() * 6.283;
-      P[q + 6] = wave === 0 ? 0.04 + 0.2 * Math.random()
-        : wave === 1 ? 0.42 + 0.2 * Math.random()
-        : 0.78 + 0.22 * Math.random(); // where on the candy ramp this shard burns
-      P[q + 7] = Math.random() * 6.283;
-      P[q + 8] = 0.03 * Math.random();
-      P[q + 9] = 0.72 + 0.56 * Math.random(); // three vertex radii — shard, not glyph
-      P[q + 10] = 0.72 + 0.56 * Math.random();
-      P[q + 11] = 0.72 + 0.56 * Math.random();
-    }
-  }
+  // room furniture (dialog markup lives beside the button in index.html)
+  const room = document.querySelector('.hollow');
+  const seal = room ? room.querySelector('.hollow__seal') : null;
+  const iris = room ? room.querySelector('.hollow__iris') : null;
+  const irisDark = room ? room.querySelector('.hollow__iris-dark') : null;
+  const scene = room ? room.querySelector('.hollow__scene') : null;
 
-  const BDUR = 3600; // the arc: pry → escape → hold → return → seat
-  let burstOn = false, rmOn = false, burstT0 = 0, rmRaf = 0;
+  let roomState = 'idle'; // idle → flight → in → out → idle
+  let flareT0 = 0, codaT0 = 0; // canvas seam moments (entry flare / exit afterglow)
+  const FLARE = 420, CODA = 640;
+  let openScrollY = 0;
+  let tIn1 = 0, tIn2 = 0, tOut1 = 0;
   let keyLive = false, keyFocus = false, keyTop = 0, keyBot = 0;
 
   // the facet's screen triangle → the button (CSS px; the canvas sp[] carries dpr)
@@ -377,17 +349,9 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     }
   };
 
-  const stopMoment = () => {
-    burstOn = false;
-    if (rmOn) {
-      cancelAnimationFrame(rmRaf);
-      rmOn = false;
-    }
-  };
-
   // the breath — and, on :focus-visible, the hairline. Runs inside the field's own frame.
   const drawKeyExtras = (time) => {
-    if (!keyFa || burstOn || rmOn || curF <= 0.001) return;
+    if (!keyFa || roomState !== 'idle' || flareT0 || codaT0 || curF <= 0.001) return;
     const s = keyFa.sp;
     if (!reduce && keyFa.cur < 0.04) {
       let pk = (keyFa.cy - edgeY) / pspan; // the same presence fade as the field's paint
@@ -431,185 +395,239 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     }
   };
 
-  // the escape — one pass, drawn after the field so the light rides on top. m is the master
-  // phase (0→1 over BDUR); ts the running seconds (spin / twinkle / streaks — 0 freezes them,
-  // which IS the reduced-motion pose); fade scales every light for the static bloom's decay.
-  const paintBurst = (m, ts, fade) => {
-    if (!keyFa || m <= 0) return;
-    if (m > 1) m = 1;
-    const s = keyFa.sp, cx = keyFa.cx, cy = keyFa.cy;
-    const minD = Math.min(fcanvas.width, fcanvas.height);
-    // — the pry: the parted gap floods candy; the crystal levers open, then reseats —
-    const pane = sstep(m / 0.07) * (1 - sstep((m - 0.86) / 0.11)) * fade;
-    const open = sstep((m - 0.01) / 0.09) * (1 - sstep((m - 0.88) / 0.09));
-    let pt = ts * 0.13; // ignition is HOT PINK — the ramp's head — then sweeps the whole gradient
-    pt -= Math.floor(pt);
-    const PC = candyAt(pt < 0.5 ? pt * 2 : 2 - pt * 2); // the pane cycles the ramp, ping-ponged
-    if (pane > 0.003) {
-      g.globalAlpha = 0.92 * pane;
-      g.fillStyle = 'rgb(' + (PC[0] | 0) + ',' + (PC[1] | 0) + ',' + (PC[2] | 0) + ')';
-      g.beginPath();
-      g.moveTo(s[0], s[1]); g.lineTo(s[2], s[3]); g.lineTo(s[4], s[5]); g.closePath();
-      g.fill();
-    }
-    // the crystal itself — contracted + tilted about its centroid (the crack grammar, deeper);
-    // it seats with the field's own set-glint as the seam seals
-    const sc = 1 - 0.085 * open;
-    const rot = 0.05 * open;
-    const glint = m > 0.9 ? 1 + 0.06 * Math.sin(Math.PI * sstep((m - 0.9) / 0.1)) : 1;
-    const cosR = Math.cos(rot), sinR = Math.sin(rot);
-    // the crystal rides its TRUE current tone (the field's own warm ramp at fa.cur), so if the
-    // reader scrolls and the field nucleates mid-moment, the levered crystal resolves with it
-    const v = keyFa.cur;
-    const cR = keyFa.d[0] + (CREAM[0] - keyFa.d[0]) * Math.pow(v, 0.78);
-    const cG = keyFa.d[1] + (CREAM[1] - keyFa.d[1]) * Math.pow(v, 0.9);
-    const cB = keyFa.d[2] + (CREAM[2] - keyFa.d[2]) * Math.pow(v, 1.08);
-    g.globalAlpha = 1;
-    g.fillStyle = 'rgb(' + (Math.min(CREAM[0], cR * glint) | 0) + ',' +
-      (Math.min(CREAM[1], cG * glint) | 0) + ',' + (Math.min(CREAM[2], cB * glint) | 0) + ')';
-    g.beginPath();
-    for (let k = 0; k < 3; k++) {
-      const dx = s[k * 2] - cx, dy = s[k * 2 + 1] - cy;
-      const vx = cx + (dx * cosR - dy * sinR) * sc;
-      const vy = cy + (dx * sinR + dy * cosR) * sc;
-      if (k === 0) g.moveTo(vx, vy);
-      else g.lineTo(vx, vy);
-    }
-    g.closePath();
-    g.fill();
-    // — the light (additive from here on) —
-    g.globalCompositeOperation = 'lighter';
-    if (pane > 0.003) {
-      // the seam ring — the neon grammar at full: wide halo + near-white core on the seam
-      g.beginPath();
-      g.moveTo(s[0], s[1]); g.lineTo(s[2], s[3]); g.lineTo(s[4], s[5]); g.closePath();
-      g.globalAlpha = 0.5 * pane;
-      g.lineWidth = Math.min(9 * dpr, 13);
-      g.strokeStyle = 'rgb(' + (PC[0] | 0) + ',' + (PC[1] | 0) + ',' + (PC[2] | 0) + ')';
-      g.stroke();
-      g.globalAlpha = 0.95 * pane;
-      g.lineWidth = Math.max(1, 1.3 * dpr);
-      g.strokeStyle = 'rgb(' + ((PC[0] + (255 - PC[0]) * 0.55) | 0) + ',' +
-        ((PC[1] + (255 - PC[1]) * 0.55) | 0) + ',' + ((PC[2] + (255 - PC[2]) * 0.55) | 0) + ')';
-      g.stroke();
-    }
-    // the shock rings — three triangular pressure waves, one per candy station
-    for (let sr = 0; sr < 3; sr++) {
-      const u = (m - 0.012 - 0.045 * sr) / 0.23;
-      if (u <= 0 || u >= 1) continue;
-      const gr = 1 + 10.5 * (1 - (1 - u) * (1 - u) * (1 - u));
-      const RC = candyAt(0.12 + 0.38 * sr);
-      g.globalAlpha = 0.5 * (1 - u) * (1 - u) * fade;
-      g.lineWidth = Math.max(1, (2.4 - 0.6 * sr) * dpr);
-      g.strokeStyle = 'rgb(' + (RC[0] | 0) + ',' + (RC[1] | 0) + ',' + (RC[2] | 0) + ')';
-      g.beginPath();
-      g.moveTo(cx + (s[0] - cx) * gr, cy + (s[1] - cy) * gr);
-      g.lineTo(cx + (s[2] - cx) * gr, cy + (s[3] - cy) * gr);
-      g.lineTo(cx + (s[4] - cx) * gr, cy + (s[5] - cy) * gr);
-      g.closePath();
-      g.stroke();
-    }
-    // — the shards —
-    const swirl = 0.2 * m * 3.4; // one slow shared rotation — the bloom moves as a body
-    for (let i = 0; i < PN; i++) {
-      const q = i * PS;
-      const flc = clamp01((m - P[q]) / 0.34);
-      if (flc <= 0) continue;
-      const inv = 1 - flc;
-      const rise = 1 - inv * inv * inv * inv; // the leap: fast out, settling at reach
-      const size = P[q + 3], sizeN = (size - 4.5) / 25.5;
-      const rs = 0.58 + 0.14 * sizeN + P[q + 8]; // return: small shards home first
-      const uR = clamp01((m - rs) / 0.24);
-      if (uR >= 1) continue; // home — the pane drank it
-      const ret = uR * uR * (3 - 2 * uR);
-      const reach = P[q + 2] * minD;
-      const rad = reach * rise * (1 - ret);
-      const th = P[q + 1] + swirl + 1.15 * uR * uR; // the return spirals — a swallowing vortex
-      const x = cx + Math.cos(th) * rad;
-      const y = cy + Math.sin(th) * rad;
-      let a = Math.min(1, flc * 3.2) * fade;
-      if (uR > 0.75) a *= 1 - (uR - 0.75) / 0.25; // the light dies entering the seam
-      if (ts > 0 && m > 0.5 && m < 0.72) a *= 0.72 + 0.28 * Math.sin(ts * 6 + P[q + 7]);
-      if (a <= 0.01) continue;
-      const col = candyAt(P[q + 6]);
-      const r0 = col[0], g0 = col[1], b0 = col[2];
-      // the sparkle sweep — one bright wave runs outward just before the return
-      const rn = (P[q + 2] - 0.11) / 0.43;
-      const wv = (m - 0.62 - rn * 0.08) / 0.05;
-      const boost = wv > 0 && wv < 1 ? 1 + 1.1 * Math.sin(3.1416 * wv) : 1;
-      const sz = size * dpr * (1 - 0.25 * ret);
-      const ang = P[q + 5] + P[q + 4] * ts;
-      if (ts > 0 && ((flc > 0.04 && flc < 1) || (uR > 0.04 && uR < 0.9))) {
-        // the streak — closed-form velocity: the shard's own position a blink ago
-        const m2 = m - 0.014;
-        const fl2 = clamp01((m2 - P[q]) / 0.34);
-        const inv2 = 1 - fl2;
-        const uR2 = clamp01((m2 - rs) / 0.24);
-        const ret2 = uR2 * uR2 * (3 - 2 * uR2);
-        const rad2 = reach * (1 - inv2 * inv2 * inv2 * inv2) * (1 - ret2);
-        const th2 = P[q + 1] + 0.2 * m2 * 3.4 + 1.15 * uR2 * uR2;
-        g.globalAlpha = 0.15 * a;
-        g.lineWidth = Math.max(1, 1.6 * dpr);
-        g.strokeStyle = 'rgb(' + (r0 | 0) + ',' + (g0 | 0) + ',' + (b0 | 0) + ')';
-        g.beginPath();
-        g.moveTo(cx + Math.cos(th2) * rad2, cy + Math.sin(th2) * rad2);
-        g.lineTo(x, y);
-        g.stroke();
+  // ── the seam moments (canvas): the entry FLARE and the exit CODA ──────────────────────────
+  // Both are additive light on the facet's own seam — the neon pass's grammar (wide candy halo
+  // + thin near-white core) — painted in the field's frame (the life loop always runs mid-band,
+  // which the live window guarantees). The flare answers the click within one frame and is
+  // swallowed by the iris; the coda is the seam's afterglow dying as the crystal reseats.
+  const drawSeamFX = (time) => {
+    if (!keyFa || (!flareT0 && !codaT0)) return;
+    let e = 0, hue = 0.04; // hot pink at the head of the ramp
+    if (flareT0) {
+      const t = time - flareT0;
+      if (t >= FLARE) flareT0 = 0;
+      else {
+        e = sstep(t / 110) * (1 - sstep((t - 250) / 170)); // fast attack, gone as the iris covers
+        hue = 0.04 + 0.2 * (t / FLARE); // pink warming toward tangerine as it opens
       }
-      // the shard — candy fill, wide faint halo, near-white core (the neon pass's grammar)
-      g.beginPath();
-      g.moveTo(x + Math.cos(ang) * sz * P[q + 9], y + Math.sin(ang) * sz * P[q + 9]);
-      g.lineTo(x + Math.cos(ang + 2.094) * sz * P[q + 10], y + Math.sin(ang + 2.094) * sz * P[q + 10]);
-      g.lineTo(x + Math.cos(ang + 4.189) * sz * P[q + 11], y + Math.sin(ang + 4.189) * sz * P[q + 11]);
-      g.closePath();
-      g.globalAlpha = 0.5 * a;
-      g.fillStyle = 'rgb(' + (r0 | 0) + ',' + (g0 | 0) + ',' + (b0 | 0) + ')';
-      g.fill();
-      g.globalAlpha = 0.2 * a;
-      g.lineWidth = Math.min(4.5 * dpr, 7);
-      g.strokeStyle = g.fillStyle;
-      g.stroke();
-      g.globalAlpha = Math.min(1, 0.85 * a * boost);
-      g.lineWidth = Math.max(1, 1.1 * dpr);
-      g.strokeStyle = 'rgb(' + ((r0 + (255 - r0) * 0.55) | 0) + ',' +
-        ((g0 + (255 - g0) * 0.55) | 0) + ',' + ((b0 + (255 - b0) * 0.55) | 0) + ')';
-      g.stroke();
     }
+    if (!e && codaT0) {
+      const t = time - codaT0;
+      if (t >= CODA) codaT0 = 0;
+      else {
+        const u = t / CODA;
+        e = (1 - u) * (1 - u) * 0.75; // lands bright, cools to nothing — the seam seals
+        hue = 0.04 + 0.42 * u; // the dying light drifts through the ramp as it cools
+      }
+    }
+    if (e <= 0.01) return;
+    const s = keyFa.sp;
+    const col = candyAt(hue);
+    const r0 = col[0], g0 = col[1], b0 = col[2];
+    g.globalCompositeOperation = 'lighter';
+    g.beginPath();
+    g.moveTo(s[0], s[1]); g.lineTo(s[2], s[3]); g.lineTo(s[4], s[5]); g.closePath();
+    g.globalAlpha = 0.16 * e; // a breath of light inside the gap
+    g.fillStyle = 'rgb(' + (r0 | 0) + ',' + (g0 | 0) + ',' + (b0 | 0) + ')';
+    g.fill();
+    g.globalAlpha = 0.55 * e;
+    g.lineWidth = Math.min(9 * dpr, 13);
+    g.strokeStyle = g.fillStyle;
+    g.stroke();
+    g.globalAlpha = 0.92 * e;
+    g.lineWidth = Math.max(1, 1.3 * dpr);
+    g.strokeStyle = 'rgb(' + ((r0 + (255 - r0) * 0.55) | 0) + ',' +
+      ((g0 + (255 - g0) * 0.55) | 0) + ',' + ((b0 + (255 - b0) * 0.55) | 0) + ')';
+    g.stroke();
     g.globalCompositeOperation = 'source-over';
     g.globalAlpha = 1;
     g.lineWidth = 1;
   };
+  const fxOn = () => flareT0 !== 0 || codaT0 !== 0;
 
-  // reduced motion: the composed constellation as a static bloom, fading — no cascade
-  const rmBloom = () => {
-    rmOn = true;
-    const t0 = performance.now();
-    const step = (now) => {
-      if (!rmOn) {
-        draw(performance.now()); // ended by the ground guard — leave a clean frame
-        return;
-      }
-      const u = (now - t0) / 1500;
-      if (u >= 1) {
-        rmOn = false;
-        draw(now); // the resting band, exactly as scroll left it
-        return;
-      }
-      draw(now);
-      paintBurst(0.56, 0, 1 - u * u); // the hold pose, frozen (ts 0), decaying
-      rmRaf = requestAnimationFrame(step);
-    };
-    rmRaf = requestAnimationFrame(step);
+  // ── the room controller ────────────────────────────────────────────────────────────────────
+  // While the hollow is open the sheet beneath must not move: wheel / touchmove / scroll-keys
+  // are held (the room is a place, not a scroll state). If the words ever outgrow a short
+  // viewport the centre column scrolls ITSELF (overscroll contained) — the guards stand aside
+  // for that one case. A scrollbar drag cannot be prevented, so it simply closes the room.
+  const hvCenter = room ? room.querySelector('.hollow__center') : null;
+  const centerScrolls = () => hvCenter && hvCenter.scrollHeight > hvCenter.clientHeight + 4;
+  const guardWheel = (e) => {
+    if (!centerScrolls()) e.preventDefault();
+  };
+  const guardKeys = (e) => {
+    const k = e.key;
+    if (k === ' ' && e.target === seal) return; // space still presses the seal
+    if ((k === 'ArrowUp' || k === 'ArrowDown' || k === 'PageUp' || k === 'PageDown' ||
+      k === 'Home' || k === 'End' || k === ' ') && !centerScrolls()) e.preventDefault();
+  };
+  const addGuards = () => {
+    addEventListener('wheel', guardWheel, { passive: false });
+    addEventListener('touchmove', guardWheel, { passive: false });
+    addEventListener('keydown', guardKeys, true);
+  };
+  const removeGuards = () => {
+    removeEventListener('wheel', guardWheel, { passive: false });
+    removeEventListener('touchmove', guardWheel, { passive: false });
+    removeEventListener('keydown', guardKeys, true);
   };
 
-  if (keyBtn && keyFa) {
-    keyBtn.addEventListener('click', () => {
-      if (!keyLive || burstOn || rmOn) return; // one-shot; re-triggerable once resolved
-      burstT0 = performance.now();
-      if (reduce) rmBloom();
-      else {
-        burstOn = true;
-        setLoop(true);
+  // the pointer-damped parallax — the light answers the hand (fine pointers, full motion only)
+  let pRaf = 0;
+  const onRoomMove = (e) => {
+    if (pRaf || !scene) return;
+    pRaf = requestAnimationFrame(() => {
+      pRaf = 0;
+      const px = e.clientX / innerWidth - 0.5;
+      const py = e.clientY / innerHeight - 0.5;
+      scene.style.transform = 'translate(' + (px * -14).toFixed(1) + 'px,' + (py * -10).toFixed(1) + 'px)';
+    });
+  };
+  const finePointer = matchMedia('(pointer: fine)');
+
+  // the iris: the facet's own triangle in live CSS coordinates, ready to fly
+  let irisScale = 20;
+  const placeIris = () => {
+    if (!iris || !keyFa) return;
+    const s = keyFa.sp;
+    const x0 = s[0] / dpr, y0 = s[1] / dpr, x1 = s[2] / dpr, y1 = s[3] / dpr;
+    const x2 = s[4] / dpr, y2 = s[5] / dpr;
+    const L = Math.min(x0, x1, x2), T = Math.min(y0, y1, y2);
+    const W = Math.max(x0, x1, x2) - L || 1, H = Math.max(y0, y1, y2) - T || 1;
+    iris.style.left = L.toFixed(1) + 'px';
+    iris.style.top = T.toFixed(1) + 'px';
+    iris.style.width = W.toFixed(1) + 'px';
+    iris.style.height = H.toFixed(1) + 'px';
+    const pc = (vx, vy) =>
+      (((vx - L) / W) * 100).toFixed(2) + '% ' + (((vy - T) / H) * 100).toFixed(2) + '%';
+    iris.style.clipPath = 'polygon(' + pc(x0, y0) + ', ' + pc(x1, y1) + ', ' + pc(x2, y2) + ')';
+    const gx = (x0 + x1 + x2) / 3, gy = (y0 + y1 + y2) / 3;
+    iris.style.transformOrigin = (gx - L).toFixed(1) + 'px ' + (gy - T).toFixed(1) + 'px';
+    // scale: the triangle must swallow the viewport from its centroid — farthest corner over
+    // the centroid's nearest edge (point-line distance), with margin
+    const dCorner = Math.max(
+      Math.hypot(gx, gy),
+      Math.hypot(innerWidth - gx, gy),
+      Math.hypot(gx, innerHeight - gy),
+      Math.hypot(innerWidth - gx, innerHeight - gy),
+    );
+    const edgeDist = (ax, ay, bx, by) => {
+      const len = Math.hypot(bx - ax, by - ay) || 1;
+      return Math.abs((bx - ax) * (ay - gy) - (ax - gx) * (by - ay)) / len;
+    };
+    const dEdge = Math.min(
+      edgeDist(x0, y0, x1, y1),
+      edgeDist(x1, y1, x2, y2),
+      edgeDist(x2, y2, x0, y0),
+    );
+    irisScale = (dCorner / Math.max(8, dEdge)) * 1.12;
+  };
+
+  const clearRoomTimers = () => {
+    clearTimeout(tIn1);
+    clearTimeout(tIn2);
+    clearTimeout(tOut1);
+  };
+
+  const settleRoomShut = () => {
+    room.classList.remove('hollow--in', 'hollow--flight', 'hollow--out', 'hollow--return');
+    if (iris) {
+      iris.style.display = 'none';
+      iris.style.transform = '';
+    }
+    if (irisDark) irisDark.style.opacity = '';
+    if (scene) scene.style.transform = '';
+    removeGuards();
+    room.removeEventListener('pointermove', onRoomMove);
+    if (room.open) room.close();
+    roomState = 'idle';
+    // the door is still live (nothing scrolled) — hand the key back to the visitor
+    if (keyLive && keyBtn) keyBtn.focus({ preventScroll: true });
+  };
+
+  const openRoom = () => {
+    if (!room || roomState !== 'idle' || !keyLive) return;
+    roomState = 'flight';
+    openScrollY = window.scrollY;
+    clearRoomTimers();
+    addGuards();
+    if (finePointer.matches && !reduce) room.addEventListener('pointermove', onRoomMove);
+    if (reduce) {
+      // composed and still: a quiet fade, no flight (the iris is display:none in CSS)
+      room.showModal();
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          room.classList.add('hollow--in');
+          roomState = 'in';
+        });
+      });
+      return;
+    }
+    flareT0 = performance.now(); // the seam answers THIS frame
+    codaT0 = 0;
+    placeIris();
+    iris.style.display = 'block';
+    iris.style.transform = 'scale(1)';
+    irisDark.style.opacity = '0';
+    room.showModal();
+    room.classList.add('hollow--flight');
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        iris.style.transform = 'scale(' + irisScale.toFixed(2) + ')';
+        irisDark.style.opacity = '1';
+      });
+    });
+    tIn1 = setTimeout(() => room.classList.add('hollow--in'), 600); // compose under the cover
+    tIn2 = setTimeout(() => {
+      roomState = 'in';
+      iris.style.display = 'none'; // the room's own black has the screen now
+      room.classList.remove('hollow--flight');
+    }, 1000);
+  };
+
+  const closeRoom = (quick) => {
+    if (!room || roomState === 'idle' || roomState === 'out') return;
+    clearRoomTimers();
+    if (reduce || quick) {
+      // the quiet way out (reduced motion), or the world moved (scrollbar drag): let go now
+      roomState = 'out';
+      settleRoomShut();
+      return;
+    }
+    roomState = 'out';
+    room.classList.remove('hollow--flight');
+    room.classList.add('hollow--out', 'hollow--return');
+    placeIris(); // resize-safe: the facet's live position, right now
+    iris.style.display = 'block';
+    iris.style.transform = 'scale(' + irisScale.toFixed(2) + ')';
+    irisDark.style.opacity = '1'; // cover instantly; the room lets go beneath
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        iris.style.transform = 'scale(1)'; // home to the facet
+        irisDark.style.opacity = '0'; //      black cooling back to candy
+      });
+    });
+    tOut1 = setTimeout(() => {
+      codaT0 = performance.now(); // the landed seam's afterglow dies on the canvas
+      setLoop(true);
+      settleRoomShut();
+    }, 760);
+  };
+
+  if (room && seal && keyBtn && keyFa) {
+    keyBtn.addEventListener('click', openRoom);
+    seal.addEventListener('click', () => {
+      if (roomState === 'in') closeRoom(false); // armed only once the room has composed
+    });
+    room.addEventListener('cancel', (e) => {
+      e.preventDefault(); // Esc takes the designed exit, not the browser's hard cut
+      if (roomState === 'in' || roomState === 'flight') closeRoom(false);
+    });
+    room.addEventListener('close', () => {
+      if (roomState !== 'idle') {
+        // closed by other means (e.g. the browser) — restore everything at once
+        roomState = 'out';
+        settleRoomShut();
       }
     });
     keyBtn.addEventListener('focus', () => {
@@ -741,9 +759,9 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
       g.globalCompositeOperation = 'source-over';
     }
     g.globalAlpha = 1;
-    // — the loose facet: the breath (and, focused, its hairline); the escape, when sprung —
+    // — the loose facet: the breath (and, focused, its hairline); the seam's flare / afterglow —
     drawKeyExtras(time);
-    if (burstOn) paintBurst((time - burstT0) / BDUR, (time - burstT0) / 1000, 1);
+    drawSeamFX(time);
   };
 
   // The life loop — advances every facet toward its scroll-driven target (the nucleation settle)
@@ -766,10 +784,9 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     if (!looping) return;
     const dt = Math.min(50, Math.max(1, now - lastT));
     lastT = now;
-    if (burstOn && now - burstT0 >= BDUR) burstOn = false; // the moment resolves — this frame is the resting band
     const maxD = advance(dt);
     draw(now);
-    if (maxD > 0.0005 || (curF > 0.02 && curF < 0.92) || burstOn) raf = requestAnimationFrame(tick);
+    if (maxD > 0.0005 || (curF > 0.02 && curF < 0.92) || fxOn()) raf = requestAnimationFrame(tick);
     else looping = false;
   };
   const setLoop = (on) => {
@@ -807,9 +824,11 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
         gt = gt < 0 ? 0 : gt > 1 ? 1 : gt;
         fa.tgt = rr * (gt * gt * (3 - 2 * gt));
       }
-      // the loose facet — the moment's ground guard + the live window (see the block above draw)
+      // the loose facet — the room's ground guard + the live window (see the block above draw).
+      // Wheel/touch/keys are held while the hollow is open, so the only way this fires mid-room
+      // is a scrollbar drag — the world moved, so the room lets go at once (byte-clean close).
       if (keyFa && keyBtn) {
-        if ((burstOn || rmOn) && (curF <= 0.02 || curF >= 0.65)) stopMoment();
+        if (roomState !== 'idle' && Math.abs(window.scrollY - openScrollY) > 2) closeRoom(true);
         let pk = (keyFa.cy - edge) / pspan;
         pk = pk < 0 ? 0 : pk > 1 ? 1 : pk;
         setKeyLive(

@@ -385,3 +385,357 @@
     opacity: 1; /* the container's scroll-tracked opacity governs */
   }
 }
+
+/* ── THE HOLLOW — the room behind the loose facet ─────────────────────────────────────────────
+   The band's secret is no longer an effect: it is a PLACE. Behind the one crystal that never
+   set lies the casting's hollow — the void the metal never filled, a geode chamber whose dark
+   facets are lit only at the SEAMS by Clara's candy spectrum (№ 03's own illumination law:
+   candy is never paint, only light escaping between shards). Pink pole at the door seam
+   (lower-left — where the visitor slipped in), sweeping tangerine to periwinkle opposite.
+
+   Mechanics (body.js §2b → the hollow): a native <dialog> (top layer, modal focus trap, Esc).
+   Entry is the IRIS FLIGHT — the facet's own screen triangle (clip-pathed, candy-lit) scales
+   up from its exact band position until it swallows the viewport, crossfading candy → the
+   room's black; the room composes beneath it on the estate cadence. Exit reverses the flight
+   and the crystal reseats on the canvas. The host page is never touched: scroll is guarded
+   while inside, no layout is displaced (top layer), and the band's canvas state rests
+   untouched behind the dialog — the return IS the resting band.
+
+   Craft notes: every ambient motion is ELEMENT-level opacity/transform (the two seam layers
+   breathe as whole svgs, the glow as one div) — compositor only, no repaint, 60fps by
+   construction. Inside, the room owns its physics (glow on its own dark is lawful — this is
+   the light's home); outside, the estate's law is untouched. */
+.hollow {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent; /* the room paints itself; the flight must see the band behind */
+  overflow: hidden;
+  color: var(--ink-on-dark);
+}
+.hollow::backdrop {
+  background: transparent; /* the band remains visible under the iris flight */
+}
+
+/* — the room itself: darker than the plane — the only truly black ground on the estate — */
+.hollow__room {
+  position: absolute;
+  inset: 0;
+  background: #020202;
+  opacity: 0;
+  transition: opacity 0.5s var(--ease);
+}
+.hollow--in .hollow__room {
+  opacity: 1;
+}
+
+/* — the scene: vault + glow, one gently parallaxed body (pointer-damped in body.js) — */
+.hollow__scene {
+  position: absolute;
+  inset: -28px; /* headroom so the parallax drift never exposes an edge */
+  will-change: transform;
+  transition: transform 0.9s var(--ease);
+}
+.hollow__vault {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.hollow__vault--f {
+  opacity: 0;
+  transition: opacity 1.1s var(--ease) 0.1s;
+}
+.hollow--in .hollow__vault--f {
+  opacity: 1;
+}
+/* the seam light ignites after the shards assemble, then breathes — two layers in
+   counter-phase, whole-element opacity only */
+.hollow__breath {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 1.3s var(--ease) 0.45s;
+}
+.hollow__breath--b {
+  transition-delay: 0.7s;
+}
+.hollow--in .hollow__breath {
+  opacity: 1;
+}
+.hollow--in .hollow__breath--a > .hollow__vault {
+  animation: hvBreatheA 4.5s ease-in-out 1.6s infinite;
+}
+.hollow--in .hollow__breath--b > .hollow__vault {
+  animation: hvBreatheB 4.5s ease-in-out 1.6s infinite;
+}
+@keyframes hvBreatheA {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.74; }
+}
+@keyframes hvBreatheB {
+  0%, 100% { opacity: 0.78; }
+  50% { opacity: 1; }
+}
+
+/* — the void's own warmth: one soft candy pool behind the words (breathes with layer a) — */
+.hollow__glow {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(78vmin, 920px);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    closest-side,
+    rgba(255, 46, 136, 0.15),
+    rgba(255, 158, 46, 0.055) 46%,
+    rgba(95, 123, 255, 0.02) 62%,
+    transparent 72%
+  );
+  opacity: 0;
+  transition: opacity 1.4s var(--ease) 0.5s;
+}
+.hollow--in .hollow__glow {
+  opacity: 1;
+  animation: hvGlow 4.5s ease-in-out 1.6s infinite;
+}
+@keyframes hvGlow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.72; }
+}
+/* depth: the chamber closes in at its edges */
+.hollow__vig {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 120% at 50% 50%, transparent 52%, rgba(0, 0, 0, 0.6) 100%);
+}
+
+/* — the words at the void's centre — */
+.hollow__center {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  text-align: center;
+}
+.hollow__col {
+  max-width: min(660px, 88vw);
+  display: grid;
+  justify-items: center;
+}
+.hollow__kicker {
+  margin: 0 0 26px;
+  font-family: var(--font-label);
+  font-size: 0.66rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.hollow__display {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(2.35rem, 6vw, 4.4rem);
+  line-height: 1.04;
+  letter-spacing: -0.045em;
+  color: var(--ink-on-dark);
+}
+.hollow__display span {
+  display: block; /* each authored line is its own reveal */
+}
+.hollow__display em {
+  font-family: var(--font-break);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: #ff2e88; /* the candy breath — Clara's pink, the room's own accent (not a new hue) */
+  text-shadow: 0 0 26px rgba(255, 46, 136, 0.35); /* the room owns its light */
+}
+.hollow__lede {
+  margin: 26px 0 0;
+  font-family: var(--font-break);
+  font-size: clamp(1rem, 1.7vw, 1.26rem);
+  line-height: 1.62;
+  color: var(--ink-dim);
+  max-width: 46ch;
+}
+.hollow__sigrow {
+  margin-top: 34px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.hollow__mark {
+  width: 40px;
+  height: 40px;
+  overflow: visible;
+  flex: none;
+  filter: drop-shadow(0 0 7px rgba(255, 46, 136, 0.4)); /* static; the room owns its light */
+}
+.hollow__mark-orbit {
+  fill: none;
+  stroke: url(#hv-candy);
+  stroke-width: 1.25;
+}
+.hollow__mark-tick {
+  stroke: rgba(244, 241, 236, 0.3);
+  stroke-width: 1;
+}
+.hollow__mark-punctum {
+  fill: #ff2e88;
+}
+.hollow__sig {
+  margin: 0;
+  text-align: left;
+  font-family: var(--font-label);
+  font-size: 0.62rem;
+  letter-spacing: 0.19em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  line-height: 2;
+}
+.hollow__sig b {
+  font-weight: 400;
+  color: var(--ink-dim);
+}
+
+/* — the way out: seal the seam (or esc) — */
+.hollow__seal {
+  margin-top: 42px;
+  appearance: none;
+  background: transparent;
+  border: 1px solid rgba(244, 241, 236, 0.18);
+  color: var(--ink-dim);
+  font-family: var(--font-label);
+  font-size: 0.68rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  padding: 13px 24px;
+  cursor: pointer;
+  transition: border-color 0.4s var(--ease), color 0.4s var(--ease), box-shadow 0.4s var(--ease);
+}
+.hollow__seal:hover {
+  border-color: rgba(255, 46, 136, 0.55);
+  color: var(--ink-on-dark);
+  box-shadow: 0 0 22px rgba(255, 46, 136, 0.14), inset 0 0 14px rgba(255, 46, 136, 0.06);
+}
+.hollow__seal:focus-visible {
+  outline: 1px solid rgba(255, 46, 136, 0.8);
+  outline-offset: 3px;
+}
+.hollow__esc {
+  margin-top: 14px;
+  font-family: var(--font-label);
+  font-size: 0.56rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(244, 241, 236, 0.26);
+}
+
+/* — arrival: the words settle on the estate cadence, after the shards assemble — */
+.hollow [data-hv] {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.75s var(--ease), transform 0.75s var(--ease);
+}
+.hollow--in [data-hv="1"] { transition-delay: 0.62s; }
+.hollow--in [data-hv="2"] { transition-delay: 0.71s; }
+.hollow--in [data-hv="3"] { transition-delay: 0.8s; }
+.hollow--in [data-hv="4"] { transition-delay: 0.92s; }
+.hollow--in [data-hv="5"] { transition-delay: 1.04s; }
+.hollow--in [data-hv="6"] { transition-delay: 1.16s; }
+.hollow--in [data-hv] {
+  opacity: 1;
+  transform: none;
+}
+
+/* — leaving: the room lets go quickly (exit faster than enter), the iris carries the rest — */
+.hollow--out .hollow__room,
+.hollow--out [data-hv] {
+  opacity: 0;
+  transition: opacity 0.3s var(--ease);
+}
+
+/* — the iris: the loose facet's own triangle, flown. Geometry (inset + clip-path +
+   transform-origin) is written inline by body.js from the live facet position; only the
+   transform animates (composited). Candy face fades to the room's black mid-flight. — */
+.hollow__iris {
+  position: absolute;
+  will-change: transform;
+  transform-origin: 50% 50%;
+  pointer-events: none;
+}
+.hollow__iris-face {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #ff2e88, #ff9e2e 52%, #5f7bff);
+}
+.hollow__iris-dark {
+  position: absolute;
+  inset: 0;
+  background: #020202;
+  opacity: 0;
+}
+/* flight curves: the leap out is eager, the return settles */
+.hollow--flight .hollow__iris {
+  transition: transform 0.78s cubic-bezier(0.32, 0, 0.16, 1);
+}
+.hollow--flight .hollow__iris-dark {
+  transition: opacity 0.55s ease-in 0.2s;
+}
+.hollow--return .hollow__iris {
+  transition: transform 0.72s cubic-bezier(0.4, 0, 0.3, 1);
+}
+.hollow--return .hollow__iris-dark {
+  /* stay black while the triangle is still large (the room collapsing), then cool to candy
+     only in the last beat — a small bright shard landing on the facet, never a muddy wash */
+  transition: opacity 0.28s ease-out 0.4s;
+}
+
+/* — small sheets: the chamber tightens, the words stay clear of the rim — */
+@media (max-width: 600px) {
+  .hollow__kicker { margin-bottom: 18px; font-size: 0.58rem; letter-spacing: 0.16em; }
+  .hollow__display { font-size: clamp(1.95rem, 8.6vw, 2.35rem); }
+  .hollow__lede { margin-top: 18px; font-size: 0.95rem; line-height: 1.58; }
+  .hollow__sigrow { margin-top: 24px; gap: 13px; }
+  .hollow__mark { width: 34px; height: 34px; }
+  .hollow__sig { font-size: 0.53rem; letter-spacing: 0.13em; }
+  .hollow__seal { margin-top: 28px; padding: 12px 20px; font-size: 0.62rem; }
+  .hollow__esc { margin-top: 11px; }
+}
+
+/* — reduced motion: the room presents COMPOSED AND STILL — no flight, no breathing, no
+   stagger; entry/exit are quiet fades (body.js skips the iris entirely). Fully experiencable:
+   every word, the vault, the light — just at rest. — */
+@media (prefers-reduced-motion: reduce) {
+  .hollow__room,
+  .hollow__vault--f,
+  .hollow__breath,
+  .hollow__glow,
+  .hollow [data-hv] {
+    transition: opacity 0.25s linear;
+    transform: none;
+  }
+  .hollow--in .hollow__breath--a > .hollow__vault,
+  .hollow--in .hollow__breath--b > .hollow__vault,
+  .hollow--in .hollow__glow {
+    animation: none;
+  }
+  .hollow--in [data-hv] {
+    transition-delay: 0s;
+  }
+  .hollow__scene {
+    transition: none;
+  }
+  .hollow__iris {
+    display: none;
+  }
+}
