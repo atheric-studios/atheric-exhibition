@@ -198,6 +198,7 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
       area,
       d: (pg.getAttribute('data-d') || '6 6 8').split(/\s+/).map(Number),
       t: parseFloat(pg.getAttribute('data-t')) || 0.5,
+      w: parseFloat(pg.getAttribute('data-w')) || WIDTH, // personal resolve width (the loose facet's is narrow)
       sh: pg.hasAttribute('data-sh'),
       key: pg.hasAttribute('data-key'), // the loose facet — the band's one secret (below)
       ph: Math.random() * 6.283,
@@ -255,17 +256,30 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
   const neon = new Float32Array(facets.length * 10); // x1 y1 x2 y2 x3 y3 r g b a
   let neonN = 0;
 
-  // ── THE LOOSE FACET & THE HOLLOW — the band's one secret (rebuilt 2026-07-17) ──────────────
+  // ── THE LOOSE FACET & THE HOLLOW — the band's one secret (rebuilt 2026-07-17; elevated
+  //    the same day: the door is easier to find, longer to hold, and it answers the hand) ────
   // ONE crystal of the field never quite set — and it is a DOOR. Behind it lies the hollow:
   // the casting's hidden room (a native <dialog>, markup in index.html, dress in fracture.css).
   // Everything on the canvas here is overlay only: the field's state (fa.cur / fa.tgt) is never
   // touched, so when the room lets go, the next ordinary frame IS the resting band.
   //
+  //   the window  the loose facet sets LAST: its own data-t 0.54 with a personal narrow
+  //               data-w 0.10 (vs the field's 0.24) holds it dark and live while the field
+  //               crystallises around it — the visible holdout — yet fully cream before the
+  //               set-seal arrives at --fracture 0.66 (the tab's zero-defect-cream ground
+  //               law; the facet's triangle overlaps the seal's station). The live window is
+  //               most of the band's traverse, not a passing moment.
   //   the hint    while the key facet is dark, unveiled and covered by the band, its tone
-  //               carries a sub-perceptual warm breath (≈ +3% luminance, 4.5 s cycle, shaped
-  //               like breathing — quick swell, long settle), painted in the field's own frame
-  //               and sunk by the same presence fade. Off under reduced motion. Nothing else
-  //               anywhere on the site hints.
+  //               carries a visible warm breath (rose-warm lift, ~4.5 s cycle, shaped like
+  //               breathing — quick swell, long settle) and a faint candy WHISPER at its seam:
+  //               light leaking from behind the loose crystal, swelling with each breath, its
+  //               hue drifting slowly along Clara's ramp. Painted in the field's own frame and
+  //               sunk by the same presence fade. Under reduced motion the whisper presents as
+  //               a static composed hairline (spatial hint, no motion). Nothing else anywhere
+  //               on the site hints.
+  //   the answer  under a fine pointer the facet RESPONDS: hover eases the seam bright and
+  //               quickens the breath (phase-continuous — a rate change, never a phase snap);
+  //               leaving lets it settle back. Touch gets the longer window instead.
   //   the button  [data-facet-key] is fixed and clipped to the facet's exact screen triangle
   //               (placeKey), so the hit area IS the facet. Live only while the band covers it,
   //               the cover has cleared and the crystal is un-set — outside that window it is
@@ -309,7 +323,14 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
   const seal = room ? room.querySelector('.hollow__seal') : null;
   const iris = room ? room.querySelector('.hollow__iris') : null;
   const irisDark = room ? room.querySelector('.hollow__iris-dark') : null;
-  const scene = room ? room.querySelector('.hollow__scene') : null;
+  // the depth groups — each names its own parallax rate (data-par="x y"), so the vault
+  // moves as a body with true depth: the rim leans furthest, the far dark barely stirs
+  const parEls = room
+    ? [...room.querySelectorAll('[data-par]')].map((el) => {
+      const f = (el.getAttribute('data-par') || '').trim().split(/\s+/).map(Number);
+      return { el, fx: f[0] || 0, fy: f[1] || 0 };
+    })
+    : [];
 
   let roomState = 'idle'; // idle → flight → in → out → idle
   let flareT0 = 0, codaT0 = 0; // canvas seam moments (entry flare / exit afterglow)
@@ -317,6 +338,9 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
   let openScrollY = 0;
   let tIn1 = 0, tIn2 = 0, tOut1 = 0;
   let keyLive = false, keyFocus = false, keyTop = 0, keyBot = 0;
+  // the hand at the seam: hover eases in/out (keyHoverF) and the breath keeps its own phase
+  // accumulator (keyPh) so a quickening rate can never snap the cycle
+  let keyHover = false, keyHoverF = 0, keyPh = 0, keyT0 = 0;
 
   // the facet's screen triangle → the button (CSS px; the canvas sp[] carries dpr)
   const placeKey = () => {
@@ -345,11 +369,14 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     keyBtn.tabIndex = on ? 0 : -1;
     if (!on) {
       keyFocus = false;
+      keyHover = false;
+      keyHoverF = 0;
       if (document.activeElement === keyBtn) keyBtn.blur();
     }
   };
 
-  // the breath — and, on :focus-visible, the hairline. Runs inside the field's own frame.
+  // the breath, the seam's candy whisper, the hover answer — and, on :focus-visible, the
+  // hairline. Runs inside the field's own frame.
   const drawKeyExtras = (time) => {
     if (!keyFa || roomState !== 'idle' || flareT0 || codaT0 || curF <= 0.001) return;
     const s = keyFa.sp;
@@ -358,8 +385,15 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
       pk = pk < 0 ? 0 : pk > 1 ? 1 : pk;
       pk = pk * pk * (3 - 2 * pk);
       if (pk > 0.02) {
-        // breath-shaped swell — quick inhale, long settle (the ^1.6 keeps a resting trough)
-        const b = Math.pow(0.5 + 0.5 * Math.sin(time * 0.0014), 1.6) * pk;
+        // the hand at the seam — eased, never snapped
+        keyHoverF += ((keyHover && keyLive ? 1 : 0) - keyHoverF) * 0.11;
+        if (keyHoverF < 0.004) keyHoverF = 0; else if (keyHoverF > 0.996) keyHoverF = 1;
+        // breath-shaped swell — quick inhale, long settle (the ^1.6 keeps a resting trough).
+        // The phase ACCUMULATES so the hover quickening bends the rhythm without a snap.
+        const dtk = Math.min(50, Math.max(0, time - (keyT0 || time)));
+        keyT0 = time;
+        keyPh += dtk * (0.0014 + 0.0011 * keyHoverF);
+        const b = Math.pow(0.5 + 0.5 * Math.sin(keyPh), 1.6) * pk;
         const minX = Math.min(s[0], s[2], s[4]), minY = Math.min(s[1], s[3], s[5]);
         const maxX = Math.max(s[0], s[2], s[4]), maxY = Math.max(s[1], s[3], s[5]);
         g.save();
@@ -367,12 +401,14 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
         g.moveTo(s[0], s[1]); g.lineTo(s[2], s[3]); g.lineTo(s[4], s[5]); g.closePath();
         g.clip();
         g.clearRect(minX - 1, minY - 1, maxX - minX + 2, maxY - minY + 2);
-        // repaint exactly what the field just painted (v ≈ 0), lifted a whisper warm
+        // repaint exactly what the field just painted (v ≈ 0), lifted rose-warm — a visible
+        // breath now (the door is meant to be findable), warmer still under the hand
         const baseA = Math.min(1, 0.8 + 0.2 * (curF / 0.2));
         g.globalAlpha = 1 - (1 - baseA) * pk;
-        const R = PLANE[0] + (keyFa.d[0] + 9 * b - PLANE[0]) * pk;
-        const G2 = PLANE[1] + (keyFa.d[1] + 6 * b - PLANE[1]) * pk;
-        const B2 = PLANE[2] + (keyFa.d[2] + 3 * b - PLANE[2]) * pk;
+        const lift = 1 + 0.55 * keyHoverF;
+        const R = PLANE[0] + (keyFa.d[0] + 18 * b * lift - PLANE[0]) * pk;
+        const G2 = PLANE[1] + (keyFa.d[1] + 7 * b * lift - PLANE[1]) * pk;
+        const B2 = PLANE[2] + (keyFa.d[2] + 9 * b * lift - PLANE[2]) * pk;
         g.fillStyle = 'rgb(' + (R | 0) + ',' + (G2 | 0) + ',' + (B2 | 0) + ')';
         g.strokeStyle = g.fillStyle;
         g.beginPath();
@@ -380,7 +416,41 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
         g.fill();
         g.stroke(); // seal the cleared antialiasing edge, like the field's self-stroke
         g.restore();
+        // the seam's whisper — candy light leaking at the perimeter, swelling with each
+        // breath, blooming under the hand; hue drifting slowly along Clara's ramp
+        const wa = pk * (0.1 + 0.17 * b + 0.55 * keyHoverF * (0.72 + 0.28 * b));
+        if (wa > 0.02) {
+          let ht = 0.5 + 0.5 * Math.sin(time * 0.00012);
+          const col = candyAt(ht * 0.9);
+          g.globalCompositeOperation = 'lighter';
+          g.beginPath();
+          g.moveTo(s[0], s[1]); g.lineTo(s[2], s[3]); g.lineTo(s[4], s[5]); g.closePath();
+          g.globalAlpha = 0.5 * wa;
+          g.lineWidth = Math.min(7 * dpr, 10);
+          g.strokeStyle = 'rgb(' + (col[0] | 0) + ',' + (col[1] | 0) + ',' + (col[2] | 0) + ')';
+          g.stroke();
+          g.globalAlpha = Math.min(1, 0.95 * wa + 0.15 * keyHoverF);
+          g.lineWidth = Math.max(1, 1.2 * dpr);
+          g.strokeStyle = 'rgb(' + ((col[0] + (255 - col[0]) * 0.4) | 0) + ',' +
+            ((col[1] + (255 - col[1]) * 0.4) | 0) + ',' + ((col[2] + (255 - col[2]) * 0.4) | 0) + ')';
+          g.stroke();
+          g.globalCompositeOperation = 'source-over';
+          g.globalAlpha = 1;
+          g.lineWidth = 1;
+        }
       }
+    } else if (reduce && keyLive && keyFa.cur < 0.04) {
+      // reduced motion: the hint is COMPOSED, not moving — a faint candy hairline resting on
+      // the seam (brighter under the hand), drawn in the static per-scroll paints
+      const col = candyAt(0.06);
+      g.globalAlpha = keyHover ? 0.62 : 0.3;
+      g.lineWidth = Math.max(1, 1.2 * dpr);
+      g.strokeStyle = 'rgb(' + col[0] + ',' + col[1] + ',' + col[2] + ')';
+      g.beginPath();
+      g.moveTo(s[0], s[1]); g.lineTo(s[2], s[3]); g.lineTo(s[4], s[5]); g.closePath();
+      g.stroke();
+      g.globalAlpha = 1;
+      g.lineWidth = 1;
     }
     if (keyFocus && keyLive) {
       // the focus ring — a bone hairline around the TRUE triangle (diegetic :focus-visible)
@@ -472,15 +542,19 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     removeEventListener('keydown', guardKeys, true);
   };
 
-  // the pointer-damped parallax — the light answers the hand (fine pointers, full motion only)
+  // the pointer-damped parallax — the vault answers the hand (fine pointers, full motion
+  // only): every depth group leans at its own data-par rate, damped by its own transition
   let pRaf = 0;
   const onRoomMove = (e) => {
-    if (pRaf || !scene) return;
+    if (pRaf || !parEls.length) return;
     pRaf = requestAnimationFrame(() => {
       pRaf = 0;
       const px = e.clientX / innerWidth - 0.5;
       const py = e.clientY / innerHeight - 0.5;
-      scene.style.transform = 'translate(' + (px * -14).toFixed(1) + 'px,' + (py * -10).toFixed(1) + 'px)';
+      for (const p of parEls) {
+        p.el.style.transform =
+          'translate3d(' + (px * p.fx).toFixed(1) + 'px,' + (py * p.fy).toFixed(1) + 'px,0)';
+      }
     });
   };
   const finePointer = matchMedia('(pointer: fine)');
@@ -536,7 +610,7 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
       iris.style.transform = '';
     }
     if (irisDark) irisDark.style.opacity = '';
-    if (scene) scene.style.transform = '';
+    for (const p of parEls) p.el.style.transform = '';
     removeGuards();
     room.removeEventListener('pointermove', onRoomMove);
     if (room.open) room.close();
@@ -637,6 +711,16 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     keyBtn.addEventListener('blur', () => {
       if (!keyFocus) return;
       keyFocus = false;
+      if (reduce || !looping) draw(performance.now());
+    });
+    // the hover answer — the seam brightens, the breath quickens (eased in drawKeyExtras;
+    // under reduced motion a single static repaint carries the composed brighter hairline)
+    keyBtn.addEventListener('pointerenter', () => {
+      keyHover = true;
+      if (reduce || !looping) draw(performance.now());
+    });
+    keyBtn.addEventListener('pointerleave', () => {
+      keyHover = false;
       if (reduce || !looping) draw(performance.now());
     });
   }
@@ -818,7 +902,7 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
       edgeY = edge; // the presence fade (draw) anchors on the same cover edge
       const gspan = vh * 0.3 * dpr;
       for (const fa of facets) {
-        let rr = (curF - fa.t) / WIDTH;
+        let rr = (curF - fa.t) / fa.w;
         rr = rr < 0 ? 0 : rr > 1 ? 1 : rr;
         let gt = (fa.cy - edge) / gspan;
         gt = gt < 0 ? 0 : gt > 1 ? 1 : gt;
@@ -832,7 +916,7 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
         let pk = (keyFa.cy - edge) / pspan;
         pk = pk < 0 ? 0 : pk > 1 ? 1 : pk;
         setKeyLive(
-          pk * pk * (3 - 2 * pk) > 0.4 && // the cover has truly cleared (presence ≈ full tone)
+          pk * pk * (3 - 2 * pk) > 0.3 && // the cover has cleared (tone arriving — door wakes early)
           keyFa.tgt < 0.02 && //             the crystal is still un-set (dark; breath territory)
           r.top < keyTop - 30 && //          the band itself covers the facet's fixed screen spot
           r.bottom > keyBot + 30, //         … so the button can never sit over neighbouring type

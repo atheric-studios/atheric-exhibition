@@ -260,9 +260,13 @@
 }
 
 /* ── The loose facet — the band's one secret ──────────────────────────────────────────────────
-   ONE crystal of the field never quite set. While it is still dark and unveiled it carries a
-   sub-perceptual warm breath in its own tone (canvas-drawn, body.js §2b; off under reduced
-   motion) — the only hint that exists anywhere. This button IS the facet: its fixed position and
+   ONE crystal of the field never quite set — and it sets LAST (its own data-t 0.54 /
+   data-w 0.10 in #fracture-geo hold it dark while the field crystallises around it, yet
+   fully cream before the set-seal's station law at 0.66). While it is dark and unveiled it
+   carries a visible warm breath and a faint candy whisper at its seam — light leaking from
+   behind the loose crystal (canvas-drawn, body.js §2b; a static composed hint under reduced
+   motion) — the only hint that exists anywhere. Under a fine pointer the seam ANSWERS the
+   hand: brighter light, a quicker breath. This button IS the facet: its fixed position and
    clip-path are written by body.js from the same parsed polygon, so the hit area is exactly the
    triangle. It is live ONLY while the band covers it, the .dark-run's cover has cleared
    (presence), and the crystal is un-set — outside that window it is invisible, unfocusable and
@@ -389,9 +393,17 @@
 /* ── THE HOLLOW — the room behind the loose facet ─────────────────────────────────────────────
    The band's secret is no longer an effect: it is a PLACE. Behind the one crystal that never
    set lies the casting's hollow — the void the metal never filled, a geode chamber whose dark
-   facets are lit only at the SEAMS by Clara's candy spectrum (№ 03's own illumination law:
+   facets are lit at the SEAMS by Clara's candy spectrum (№ 03's own illumination law:
    candy is never paint, only light escaping between shards). Pink pole at the door seam
    (lower-left — where the visitor slipped in), sweeping tangerine to periwinkle opposite.
+
+   v2 (2026-07-17) — the LIVING VAULT. Three depth groups (rim / mid / far) parallax under
+   the pointer at their own rates (body.js reads data-par) and drift on their own slow airs;
+   the rim seams breathe in counter-phase under a blurred neon halo, the mid seams on a
+   longer swell, the far dark holds still — depth through stillness. Two candy light pools
+   ORBIT the void in counter-rotation (screen-blended: light, never paint), so the seams and
+   the dust brighten as the light passes. Entry is a dolly INTO the geode: each depth group
+   settles from its own slight scale, staggered outside-in, under the iris cover.
 
    Mechanics (body.js §2b → the hollow): a native <dialog> (top layer, modal focus trap, Esc).
    Entry is the IRIS FLIGHT — the facet's own screen triangle (clip-pathed, candy-lit) scales
@@ -401,10 +413,11 @@
    while inside, no layout is displaced (top layer), and the band's canvas state rests
    untouched behind the dialog — the return IS the resting band.
 
-   Craft notes: every ambient motion is ELEMENT-level opacity/transform (the two seam layers
-   breathe as whole svgs, the glow as one div) — compositor only, no repaint, 60fps by
-   construction. Inside, the room owns its physics (glow on its own dark is lawful — this is
-   the light's home); outside, the estate's law is untouched. */
+   Craft notes: every ambient motion is ELEMENT-level opacity/transform (seam layers breathe
+   as whole svgs, dust drifts as whole svgs, the sweeps rotate about a 0×0 pivot, filters and
+   gradients raster ONCE) — compositor only, no repaint, 60fps by construction. Inside, the
+   room owns its physics (sustained gentle life is lawful — this is the light's home);
+   outside, the estate's rest-state calm is untouched. */
 .hollow {
   position: fixed;
   inset: 0;
@@ -435,12 +448,10 @@
   opacity: 1;
 }
 
-/* — the scene: vault + glow, one gently parallaxed body (pointer-damped in body.js) — */
+/* — the scene: a plain stage; the depth groups carry their own motion — */
 .hollow__scene {
   position: absolute;
-  inset: -28px; /* headroom so the parallax drift never exposes an edge */
-  will-change: transform;
-  transition: transform 0.9s var(--ease);
+  inset: -34px; /* headroom so parallax + drift never expose an edge */
 }
 .hollow__vault {
   position: absolute;
@@ -448,15 +459,50 @@
   width: 100%;
   height: 100%;
 }
-.hollow__vault--f {
+
+/* — the depth groups: pointer-parallaxed (body.js writes the transform, this transition
+     damps it) and dollied in on entry — each settles from its own slight scale, staggered
+     outside-in under the iris cover. The inline JS transform takes over after entry. — */
+.hollow__depth {
+  position: absolute;
+  inset: 0;
   opacity: 0;
-  transition: opacity 1.1s var(--ease) 0.1s;
+  will-change: transform;
+  transition: opacity 1s var(--ease), transform 1.3s var(--ease);
 }
-.hollow--in .hollow__vault--f {
+.hollow__depth--far { transform: scale(1.02); transition-delay: 0.05s, 0.05s; }
+.hollow__depth--mid { transform: scale(1.045); transition-delay: 0.12s, 0.12s; }
+.hollow__depth--rim { transform: scale(1.085); transition-delay: 0.2s, 0.2s; }
+.hollow--in .hollow__depth {
   opacity: 1;
+  transform: none;
 }
-/* the seam light ignites after the shards assemble, then breathes — two layers in
-   counter-phase, whole-element opacity only */
+/* the idle airs — each depth drifts on its own slow loop (a nested wrapper, so the JS
+   parallax transform above and this animation never fight over one transform) */
+.hollow__drift {
+  position: absolute;
+  inset: 0;
+}
+.hollow--in .hollow__drift--rim { animation: hvDriftA 26s ease-in-out infinite alternate; }
+.hollow--in .hollow__drift--mid { animation: hvDriftB 34s ease-in-out infinite alternate; }
+.hollow--in .hollow__drift--far { animation: hvDriftC 44s ease-in-out infinite alternate; }
+@keyframes hvDriftA {
+  from { transform: translate3d(-5px, 3px, 0); }
+  to { transform: translate3d(5px, -4px, 0); }
+}
+@keyframes hvDriftB {
+  from { transform: translate3d(4px, -3px, 0); }
+  to { transform: translate3d(-4px, 3px, 0); }
+}
+@keyframes hvDriftC {
+  from { transform: translate3d(-2px, -2px, 0); }
+  to { transform: translate3d(2px, 2px, 0); }
+}
+
+/* the seam light ignites after the shards assemble, then breathes — rim layers in
+   counter-phase (a carries the blurred halo, b the door), mid on a longer swell;
+   whole-element opacity only. The breathing curve is asymmetric — quick swell, long
+   settle — living light, not a metronome. */
 .hollow__breath {
   position: absolute;
   inset: 0;
@@ -465,6 +511,9 @@
 }
 .hollow__breath--b {
   transition-delay: 0.7s;
+}
+.hollow__breath--mid {
+  transition-delay: 0.55s;
 }
 .hollow--in .hollow__breath {
   opacity: 1;
@@ -475,16 +524,102 @@
 .hollow--in .hollow__breath--b > .hollow__vault {
   animation: hvBreatheB 4.5s ease-in-out 1.6s infinite;
 }
+.hollow--in .hollow__breath--mid > .hollow__vault {
+  animation: hvBreatheM 6.8s ease-in-out 2.1s infinite;
+}
 @keyframes hvBreatheA {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.74; }
+  38% { opacity: 0.7; }
+  62% { opacity: 0.88; }
 }
 @keyframes hvBreatheB {
-  0%, 100% { opacity: 0.78; }
-  50% { opacity: 1; }
+  0%, 100% { opacity: 0.74; }
+  38% { opacity: 1; }
+  62% { opacity: 0.86; }
+}
+@keyframes hvBreatheM {
+  0%, 100% { opacity: 1; }
+  45% { opacity: 0.78; }
 }
 
-/* — the void's own warmth: one soft candy pool behind the words (breathes with layer a) — */
+/* — the dust: two mote layers counter-drifting through the light, twinkling as one body — */
+.hollow__dustwrap {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 1.6s var(--ease) 0.9s;
+}
+.hollow--in .hollow__dustwrap {
+  opacity: 1;
+}
+.hollow--in .hollow__dust--x { animation: hvDustX 21s ease-in-out infinite alternate; }
+.hollow--in .hollow__dust--y { animation: hvDustY 29s ease-in-out infinite alternate; }
+@keyframes hvDustX {
+  from { transform: translate3d(-8px, 4px, 0); opacity: 0.75; }
+  50% { opacity: 1; }
+  to { transform: translate3d(9px, -6px, 0); opacity: 0.8; }
+}
+@keyframes hvDustY {
+  from { transform: translate3d(7px, 5px, 0); opacity: 0.9; }
+  50% { opacity: 0.7; }
+  to { transform: translate3d(-8px, -5px, 0); opacity: 1; }
+}
+
+/* — the light sweeps: two candy pools orbiting the void in counter-rotation, screen-blended
+     over the vault (light, never paint). Only the 0×0 pivot rotates; each pool rasters once.
+     The pink pool runs eager, the periwinkle contrary and slow — the room's weather. — */
+.hollow__sweep {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  transition: opacity 1.8s var(--ease) 1s;
+}
+.hollow--in .hollow__sweep {
+  opacity: 1;
+}
+.hollow--in .hollow__sweep--a { animation: hvSweep 46s linear infinite; }
+.hollow--in .hollow__sweep--b { animation: hvSweepBack 67s linear infinite; }
+@keyframes hvSweep {
+  to { transform: rotate(1turn); }
+}
+@keyframes hvSweepBack {
+  to { transform: rotate(-1turn); }
+}
+.hollow__sweep-pool {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(110vmax, 1500px);
+  aspect-ratio: 1;
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+.hollow__sweep-pool--a {
+  transform: translate(-50%, -50%) rotate(24deg) translateY(-30vmax);
+  background: radial-gradient(
+    closest-side,
+    rgba(255, 46, 136, 0.17),
+    rgba(255, 158, 46, 0.07) 42%,
+    rgba(255, 158, 46, 0.02) 60%,
+    transparent 72%
+  );
+}
+.hollow__sweep-pool--b {
+  transform: translate(-50%, -50%) rotate(196deg) translateY(-26vmax);
+  background: radial-gradient(
+    closest-side,
+    rgba(95, 123, 255, 0.15),
+    rgba(95, 123, 255, 0.05) 44%,
+    rgba(255, 46, 136, 0.015) 62%,
+    transparent 74%
+  );
+}
+
+/* — the void's own warmth: one soft candy pool behind the words, breathing in scale and
+     light (its transform is its own — the depth groups carry the parallax) — */
 .hollow__glow {
   position: absolute;
   left: 50%;
@@ -494,10 +629,10 @@
   transform: translate(-50%, -50%);
   background: radial-gradient(
     closest-side,
-    rgba(255, 46, 136, 0.15),
-    rgba(255, 158, 46, 0.055) 46%,
-    rgba(95, 123, 255, 0.02) 62%,
-    transparent 72%
+    rgba(255, 46, 136, 0.19),
+    rgba(255, 158, 46, 0.075) 44%,
+    rgba(95, 123, 255, 0.03) 62%,
+    transparent 74%
   );
   opacity: 0;
   transition: opacity 1.4s var(--ease) 0.5s;
@@ -507,27 +642,32 @@
   animation: hvGlow 4.5s ease-in-out 1.6s infinite;
 }
 @keyframes hvGlow {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.72; }
+  0%, 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  38% { opacity: 0.76; transform: translate(-50%, -50%) scale(1.045); }
+  62% { opacity: 0.9; transform: translate(-50%, -50%) scale(1.015); }
 }
 /* depth: the chamber closes in at its edges */
 .hollow__vig {
   position: absolute;
   inset: 0;
-  background: radial-gradient(120% 120% at 50% 50%, transparent 52%, rgba(0, 0, 0, 0.6) 100%);
+  background: radial-gradient(120% 120% at 50% 50%, transparent 50%, rgba(0, 0, 0, 0.68) 100%);
 }
 
-/* — the words at the void's centre — */
+/* — the words at the void's centre. The column scrolls ITSELF on short viewports
+     (grid + margin:auto centring — the classic safe-centre; body.js's guards stand
+     aside when it truly overflows) — */
 .hollow__center {
   position: absolute;
   inset: 0;
   display: grid;
-  place-items: center;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 24px;
   text-align: center;
 }
 .hollow__col {
-  max-width: min(660px, 88vw);
+  margin: auto;
+  max-width: min(680px, 88vw);
   display: grid;
   justify-items: center;
 }
@@ -551,24 +691,102 @@
 .hollow__display span {
   display: block; /* each authored line is its own reveal */
 }
+/* the display lines CONDENSE out of the dark — blur resolving to sharp, the room's own
+   crystallisation at type scale (a finite entrance transition, not a held effect) */
+.hollow__display span[data-hv] {
+  filter: blur(9px);
+  transition-property: opacity, transform, filter;
+}
+.hollow--in .hollow__display span[data-hv] {
+  filter: blur(0);
+}
 .hollow__display em {
   font-family: var(--font-break);
   font-style: italic;
   font-weight: 400;
   letter-spacing: -0.01em;
-  color: #ff2e88; /* the candy breath — Clara's pink, the room's own accent (not a new hue) */
-  text-shadow: 0 0 26px rgba(255, 46, 136, 0.35); /* the room owns its light */
+  /* the ember — Clara's spectrum alive INSIDE the word (background-clip text; the shimmer
+     repaints one word's box, nothing more), bloomed by its own drop-shadow */
+  /* stops anchored pink at BOTH sweep rest points, so the ember only ever passes through
+     tangerine/periwinkle and always comes home warm */
+  background: linear-gradient(100deg, #ff2e88 4%, #ff9e2e 30%, #ff5ea4 50%, #7d94ff 72%, #ff2e88 96%);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 15px rgba(255, 46, 136, 0.45));
 }
-.hollow__lede {
-  margin: 26px 0 0;
+.hollow--in .hollow__display em {
+  animation: hvEmber 11s ease-in-out 1.8s infinite;
+}
+@keyframes hvEmber {
+  0%, 100% { background-position: 0% 0; }
+  50% { background-position: 100% 0; }
+}
+
+/* — the movements: the author's thesis in three stations, i pink · ii tangerine ·
+     iii periwinkle — the palette structurally in the type. Left-set like a manuscript,
+     numerals hanging in the gutter, each numeral's hairline scribing in its own hue. — */
+.hollow__mvts {
+  margin: 36px auto 0;
+  max-width: min(52ch, 84vw);
+  display: grid;
+  gap: 24px;
+  text-align: left;
+}
+.hollow__mvt {
+  position: relative;
+  margin: 0;
+  padding-left: 46px;
   font-family: var(--font-break);
-  font-size: clamp(1rem, 1.7vw, 1.26rem);
-  line-height: 1.62;
+  font-size: clamp(0.99rem, 1.45vw, 1.13rem);
+  line-height: 1.68;
   color: var(--ink-dim);
-  max-width: 46ch;
 }
+.hollow__mvt-no {
+  position: absolute;
+  left: 0;
+  top: 0.34em;
+  font-family: var(--font-label);
+  font-size: 0.6rem;
+  letter-spacing: 0.16em;
+  line-height: 1;
+}
+.hollow__mvt-no::after {
+  /* the station's hairline — scribes downward in the movement's own hue on arrival */
+  content: '';
+  position: absolute;
+  left: 1px;
+  top: calc(100% + 9px);
+  width: 1px;
+  height: 30px;
+  background: currentColor;
+  opacity: 0.45;
+  transform: scaleY(0);
+  transform-origin: center top;
+  transition: transform 0.8s var(--ease);
+}
+.hollow--in .hollow__mvt-no::after {
+  transform: scaleY(1);
+}
+.hollow--in .hollow__mvt--i .hollow__mvt-no::after { transition-delay: 1.15s; }
+.hollow--in .hollow__mvt--ii .hollow__mvt-no::after { transition-delay: 1.3s; }
+.hollow--in .hollow__mvt--iii .hollow__mvt-no::after { transition-delay: 1.45s; }
+.hollow__mvt--i .hollow__mvt-no { color: #ff2e88; }
+.hollow__mvt--ii .hollow__mvt-no { color: #ff9e2e; }
+.hollow__mvt--iii .hollow__mvt-no { color: #7d94ff; }
+.hollow__mvt em {
+  font-style: italic;
+  /* each movement's closing thesis carries its station's light (AA-checked on #020202;
+     periwinkle lifted to #7d94ff for small-type contrast) */
+}
+.hollow__mvt--i em { color: #ff5ea4; filter: drop-shadow(0 0 12px rgba(255, 46, 136, 0.3)); }
+.hollow__mvt--ii em { color: #ffab4d; filter: drop-shadow(0 0 12px rgba(255, 158, 46, 0.26)); }
+.hollow__mvt--iii em { color: #8fa3ff; filter: drop-shadow(0 0 12px rgba(95, 123, 255, 0.3)); }
+
 .hollow__sigrow {
-  margin-top: 34px;
+  margin-top: 36px;
   display: flex;
   align-items: center;
   gap: 16px;
@@ -585,12 +803,28 @@
   stroke: url(#hv-candy);
   stroke-width: 1.25;
 }
+/* the instrument runs while the room is open — a light circling the orbit (pathLength=100;
+   a 48px repaint, nothing more) */
+.hollow--in .hollow__mark-orbit {
+  stroke-dasharray: 72 28;
+  animation: hvOrbit 9s linear infinite;
+}
+@keyframes hvOrbit {
+  to { stroke-dashoffset: -100; }
+}
 .hollow__mark-tick {
   stroke: rgba(244, 241, 236, 0.3);
   stroke-width: 1;
 }
 .hollow__mark-punctum {
   fill: #ff2e88;
+}
+.hollow--in .hollow__mark-punctum {
+  animation: hvPunctum 4.5s ease-in-out infinite;
+}
+@keyframes hvPunctum {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.68; }
 }
 .hollow__sig {
   margin: 0;
@@ -607,8 +841,11 @@
   color: var(--ink-dim);
 }
 
-/* — the way out: seal the seam (or esc) — */
+/* — the way out: seal the seam (or esc). The ring cycles Clara's stations on a pseudo
+     (its own layer, so the hover transition on the button's real border never fights the
+     ambient animation) — */
 .hollow__seal {
+  position: relative;
   margin-top: 42px;
   appearance: none;
   background: transparent;
@@ -621,6 +858,26 @@
   padding: 13px 24px;
   cursor: pointer;
   transition: border-color 0.4s var(--ease), color 0.4s var(--ease), box-shadow 0.4s var(--ease);
+}
+.hollow__seal::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border: 1px solid rgba(255, 46, 136, 0);
+  pointer-events: none;
+  transition: opacity 0.4s var(--ease);
+}
+.hollow--in .hollow__seal::before {
+  animation: hvSealHue 14s ease-in-out 2s infinite;
+}
+.hollow__seal:hover::before,
+.hollow__seal:focus-visible::before {
+  opacity: 0; /* the hand's own answer takes over */
+}
+@keyframes hvSealHue {
+  0%, 100% { border-color: rgba(255, 46, 136, 0.34); }
+  33% { border-color: rgba(255, 158, 46, 0.3); }
+  66% { border-color: rgba(95, 123, 255, 0.34); }
 }
 .hollow__seal:hover {
   border-color: rgba(255, 46, 136, 0.55);
@@ -644,14 +901,16 @@
 .hollow [data-hv] {
   opacity: 0;
   transform: translateY(16px);
-  transition: opacity 0.75s var(--ease), transform 0.75s var(--ease);
+  transition: opacity 0.85s var(--ease), transform 0.85s var(--ease), filter 1.15s var(--ease);
 }
 .hollow--in [data-hv="1"] { transition-delay: 0.62s; }
-.hollow--in [data-hv="2"] { transition-delay: 0.71s; }
-.hollow--in [data-hv="3"] { transition-delay: 0.8s; }
-.hollow--in [data-hv="4"] { transition-delay: 0.92s; }
-.hollow--in [data-hv="5"] { transition-delay: 1.04s; }
-.hollow--in [data-hv="6"] { transition-delay: 1.16s; }
+.hollow--in [data-hv="2"] { transition-delay: 0.7s; }
+.hollow--in [data-hv="3"] { transition-delay: 0.82s; }
+.hollow--in [data-hv="4"] { transition-delay: 0.98s; }
+.hollow--in [data-hv="5"] { transition-delay: 1.12s; }
+.hollow--in [data-hv="6"] { transition-delay: 1.26s; }
+.hollow--in [data-hv="7"] { transition-delay: 1.42s; }
+.hollow--in [data-hv="8"] { transition-delay: 1.54s; }
 .hollow--in [data-hv] {
   opacity: 1;
   transform: none;
@@ -700,39 +959,71 @@
   transition: opacity 0.28s ease-out 0.4s;
 }
 
+/* — short sheets (laptops): the movements tighten so the whole thesis sits inside the fold,
+     centred in the void — the column may still scroll on truly small heights — */
+@media (max-height: 980px) and (min-width: 601px) {
+  .hollow__kicker { margin-bottom: 18px; }
+  .hollow__display { font-size: clamp(2.1rem, 4.6vw, 3.3rem); }
+  .hollow__mvts { margin-top: 26px; gap: 17px; max-width: min(56ch, 84vw); }
+  .hollow__mvt { font-size: clamp(0.95rem, 1.3vw, 1.04rem); line-height: 1.6; }
+  .hollow__sigrow { margin-top: 26px; }
+  .hollow__seal { margin-top: 30px; }
+}
+
 /* — small sheets: the chamber tightens, the words stay clear of the rim — */
 @media (max-width: 600px) {
-  .hollow__kicker { margin-bottom: 18px; font-size: 0.58rem; letter-spacing: 0.16em; }
+  .hollow__kicker { margin-bottom: 16px; font-size: 0.58rem; letter-spacing: 0.16em; }
   .hollow__display { font-size: clamp(1.95rem, 8.6vw, 2.35rem); }
-  .hollow__lede { margin-top: 18px; font-size: 0.95rem; line-height: 1.58; }
-  .hollow__sigrow { margin-top: 24px; gap: 13px; }
+  .hollow__mvts { margin-top: 22px; gap: 16px; max-width: 88vw; }
+  .hollow__mvt { padding-left: 32px; font-size: 0.92rem; line-height: 1.6; }
+  .hollow__mvt-no::after { height: 22px; top: calc(100% + 7px); }
+  .hollow__sigrow { margin-top: 22px; gap: 13px; }
   .hollow__mark { width: 34px; height: 34px; }
   .hollow__sig { font-size: 0.53rem; letter-spacing: 0.13em; }
-  .hollow__seal { margin-top: 28px; padding: 12px 20px; font-size: 0.62rem; }
+  .hollow__seal { margin-top: 24px; padding: 12px 20px; font-size: 0.62rem; }
   .hollow__esc { margin-top: 11px; }
 }
 
 /* — reduced motion: the room presents COMPOSED AND STILL — no flight, no breathing, no
-   stagger; entry/exit are quiet fades (body.js skips the iris entirely). Fully experiencable:
-   every word, the vault, the light — just at rest. — */
+   drift, no sweep-orbit, no stagger; entry/exit are quiet fades (body.js skips the iris
+   entirely). Fully experiencable: every word, the vault, the halo, both light pools resting
+   at their composed stations, the numerals' hairlines drawn — just at rest. — */
 @media (prefers-reduced-motion: reduce) {
   .hollow__room,
-  .hollow__vault--f,
+  .hollow__depth,
   .hollow__breath,
+  .hollow__dustwrap,
+  .hollow__sweep,
   .hollow__glow,
   .hollow [data-hv] {
     transition: opacity 0.25s linear;
     transform: none;
   }
+  .hollow--in .hollow__drift--rim,
+  .hollow--in .hollow__drift--mid,
+  .hollow--in .hollow__drift--far,
   .hollow--in .hollow__breath--a > .hollow__vault,
   .hollow--in .hollow__breath--b > .hollow__vault,
-  .hollow--in .hollow__glow {
+  .hollow--in .hollow__breath--mid > .hollow__vault,
+  .hollow--in .hollow__dust--x,
+  .hollow--in .hollow__dust--y,
+  .hollow--in .hollow__sweep--a,
+  .hollow--in .hollow__sweep--b,
+  .hollow--in .hollow__glow,
+  .hollow--in .hollow__display em,
+  .hollow--in .hollow__mark-orbit,
+  .hollow--in .hollow__mark-punctum,
+  .hollow--in .hollow__seal::before {
     animation: none;
   }
   .hollow--in [data-hv] {
     transition-delay: 0s;
   }
-  .hollow__scene {
+  .hollow__display span[data-hv] {
+    filter: none;
+  }
+  .hollow__mvt-no::after {
+    transform: none;
     transition: none;
   }
   .hollow__iris {
