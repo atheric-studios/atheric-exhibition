@@ -323,14 +323,548 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
   const seal = room ? room.querySelector('.hollow__seal') : null;
   const iris = room ? room.querySelector('.hollow__iris') : null;
   const irisDark = room ? room.querySelector('.hollow__iris-dark') : null;
-  // the depth groups — each names its own parallax rate (data-par="x y"), so the vault
-  // moves as a body with true depth: the rim leans furthest, the far dark barely stirs
-  const parEls = room
-    ? [...room.querySelectorAll('[data-par]')].map((el) => {
-      const f = (el.getAttribute('data-par') || '').trim().split(/\s+/).map(Number);
-      return { el, fx: f[0] || 0, fy: f[1] || 0 };
-    })
-    : [];
+  // ── THE FIELD — the room itself (v3, 2026-07-30). The vault-object is dead. ───────────────
+  // No ring, no central void, nothing to look AT: the entire viewport is the room — a
+  // full-bleed triangulated field the visitor stands INSIDE. One canvas, one welded
+  // shared-vertex mesh (parsed from #hollow-geo, the slot-in source): the vertices BREATHE —
+  // a slow travelling drift crosses the field as a swell, a smooth per-vertex depth field
+  // shears near past far under the pointer, and the facets PART around the hand — and
+  // because every facet shares its vertices, the living geometry can never open a gap.
+  //
+  // The light law holds absolutely: the facets' own paint is near-black (baked from
+  // data-d); everything candy is drawn ADDITIVELY (composite 'lighter') — illumination,
+  // never paint. Three wandering PRESENCES (pink / tangerine / periwinkle — the movements'
+  // own stations) cross the room on slow incommensurate orbits; seams ignite as they pass
+  // (wide halo + thin near-white core — the fig. 07 seam-light grammar), faces catch a
+  // faint wash, candy motes rise like incense. The room ANSWERS: light gathers to the
+  // cursor and the field parts around it; press-and-hold GATHERS the room — the presences
+  // lean toward the hand, the parting widens — and release rings a luminous WAVE outward
+  // through the seams (Space rings it from the room's heart for the keyboard; a quick tap
+  // rings a small one). Reduced motion: one composed still frame — presences at rest,
+  // motes settled — and press/Space answer as a STATE (single repaints), never a motion.
+  //
+  // Budget: geometry parsed and every sprite/colour string baked ONCE at first open (paid
+  // under the iris cover); per frame only typed-array math + canvas paths (the few rgb()
+  // strings for lit seams/faces are the fracture renderer's own proven pattern — no other
+  // allocation). The loop runs ONLY while the room is open; the estate outside never pays.
+  const fieldCanvas = room ? room.querySelector('.hollow__field') : null;
+  const hgeoEl = document.getElementById('hollow-geo');
+  let hf = null; // the built field — lazy; hfLoop/hfLast/hfT0 drive the room-only life loop
+  let hfRaf = 0, hfOn = false, hfLast = 0, hfT0 = 0;
+  // the hand: damped presence position/intensity (field units), the lean, the charge
+  let hpX = 800, hpY = 500, hpTX = 800, hpTY = 500, hpI = 0, hpOn = false;
+  let hLeanX = 0, hLeanY = 0, hLeanTX = 0, hLeanTY = 0;
+  let hCharging = false, hCharge = 0, hGather = 0, hRmPress = 0;
+  // the waves — four slots, no per-frame allocation
+  const WV = 4;
+  const wvX = new Float32Array(WV), wvY = new Float32Array(WV);
+  const wvT0 = new Float32Array(WV), wvAmp = new Float32Array(WV), wvHue = new Float32Array(WV);
+  const wvSig = new Float32Array(WV), wvRad = new Float32Array(WV), wvEnv = new Float32Array(WV);
+  let wvN = 0;
+
+  const buildField = () => {
+    if (hf || !fieldCanvas || !hgeoEl || !fieldCanvas.getContext) return;
+    const hg = fieldCanvas.getContext('2d');
+    if (!hg) return;
+    const GW = +hgeoEl.getAttribute('data-w') || 1600;
+    const GH = +hgeoEl.getAttribute('data-h') || 1000;
+    const polys = hgeoEl.querySelectorAll('polygon');
+    const T = polys.length;
+    if (!T) return;
+    // — weld: identical coordinate strings are one vertex (the generator guarantees the
+    //   strings match exactly for shared corners), so the mesh is watertight by parse —
+    const keyToIdx = new Map();
+    const bxA = [], byA = [];
+    const ti = new Uint16Array(T * 3);
+    const tfill = new Array(T);
+    for (let i = 0; i < T; i++) {
+      const pg = polys[i];
+      const pts = pg.getAttribute('points').trim().split(' ');
+      for (let e = 0; e < 3; e++) {
+        let vi = keyToIdx.get(pts[e]);
+        if (vi === undefined) {
+          vi = bxA.length;
+          keyToIdx.set(pts[e], vi);
+          const c = pts[e].split(',');
+          bxA.push(+c[0]);
+          byA.push(+c[1]);
+        }
+        ti[i * 3 + e] = vi;
+      }
+      const d = (pg.getAttribute('data-d') || '8 8 11').split(' ');
+      tfill[i] = 'rgb(' + d[0] + ',' + d[1] + ',' + d[2] + ')';
+    }
+    const NV = bxA.length;
+    const bx = Float32Array.from(bxA), by = Float32Array.from(byA);
+    // — unique seams (shared edges once) —
+    const edgeSet = new Map();
+    for (let i = 0; i < T; i++) {
+      for (let e = 0; e < 3; e++) {
+        const a = ti[i * 3 + e], b = ti[i * 3 + ((e + 1) % 3)];
+        const k = a < b ? a * 65536 + b : b * 65536 + a;
+        if (!edgeSet.has(k)) edgeSet.set(k, a < b ? [a, b] : [b, a]);
+      }
+    }
+    const NE = edgeSet.size;
+    const ea = new Uint16Array(NE), ebb = new Uint16Array(NE);
+    {
+      let i = 0;
+      for (const [a, b] of edgeSet.values()) { ea[i] = a; ebb[i] = b; i++; }
+    }
+    const frac = (v) => v - Math.floor(v);
+    const hash = (x, y) => frac(Math.sin(x * 12.9898 + y * 78.233) * 43758.5453);
+    // — per-vertex character: a smooth depth field (parallax shears, never tears), a
+    //   travelling drift phase (the swell crosses the room), an amplitude of its own —
+    const vz = new Float32Array(NV), vphx = new Float32Array(NV), vphy = new Float32Array(NV);
+    const vamp = new Float32Array(NV);
+    const bpx = new Float32Array(NV), bpy = new Float32Array(NV); // base canvas px (resize)
+    const vpx = new Float32Array(NV), vpy = new Float32Array(NV); // living canvas px (frame)
+    const vlr = new Float32Array(NV), vlg = new Float32Array(NV), vlb = new Float32Array(NV);
+    for (let i = 0; i < NV; i++) {
+      const x = bx[i], y = by[i], f1 = hash(x, y);
+      let z = 0.5 + 0.28 * Math.sin(x * 0.0017 + 0.9) * Math.sin(y * 0.0023 + 2.1) +
+        0.22 * Math.sin((x - y) * 0.0011);
+      vz[i] = z < 0 ? 0 : z > 1 ? 1 : z;
+      vphx[i] = x * 0.006 + f1 * 1.9;
+      vphy[i] = y * 0.0052 + f1 * 4.4;
+      vamp[i] = 5.2 + 3.0 * f1;
+    }
+    // — per-seam character: nearer seams stroke wider; every seam keeps its own jitter —
+    const ew = new Float32Array(NE), ej = new Float32Array(NE);
+    for (let i = 0; i < NE; i++) {
+      const zm = (vz[ea[i]] + vz[ebb[i]]) * 0.5;
+      const f = hash(bx[ea[i]] + 3.7, by[ebb[i]] + 9.1);
+      ew[i] = (4.7 - 2.2 * zm) * (0.78 + 0.5 * f);
+      ej[i] = 0.7 + 0.55 * f;
+    }
+    // — the light sprites: radial glows rastered ONCE (no per-frame gradients, no filters) —
+    const mkGlow = (r, g2, b, px) => {
+      const c = document.createElement('canvas');
+      c.width = c.height = px;
+      const cg = c.getContext('2d');
+      const grd = cg.createRadialGradient(px / 2, px / 2, 0, px / 2, px / 2, px / 2);
+      grd.addColorStop(0, 'rgba(' + r + ',' + g2 + ',' + b + ',0.5)');
+      grd.addColorStop(0.42, 'rgba(' + r + ',' + g2 + ',' + b + ',0.16)');
+      grd.addColorStop(1, 'rgba(' + r + ',' + g2 + ',' + b + ',0)');
+      cg.fillStyle = grd;
+      cg.fillRect(0, 0, px, px);
+      return c;
+    };
+    // the three presences — the movements' own stations; periwinkle inked up to read on black
+    const wisps = [
+      { r: 255, g: 46, b: 136, wr: 1, wg: 0.180, wb: 0.533, R: 330, I: 0.62, spr: mkGlow(255, 46, 136, 256) },
+      { r: 255, g: 158, b: 46, wr: 1, wg: 0.620, wb: 0.180, R: 300, I: 0.55, spr: mkGlow(255, 158, 46, 256) },
+      { r: 95, g: 123, b: 255, wr: 0.373, wg: 0.482, wb: 1, R: 355, I: 0.88, spr: mkGlow(95, 123, 255, 256) },
+    ];
+    const wx = new Float32Array(3), wy = new Float32Array(3);
+    // the hand's light takes the room's hue — twelve stations along Clara's ramp
+    const pspr = [];
+    for (let i = 0; i < 12; i++) {
+      const c = candyAt(i / 11);
+      pspr.push(mkGlow(c[0] | 0, c[1] | 0, c[2] | 0, 256));
+    }
+    // — the motes: candy dust rising like incense —
+    const NM = 64;
+    const mx = new Float32Array(NM), my = new Float32Array(NM), msp = new Float32Array(NM);
+    const mph = new Float32Array(NM), msw = new Float32Array(NM), mtw = new Float32Array(NM);
+    const msz = new Float32Array(NM);
+    const mhue = new Uint8Array(NM);
+    const mspr = [mkGlow(255, 92, 164, 40), mkGlow(255, 171, 77, 40), mkGlow(143, 163, 255, 40)];
+    for (let i = 0; i < NM; i++) {
+      const f = hash(i * 17.3 + 4.1, i * 9.7 + 1.3), f2 = hash(i * 5.9 + 8.8, i * 13.1 + 3.2);
+      mx[i] = -60 + f * (GW + 120);
+      my[i] = -60 + f2 * (GH + 120);
+      msp[i] = 9 + f * 11;
+      mph[i] = f2 * 6.283;
+      msw[i] = 7 + f * 12;
+      mtw[i] = 0.0008 + f2 * 0.0009;
+      msz[i] = 2.1 + f * 2.6;
+      mhue[i] = i % 3;
+    }
+    const act = new Uint8Array(T), eact = new Uint8Array(NE);
+    hf = {
+      hg, GW, GH, T, NV, NE, ti, tfill, bx, by, bpx, bpy, vpx, vpy, vz, vphx, vphy, vamp,
+      vlr, vlg, vlb, ea, eb: ebb, ew, ej, wisps, wx, wy, pspr,
+      NM, mx, my, msp, mph, msw, mtw, msz, mhue, mspr, act, eact,
+      scale: 1, ox: 0, oy: 0, dpr: 1, coreW: 1,
+      // the visible window in field units (set at resize) — the presences wander THIS room,
+      // not the abstract stage, so a narrow crop (phones) is never left dark
+      cX: 800, cY: 500, aX: 800, aY: 500, rest: [[430, 330], [1190, 620], [760, 830]],
+    };
+    hfResize();
+  };
+
+  const hfResize = () => {
+    if (!hf) return;
+    const w = innerWidth, h = innerHeight;
+    hf.dpr = Math.min(devicePixelRatio || 1, 1.5);
+    fieldCanvas.width = Math.round(w * hf.dpr);
+    fieldCanvas.height = Math.round(h * hf.dpr);
+    hf.scale = Math.max(fieldCanvas.width / hf.GW, fieldCanvas.height / hf.GH); // cover
+    hf.ox = (fieldCanvas.width - hf.GW * hf.scale) / 2;
+    hf.oy = (fieldCanvas.height - hf.GH * hf.scale) / 2;
+    hf.coreW = Math.max(1, 1.25 * hf.dpr);
+    // the visible window in field units — the cover crop this viewport actually shows
+    hf.cX = (fieldCanvas.width / 2 - hf.ox) / hf.scale;
+    hf.cY = (fieldCanvas.height / 2 - hf.oy) / hf.scale;
+    hf.aX = fieldCanvas.width / 2 / hf.scale;
+    hf.aY = fieldCanvas.height / 2 / hf.scale;
+    // reduced motion's rest stations sit inside the same window, asymmetric — never an emblem
+    hf.rest = [
+      [hf.cX - hf.aX * 0.58, hf.cY - hf.aY * 0.38],
+      [hf.cX + hf.aX * 0.6, hf.cY + hf.aY * 0.2],
+      [hf.cX - hf.aX * 0.06, hf.cY + hf.aY * 0.66],
+    ];
+    for (let i = 0; i < hf.NV; i++) {
+      hf.bpx[i] = hf.bx[i] * hf.scale + hf.ox;
+      hf.bpy[i] = hf.by[i] * hf.scale + hf.oy;
+    }
+    // cull to the viewport once per resize — off-screen margin facets never cost a path
+    const m = 90 * hf.dpr, cw = fieldCanvas.width + m, ch = fieldCanvas.height + m;
+    for (let t = 0; t < hf.T; t++) {
+      const a = hf.ti[t * 3], b = hf.ti[t * 3 + 1], c = hf.ti[t * 3 + 2];
+      const x0 = Math.min(hf.bpx[a], hf.bpx[b], hf.bpx[c]);
+      const x1 = Math.max(hf.bpx[a], hf.bpx[b], hf.bpx[c]);
+      const y0 = Math.min(hf.bpy[a], hf.bpy[b], hf.bpy[c]);
+      const y1 = Math.max(hf.bpy[a], hf.bpy[b], hf.bpy[c]);
+      hf.act[t] = x1 > -m && x0 < cw && y1 > -m && y0 < ch ? 1 : 0;
+    }
+    for (let e = 0; e < hf.NE; e++) {
+      const a = hf.ea[e], b = hf.eb[e];
+      const x0 = Math.min(hf.bpx[a], hf.bpx[b]), x1 = Math.max(hf.bpx[a], hf.bpx[b]);
+      const y0 = Math.min(hf.bpy[a], hf.bpy[b]), y1 = Math.max(hf.bpy[a], hf.bpy[b]);
+      hf.eact[e] = x1 > -m && x0 < cw && y1 > -m && y0 < ch ? 1 : 0;
+    }
+  };
+
+  const foldT = (u) => {
+    u = u - Math.floor(u / 2) * 2;
+    return u > 1 ? 2 - u : u;
+  };
+
+  // one frame of the room — still=true paints the composed reduced-motion state
+  const hfDraw = (now, still) => {
+    if (!hf) return;
+    const g2 = hf.hg, sc = hf.scale;
+    const al = still ? 1 : sstep((now - hfT0) / 2000); // the room WAKES over the first breaths
+    const br = still ? 1 : 1 + 0.16 * Math.sin(now * 0.00086); // the slow global breath (~7.3s)
+    // — the presences cross the room on slow incommensurate orbits (scaled to the VISIBLE
+    //   window, so a narrow crop still hosts all three); a held press GATHERS them —
+    if (still) {
+      for (let k = 0; k < 3; k++) { hf.wx[k] = hf.rest[k][0]; hf.wy[k] = hf.rest[k][1]; }
+    } else {
+      hf.wx[0] = hf.cX + hf.aX * 0.78 * Math.sin(now * 0.000119 + 0.7);
+      hf.wy[0] = hf.cY + hf.aY * 0.77 * Math.sin(now * 0.000153 + 2.0);
+      hf.wx[1] = hf.cX + hf.aX * 0.82 * Math.sin(now * 0.000094 + 3.9);
+      hf.wy[1] = hf.cY + hf.aY * 0.8 * Math.sin(now * 0.000134 + 4.6);
+      hf.wx[2] = hf.cX + hf.aX * 0.74 * Math.sin(now * 0.000107 + 1.9);
+      hf.wy[2] = hf.cY + hf.aY * 0.72 * Math.sin(now * 0.000086 + 0.3);
+      if (hGather > 0.001) {
+        for (let k = 0; k < 3; k++) {
+          hf.wx[k] += hGather * (hpX - hf.wx[k]);
+          hf.wy[k] += hGather * (hpY - hf.wy[k]);
+        }
+      }
+    }
+    // presence light colour — the room's hue at this hour (one sample, the CC scratch)
+    const pht = foldT(now * 0.000021 + hpX * 0.0005);
+    const pc = candyAt(pht);
+    const pcr = pc[0] / 255, pcg = pc[1] / 255, pcb = pc[2] / 255;
+    const presI = still ? hRmPress : hpI;
+    const presR = 250 * (1 + 0.9 * hCharge), presIk = (0.8 + 1.3 * hCharge) * presI * al;
+    const partR = 205 * (1 + 0.85 * hCharge);
+    const partP = 12.5 * (1 + 1.6 * hCharge) * (still ? hRmPress : Math.max(presI, 0.001));
+    const t1 = now * 0.00047, t2 = now * 0.00039;
+    // per-wave invariants hoisted out of the vertex loop (age, ring radius, envelope)
+    for (let v = 0; v < wvN; v++) {
+      const age = (now - wvT0[v]) / 1700;
+      wvSig[v] = 85 + 70 * age;
+      wvRad[v] = age * 1955; // 1150 units/s across the 1.7 s life
+      wvEnv[v] = age < 1 ? Math.pow(1 - age, 1.8) * wvAmp[v] : 0;
+    }
+    // — the vertex pass: breathe, shear, part; then gather every light into r/g/b —
+    for (let i = 0; i < hf.NV; i++) {
+      const X = hf.bx[i], Y = hf.by[i];
+      let ox = 0, oy = 0;
+      if (!still) {
+        ox = hf.vamp[i] * Math.sin(t1 + hf.vphx[i]) + hLeanX * 24 * (0.55 - hf.vz[i]);
+        oy = hf.vamp[i] * 0.8 * Math.sin(t2 + hf.vphy[i]) + hLeanY * 17 * (0.55 - hf.vz[i]);
+      }
+      if (partP > 0.02) {
+        const dxp = X - hpX, dyp = Y - hpY;
+        const d2 = dxp * dxp + dyp * dyp;
+        if (d2 < partR * partR) {
+          const d = Math.sqrt(d2) || 1;
+          let f = 1 - d / partR;
+          f *= f;
+          const push = partP * f;
+          ox += (dxp / d) * push;
+          oy += (dyp / d) * push;
+        }
+      }
+      hf.vpx[i] = hf.bpx[i] + ox * sc;
+      hf.vpy[i] = hf.bpy[i] + oy * sc;
+      let lr = 0, lg = 0, lb = 0;
+      for (let k = 0; k < 3; k++) {
+        const wk = hf.wisps[k];
+        const dx = X - hf.wx[k], dy = Y - hf.wy[k];
+        const d2 = dx * dx + dy * dy, R2 = wk.R * wk.R;
+        if (d2 < R2) {
+          let q = 1 - d2 / R2;
+          q *= q;
+          const s = wk.I * q * br * al;
+          lr += s * wk.wr; lg += s * wk.wg; lb += s * wk.wb;
+        }
+      }
+      if (presIk > 0.01) {
+        const dx = X - hpX, dy = Y - hpY;
+        const d2 = dx * dx + dy * dy, R2 = presR * presR;
+        if (d2 < R2) {
+          let q = 1 - d2 / R2;
+          q *= q;
+          const s = presIk * q;
+          lr += s * pcr; lg += s * pcg; lb += s * pcb;
+        }
+      }
+      for (let v = 0; v < wvN; v++) {
+        if (wvEnv[v] <= 0) continue;
+        const dx = X - wvX[v], dy = Y - wvY[v];
+        const d = Math.sqrt(dx * dx + dy * dy);
+        let q = (d - wvRad[v]) / wvSig[v];
+        if (q > -1 && q < 1) {
+          q = 1 - q * q;
+          q *= q;
+          const env = wvEnv[v] * q;
+          const c = candyAt(foldT(d * 0.00085 + wvHue[v]));
+          lr += env * (c[0] / 255); lg += env * (c[1] / 255); lb += env * (c[2] / 255);
+        }
+      }
+      hf.vlr[i] = lr; hf.vlg[i] = lg; hf.vlb[i] = lb;
+    }
+    // — paint. Base facets first (their own near-black — the only paint in the room) —
+    g2.globalCompositeOperation = 'source-over';
+    g2.globalAlpha = 1;
+    g2.fillStyle = '#020202';
+    g2.fillRect(0, 0, fieldCanvas.width, fieldCanvas.height);
+    for (let t = 0; t < hf.T; t++) {
+      if (!hf.act[t]) continue;
+      const a = hf.ti[t * 3], b = hf.ti[t * 3 + 1], c = hf.ti[t * 3 + 2];
+      g2.fillStyle = hf.tfill[t];
+      g2.beginPath();
+      g2.moveTo(hf.vpx[a], hf.vpy[a]);
+      g2.lineTo(hf.vpx[b], hf.vpy[b]);
+      g2.lineTo(hf.vpx[c], hf.vpy[c]);
+      g2.closePath();
+      g2.fill();
+    }
+    // — then LIGHT, strictly additive: face wash, seam halo + core, presences, motes —
+    g2.globalCompositeOperation = 'lighter';
+    g2.lineCap = 'round';
+    for (let t = 0; t < hf.T; t++) {
+      if (!hf.act[t]) continue;
+      const a = hf.ti[t * 3], b = hf.ti[t * 3 + 1], c = hf.ti[t * 3 + 2];
+      const r = (hf.vlr[a] + hf.vlr[b] + hf.vlr[c]) * 0.3333;
+      const gg = (hf.vlg[a] + hf.vlg[b] + hf.vlg[c]) * 0.3333;
+      const bb = (hf.vlb[a] + hf.vlb[b] + hf.vlb[c]) * 0.3333;
+      const m2 = r > gg ? (r > bb ? r : bb) : (gg > bb ? gg : bb);
+      if (m2 < 0.03) continue;
+      let a2 = m2 * 0.17;
+      if (a2 > 0.14) a2 = 0.14;
+      const inv = 255 / m2;
+      g2.globalAlpha = a2;
+      g2.fillStyle = 'rgb(' + ((r * inv) | 0) + ',' + ((gg * inv) | 0) + ',' + ((bb * inv) | 0) + ')';
+      g2.beginPath();
+      g2.moveTo(hf.vpx[a], hf.vpy[a]);
+      g2.lineTo(hf.vpx[b], hf.vpy[b]);
+      g2.lineTo(hf.vpx[c], hf.vpy[c]);
+      g2.closePath();
+      g2.fill();
+    }
+    for (let e = 0; e < hf.NE; e++) {
+      if (!hf.eact[e]) continue;
+      const a = hf.ea[e], b = hf.eb[e];
+      const r = (hf.vlr[a] + hf.vlr[b]) * 0.5;
+      const gg = (hf.vlg[a] + hf.vlg[b]) * 0.5;
+      const bb = (hf.vlb[a] + hf.vlb[b]) * 0.5;
+      const m2 = r > gg ? (r > bb ? r : bb) : (gg > bb ? gg : bb);
+      if (m2 < 0.02) continue;
+      const inv = 255 / m2;
+      const rr = (r * inv) | 0, rg = (gg * inv) | 0, rb = (bb * inv) | 0;
+      g2.beginPath();
+      g2.moveTo(hf.vpx[a], hf.vpy[a]);
+      g2.lineTo(hf.vpx[b], hf.vpy[b]);
+      if (m2 > 0.045) {
+        // the halo — bloom escaping onto the neighbouring faces
+        let ha = m2 * 0.8 * hf.ej[e];
+        if (ha > 0.7) ha = 0.7;
+        g2.globalAlpha = ha;
+        g2.lineWidth = hf.ew[e] * sc;
+        g2.strokeStyle = 'rgb(' + rr + ',' + rg + ',' + rb + ')';
+        g2.stroke();
+      }
+      // the core — thin and near-white-hot on the seam line itself
+      let ca = m2 * 1.5 * hf.ej[e];
+      if (ca > 1) ca = 1;
+      g2.globalAlpha = ca;
+      g2.lineWidth = hf.coreW;
+      g2.strokeStyle = 'rgb(' + ((rr + (255 - rr) * 0.55) | 0) + ',' +
+        ((rg + (255 - rg) * 0.55) | 0) + ',' + ((rb + (255 - rb) * 0.55) | 0) + ')';
+      g2.stroke();
+    }
+    // the presences' own bodies — pre-rastered glows riding the field
+    for (let k = 0; k < 3; k++) {
+      const wk = hf.wisps[k];
+      const size = wk.R * 2.6 * sc;
+      const px = hf.wx[k] * sc + hf.ox, py = hf.wy[k] * sc + hf.oy;
+      g2.globalAlpha = (0.30 + 0.07 * Math.sin(now * 0.0004 + k * 2.1)) * br * al;
+      g2.drawImage(wk.spr, px - size / 2, py - size / 2, size, size);
+    }
+    if (presI > 0.02) {
+      const idx = (pht * 11) | 0;
+      const size = presR * 2.5 * sc;
+      const px = hpX * sc + hf.ox, py = hpY * sc + hf.oy;
+      g2.globalAlpha = Math.min(0.85, 0.42 * presI * (1 + 0.6 * hCharge)) * al;
+      g2.drawImage(hf.pspr[idx], px - size / 2, py - size / 2, size, size);
+    }
+    for (let i = 0; i < hf.NM; i++) {
+      const sx = (hf.mx[i] + (still ? 0 : Math.sin(now * 0.00052 + hf.mph[i]) * hf.msw[i])) * sc + hf.ox;
+      const sy = hf.my[i] * sc + hf.oy;
+      if (sx < -20 || sx > fieldCanvas.width + 20 || sy < -20 || sy > fieldCanvas.height + 20) continue;
+      const tw = still ? 0.5 : 0.5 + 0.5 * Math.sin(now * hf.mtw[i] + hf.mph[i] * 3.1);
+      g2.globalAlpha = (0.1 + 0.42 * tw * tw) * al;
+      const s2 = hf.msz[i] * 2.6 * sc;
+      g2.drawImage(hf.mspr[hf.mhue[i]], sx - s2 / 2, sy - s2 / 2, s2, s2);
+    }
+    g2.globalCompositeOperation = 'source-over';
+    g2.globalAlpha = 1;
+    g2.lineWidth = 1;
+  };
+
+  const hfTick = (now) => {
+    if (!hfOn) return;
+    const dt = Math.min(50, Math.max(1, now - hfLast));
+    hfLast = now;
+    // the hand, damped — presence glides, the lean settles, the charge swells and decays
+    const kp = Math.min(1, dt / 170);
+    hpX += (hpTX - hpX) * kp;
+    hpY += (hpTY - hpY) * kp;
+    hpI += ((hpOn ? 1 : 0) - hpI) * Math.min(1, dt / 260);
+    hLeanX += (hLeanTX - hLeanX) * Math.min(1, dt / 300);
+    hLeanY += (hLeanTY - hLeanY) * Math.min(1, dt / 300);
+    hCharge = hCharging ? Math.min(1, hCharge + dt / 1100) : Math.max(0, hCharge - dt / 450);
+    hGather += ((hCharging ? 0.30 * hCharge : 0) - hGather) * Math.min(1, dt / 320);
+    // the motes rise; past the visible ceiling they return beneath the visible floor
+    // (window bounds, not stage bounds — a short crop would otherwise hide most of the climb)
+    if (hf) {
+      const top = hf.cY - hf.aY - 60, bottom = hf.cY + hf.aY + 60;
+      for (let i = 0; i < hf.NM; i++) {
+        hf.my[i] -= hf.msp[i] * dt * 0.001;
+        if (hf.my[i] < top) hf.my[i] = bottom;
+      }
+    }
+    // retire spent waves (order irrelevant — swap-with-last, no allocation)
+    for (let v = wvN - 1; v >= 0; v--) {
+      if (now - wvT0[v] >= 1700) {
+        wvN--;
+        wvX[v] = wvX[wvN]; wvY[v] = wvY[wvN]; wvT0[v] = wvT0[wvN];
+        wvAmp[v] = wvAmp[wvN]; wvHue[v] = wvHue[wvN];
+      }
+    }
+    hfDraw(now, false);
+    hfRaf = requestAnimationFrame(hfTick);
+  };
+
+  const hfStart = () => {
+    if (hfOn || !hf) return;
+    hfOn = true;
+    hfT0 = hfLast = performance.now();
+    // the hand starts clean — no charge, no presence, no lean, no leftover shear from the
+    // last visit (the field must compose at rest, then answer THIS visitor)
+    hCharge = 0; hGather = 0; hCharging = false; hpI = 0; hpOn = false; wvN = 0;
+    hLeanX = hLeanY = hLeanTX = hLeanTY = 0;
+    hpX = hpTX = hf.cX;
+    hpY = hpTY = hf.cY;
+    hfRaf = requestAnimationFrame(hfTick);
+  };
+  const hfStop = () => {
+    if (!hfOn) return;
+    hfOn = false;
+    cancelAnimationFrame(hfRaf);
+  };
+
+  const hfSpawnWave = (x, y, amp) => {
+    if (!hf) return;
+    let v = 0;
+    if (wvN < WV) {
+      v = wvN++;
+    } else {
+      // a fifth wave recycles the ELDEST ring (the one nearest its own end)
+      for (let i = 1; i < WV; i++) if (wvT0[i] < wvT0[v]) v = i;
+    }
+    wvX[v] = x; wvY[v] = y;
+    wvT0[v] = performance.now();
+    wvAmp[v] = amp;
+    wvHue[v] = foldT(performance.now() * 0.000021);
+  };
+
+  // client px → field units (the inverse of the cover transform)
+  const hfFieldX = (cx) => hf ? ((cx * hf.dpr - hf.ox) / hf.scale) : 800;
+  const hfFieldY = (cy) => hf ? ((cy * hf.dpr - hf.oy) / hf.scale) : 500;
+
+  const onFieldMove = (e) => {
+    if (!hf) return;
+    hpTX = hfFieldX(e.clientX);
+    hpTY = hfFieldY(e.clientY);
+    hpOn = true;
+    hLeanTX = (e.clientX / innerWidth - 0.5) * 2;
+    hLeanTY = (e.clientY / innerHeight - 0.5) * 2;
+  };
+  const onFieldDown = (e) => {
+    if (!hf || e.target.closest('.hollow__seal')) return;
+    hpTX = hfFieldX(e.clientX);
+    hpTY = hfFieldY(e.clientY);
+    hpOn = true;
+    if (reduce) {
+      // a state, not a motion: the field parts and lights around the held point, composed
+      hpX = hpTX; hpY = hpTY;
+      hRmPress = 1;
+      hfDraw(performance.now(), true);
+      return;
+    }
+    hCharging = true;
+  };
+  const onFieldUp = () => {
+    if (!hf) return;
+    if (reduce) {
+      if (hRmPress) {
+        hRmPress = 0;
+        hfDraw(performance.now(), true);
+      }
+      return;
+    }
+    if (!hCharging) return;
+    hCharging = false;
+    hfSpawnWave(hpX, hpY, 0.55 + 0.9 * hCharge); // release — the room rings
+  };
+  const onFieldLeave = () => {
+    hpOn = false;
+    hLeanTX = 0;
+    hLeanTY = 0;
+  };
+  const fieldPointerOn = () => {
+    room.addEventListener('pointermove', onFieldMove);
+    room.addEventListener('pointerdown', onFieldDown);
+    room.addEventListener('pointerleave', onFieldLeave);
+    addEventListener('pointerup', onFieldUp);
+    addEventListener('pointercancel', onFieldUp);
+  };
+  const fieldPointerOff = () => {
+    room.removeEventListener('pointermove', onFieldMove);
+    room.removeEventListener('pointerdown', onFieldDown);
+    room.removeEventListener('pointerleave', onFieldLeave);
+    removeEventListener('pointerup', onFieldUp);
+    removeEventListener('pointercancel', onFieldUp);
+  };
 
   let roomState = 'idle'; // idle → flight → in → out → idle
   let flareT0 = 0, codaT0 = 0; // canvas seam moments (entry flare / exit afterglow)
@@ -523,41 +1057,48 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
   const hvCenter = room ? room.querySelector('.hollow__center') : null;
   const centerScrolls = () => hvCenter && hvCenter.scrollHeight > hvCenter.clientHeight + 4;
   const guardWheel = (e) => {
+    // zoom is never guarded: ctrl+wheel is the browser's zoom gesture, and a multi-touch
+    // move is a pinch — both pass (WCAG 1.4.4/1.4.10); only single-point scroll is held
+    if (e.ctrlKey || (e.touches && e.touches.length > 1)) return;
     if (!centerScrolls()) e.preventDefault();
   };
   const guardKeys = (e) => {
     const k = e.key;
     if (k === ' ' && e.target === seal) return; // space still presses the seal
     if ((k === 'ArrowUp' || k === 'ArrowDown' || k === 'PageUp' || k === 'PageDown' ||
-      k === 'Home' || k === 'End' || k === ' ') && !centerScrolls()) e.preventDefault();
+      k === 'Home' || k === 'End' || k === ' ') && !centerScrolls()) {
+      e.preventDefault();
+      // the keyboard's own hand: Space rings the wave from the room's heart (under
+      // reduced motion it presents the composed press-state instead — cleared on keyup)
+      if (k === ' ' && !e.repeat && roomState === 'in' && hf) {
+        if (reduce) {
+          hpX = hf.cX; hpY = hf.cY;
+          hRmPress = 1;
+          hfDraw(performance.now(), true);
+        } else {
+          hfSpawnWave(hf.cX, hf.cY, 0.9); // the wave rings from the room's heart
+        }
+      }
+    }
+  };
+  const guardKeyUp = (e) => {
+    if (e.key === ' ' && reduce && hRmPress && hf) {
+      hRmPress = 0;
+      hfDraw(performance.now(), true);
+    }
   };
   const addGuards = () => {
     addEventListener('wheel', guardWheel, { passive: false });
     addEventListener('touchmove', guardWheel, { passive: false });
     addEventListener('keydown', guardKeys, true);
+    addEventListener('keyup', guardKeyUp, true);
   };
   const removeGuards = () => {
     removeEventListener('wheel', guardWheel, { passive: false });
     removeEventListener('touchmove', guardWheel, { passive: false });
     removeEventListener('keydown', guardKeys, true);
+    removeEventListener('keyup', guardKeyUp, true);
   };
-
-  // the pointer-damped parallax — the vault answers the hand (fine pointers, full motion
-  // only): every depth group leans at its own data-par rate, damped by its own transition
-  let pRaf = 0;
-  const onRoomMove = (e) => {
-    if (pRaf || !parEls.length) return;
-    pRaf = requestAnimationFrame(() => {
-      pRaf = 0;
-      const px = e.clientX / innerWidth - 0.5;
-      const py = e.clientY / innerHeight - 0.5;
-      for (const p of parEls) {
-        p.el.style.transform =
-          'translate3d(' + (px * p.fx).toFixed(1) + 'px,' + (py * p.fy).toFixed(1) + 'px,0)';
-      }
-    });
-  };
-  const finePointer = matchMedia('(pointer: fine)');
 
   // the iris: the facet's own triangle in live CSS coordinates, ready to fly
   let irisScale = 20;
@@ -604,17 +1145,20 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
   };
 
   const settleRoomShut = () => {
+    clearRoomTimers(); // a browser-forced close must not leave a delayed second settle armed
     room.classList.remove('hollow--in', 'hollow--flight', 'hollow--out', 'hollow--return');
     if (iris) {
       iris.style.display = 'none';
       iris.style.transform = '';
     }
     if (irisDark) irisDark.style.opacity = '';
-    for (const p of parEls) p.el.style.transform = '';
+    hfStop();
+    fieldPointerOff();
     removeGuards();
-    room.removeEventListener('pointermove', onRoomMove);
     if (room.open) room.close();
     roomState = 'idle';
+    // hand the band its life back (the loop idles while the room owns the screen)
+    if (!reduce && curF > 0.001) setLoop(true);
     // the door is still live (nothing scrolled) — hand the key back to the visitor
     if (keyLive && keyBtn) keyBtn.focus({ preventScroll: true });
   };
@@ -625,18 +1169,29 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     openScrollY = window.scrollY;
     clearRoomTimers();
     addGuards();
-    if (finePointer.matches && !reduce) room.addEventListener('pointermove', onRoomMove);
+    buildField(); // first open pays the parse — under the iris cover
+    hfResize();
+    fieldPointerOn();
     if (reduce) {
-      // composed and still: a quiet fade, no flight (the iris is display:none in CSS)
+      // composed and still: a quiet fade, no flight (the iris is display:none in CSS);
+      // the field presents ONE composed frame — presences at rest, motes settled.
+      // (Exit under reduced motion is the estate's hard cut, like the set-veil's.)
+      hRmPress = 0;
+      hfDraw(performance.now(), true);
       room.showModal();
+      room.focus({ preventScroll: true }); // the room itself receives the visitor (below)
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
+          // the door may have been shut inside this two-frame window (a scrollbar drag) —
+          // an un-guarded flip here would resurrect 'in' on a closed dialog
+          if (roomState !== 'flight' || !room.open) return;
           room.classList.add('hollow--in');
           roomState = 'in';
         });
       });
       return;
     }
+    hfStart(); // the room wakes beneath the flight
     flareT0 = performance.now(); // the seam answers THIS frame
     codaT0 = 0;
     placeIris();
@@ -644,6 +1199,10 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     iris.style.transform = 'scale(1)';
     irisDark.style.opacity = '0';
     room.showModal();
+    // focus the ROOM, not the seal: showModal would hand focus to the only button, where
+    // Space means [ seal the seam ] — and the keyboard could never ring the wave. The
+    // dialog itself receives the visitor (tabindex="-1"); Tab reaches the seal.
+    room.focus({ preventScroll: true });
     room.classList.add('hollow--flight');
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
@@ -866,6 +1425,13 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
   };
   const tick = (now) => {
     if (!looping) return;
+    if (roomState === 'in') {
+      // the room owns the screen (opaque above the band) — the band's life idles rather
+      // than repaint unseen frames all visit; every way out of the room hands it back
+      // (closeRoom's coda path and settleRoomShut both setLoop(true))
+      looping = false;
+      return;
+    }
     const dt = Math.min(50, Math.max(1, now - lastT));
     lastT = now;
     const maxD = advance(dt);
@@ -939,7 +1505,15 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
   placeKey();
   onScroll();
   window.addEventListener('scroll', onScroll, { passive: true });
-  window.addEventListener('resize', () => { resize(); placeKey(); onScroll(); }, { passive: true });
+  window.addEventListener('resize', () => {
+    resize();
+    placeKey();
+    onScroll();
+    if (roomState !== 'idle') {
+      hfResize(); // the room refits its cover transform live
+      if (reduce) hfDraw(performance.now(), true);
+    }
+  }, { passive: true });
   if (document.fonts && document.fonts.ready) {
     document.fonts.ready.then(() => { resize(); placeKey(); onScroll(); });
   }
