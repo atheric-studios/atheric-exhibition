@@ -355,6 +355,7 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
   let hpX = 800, hpY = 500, hpTX = 800, hpTY = 500, hpI = 0, hpOn = false;
   let hLeanX = 0, hLeanY = 0, hLeanTX = 0, hLeanTY = 0;
   let hCharging = false, hCharge = 0, hGather = 0, hRmPress = 0;
+  let hFed = false; // this hold fed the core — its release is absorbed, not rung
   let hSparkT = 600, hPulseAt = 0; // the crackle's next spark / the heartbeat's next ring
   // the hush — the words' column in field units; the LIGHT quiets beneath the type
   // (legibility as physics, not a heavier veil). Measured while the dialog is open.
@@ -364,6 +365,7 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
   const wvX = new Float32Array(WV), wvY = new Float32Array(WV);
   const wvT0 = new Float32Array(WV), wvAmp = new Float32Array(WV), wvHue = new Float32Array(WV);
   const wvSig = new Float32Array(WV), wvRad = new Float32Array(WV), wvEnv = new Float32Array(WV);
+  const wvChimed = new Uint8Array(WV); // a wave chimes the core ONCE, as it washes the heart
   let wvN = 0;
 
   const buildField = () => {
@@ -497,6 +499,7 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
       // the visible window in field units (set at resize) — the presences wander THIS room,
       // not the abstract stage, so a narrow crop (phones) is never left dark
       cX: 800, cY: 500, aX: 800, aY: 500, rest: [[430, 330], [1190, 620], [760, 830]],
+      hX: 800, hY: 350, coreS: 0.4, // the heart + the core's unit scale (set at resize)
     };
     hfResize();
   };
@@ -516,6 +519,12 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     hf.cY = (fieldCanvas.height / 2 - hf.oy) / hf.scale;
     hf.aX = fieldCanvas.width / 2 / hf.scale;
     hf.aY = fieldCanvas.height / 2 / hf.scale;
+    // the heart — the core lives in the upper centre (the words keep the lower band, CSS
+    // pads the column below the body's grown reach); its whole geometry is in core units,
+    // so a resize rescales the body, never warps it
+    hf.hX = hf.cX;
+    hf.hY = hf.cY - hf.aY * 0.42;
+    hf.coreS = Math.min(hf.aX, hf.aY) / 1050;
     // reduced motion's rest stations sit inside the same window, asymmetric — never an emblem
     hf.rest = [
       [hf.cX - hf.aX * 0.58, hf.cY - hf.aY * 0.38],
@@ -579,6 +588,16 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     const pht = foldT(now * 0.000021 + hpX * 0.0005);
     const pc = candyAt(pht);
     const pcr = pc[0] / 255, pcg = pc[1] / 255, pcb = pc[2] / 255;
+    // the heart as a light source — the room brightens as the organism grows; its hue is
+    // the current era's, so the whole field keeps the core's hour
+    let hcr = 0, hcg = 0, hcb = 0, heartR2 = 0, heartI = 0;
+    if (cN) {
+      const hc = candyAt(still ? 0.06 : foldT((now - coreBorn) * 0.000019 + 0.03));
+      hcr = hc[0] / 255; hcg = hc[1] / 255; hcb = hc[2] / 255;
+      const hR = coreR * 1.7 * hf.coreS + 150;
+      heartR2 = hR * hR;
+      heartI = (0.2 + 0.5 * (cN / KC) + 0.35 * coreFlare) * al;
+    }
     const presI = still ? hRmPress : hpI;
     const presR = 250 * (1 + 0.9 * hCharge), presIk = (0.8 + 1.3 * hCharge) * presI * al;
     const partR = 205 * (1 + 0.85 * hCharge);
@@ -655,6 +674,25 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
           lr += env * (c[0] / 255); lg += env * (c[1] / 255); lb += env * (c[2] / 255);
         }
       }
+      if (heartI > 0.01) {
+        const dx = X - hf.hX, dy = Y - hf.hY;
+        const d2 = dx * dx + dy * dy;
+        if (d2 < heartR2) {
+          let q = 1 - d2 / heartR2;
+          q *= q;
+          const s = heartI * q;
+          lr += s * hcr; lg += s * hcg; lb += s * hcb;
+        }
+      }
+      // THE UNIVERSAL LIFT — the luminous air: slow aurora PATCHES drift through the whole
+      // field (hue flowing along the ramp), so the mesh glimmers wherever the air is,
+      // with breathing troughs of quiet between — and the seam pass strokes only where
+      // there is genuinely light (the troughs are the draw budget)
+      const ambN = Math.sin(X * 0.004 + wt * 0.00016 + 1.2) *
+        Math.sin(Y * 0.0034 - wt * 0.00012 + 0.5);
+      const amb = (0.032 + 0.1 * (0.5 + 0.5 * ambN)) * br * al;
+      const ca2 = candyAt(foldT(X * 0.00035 + Y * 0.00022 + wt * 0.000018));
+      lr += amb * (ca2[0] / 255); lg += amb * (ca2[1] / 255); lb += amb * (ca2[2] / 255);
       // the light dies at the warped edge of the room — never along a straight isoline
       let ed = X - fx0;
       if (fx1 - X < ed) ed = fx1 - X;
@@ -703,7 +741,7 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
       const gg = (hf.vlg[a] + hf.vlg[b] + hf.vlg[c]) * 0.3333;
       const bb = (hf.vlb[a] + hf.vlb[b] + hf.vlb[c]) * 0.3333;
       const m2 = r > gg ? (r > bb ? r : bb) : (gg > bb ? gg : bb);
-      if (m2 < 0.03) continue;
+      if (m2 < 0.065) continue; // the wash is for real light — the air alone rides seams
       let a2 = m2 * 0.2;
       if (a2 > 0.17) a2 = 0.17;
       const inv = 255 / m2;
@@ -729,14 +767,15 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
         const bm = 1 + 2.4 * sp;
         r *= bm; gg *= bm; bb *= bm; m2 *= bm;
       }
-      if (m2 < 0.016) continue;
+      if (m2 < 0.042) continue; // beneath the air's floor — the troughs keep their dark
       const inv = 255 / m2;
       const rr = (r * inv) | 0, rg = (gg * inv) | 0, rb = (bb * inv) | 0;
       g2.beginPath();
       g2.moveTo(hf.vpx[a], hf.vpy[a]);
       g2.lineTo(hf.vpx[b], hf.vpy[b]);
-      if (m2 > 0.04) {
-        // the halo — bloom escaping onto the neighbouring faces
+      if (m2 > 0.11) {
+        // the halo — bloom escaping onto the neighbouring faces; reserved for REAL light
+        // (presence, waves, the heart), so the air's glimmer stays one thin line
         let ha = m2 * 0.9 * hf.ej[e];
         if (ha > 0.78) ha = 0.78;
         g2.globalAlpha = ha;
@@ -753,12 +792,15 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
         ((rg + (255 - rg) * 0.55) | 0) + ',' + ((rb + (255 - rb) * 0.55) | 0) + ')';
       g2.stroke();
     }
-    // the presences' own bodies — pre-rastered glows riding the field
+    // THE CORE — the room's heart, drawn above the field's own light (focal)
+    coreDraw(now, still, al);
+    // the presences' own bodies — pre-rastered glows riding the field (a shade quieter
+    // than before: the core is the focal event now, the presences are its weather)
     for (let k = 0; k < 3; k++) {
       const wk = hf.wisps[k];
       const size = wk.R * 2.6 * sc;
       const px = hf.wx[k] * sc + hf.ox, py = hf.wy[k] * sc + hf.oy;
-      g2.globalAlpha = (0.36 + 0.1 * Math.sin(now * 0.0004 + k * 2.1)) * br * al *
+      g2.globalAlpha = (0.3 + 0.08 * Math.sin(now * 0.0004 + k * 2.1)) * br * al *
         hushAt(hf.wx[k], hf.wy[k]);
       g2.drawImage(wk.spr, px - size / 2, py - size / 2, size, size);
     }
@@ -863,11 +905,50 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
           if (m > 0.05) { es[e] = 0.55 + Math.random() * 0.5; break; }
         }
       }
-      // the heartbeat — every so often the room rings itself, softly, from a presence
+      // the heartbeat — the room's pulse now comes FROM the core: a soft wave leaves the
+      // heart every so often (and immediately chimes the lattice on its way out)
       if (now > hPulseAt) {
         hPulseAt = now + 15000 + Math.random() * 13000;
-        const k = (Math.random() * 3) | 0;
-        hfSpawnWave(hf.wx[k], hf.wy[k], 0.3 + Math.random() * 0.18);
+        hfSpawnWave(hf.hX, hf.hY, 0.3 + Math.random() * 0.18);
+      }
+      // THE CORE's clock — accretion, feeding, maturity, the chime
+      if (cN) {
+        if (hCharging && now >= coreFeedAt) {
+          const dcu = Math.hypot(hpX - hf.hX, hpY - hf.hY) / hf.coreS;
+          if (dcu < coreR * 1.9 + 320) {
+            // the feeding hand — burst growth toward it, the heart drinks
+            coreFeedAt = now + 240;
+            coreGrow(now, true);
+            coreFlare = Math.min(2, coreFlare + 0.12);
+            hFed = true;
+          }
+        }
+        if (now >= coreGrowAt) {
+          if (cN < KC) {
+            coreGrow(now, false);
+            const dcu = Math.hypot(hpX - hf.hX, hpY - hf.hY) / hf.coreS;
+            const pf = hpI * Math.max(0, 1 - dcu / 1600); // dwelling nearby quickens it
+            const base = GROW_MS[coreRingN < 4 ? coreRingN : 4];
+            coreGrowAt = now + (base * (0.8 + 0.4 * Math.random())) / (1 + 1.6 * pf);
+          } else {
+            // maturity — the body never fully sets: an old cell re-melts now and then
+            const i = (Math.random() * cN) | 0;
+            if (now - cbt[i] > 9000) cbt[i] = now - 320;
+            coreGrowAt = now + 6500 + Math.random() * 5000;
+          }
+        }
+        coreFlare *= Math.exp(-dt / 750);
+        // a wave washing the heart chimes the lattice — once per wave
+        for (let v = 0; v < wvN; v++) {
+          if (wvChimed[v]) continue;
+          const age = (now - wvT0[v]) / 1700;
+          if (age >= 1) continue;
+          const d = Math.hypot(wvX[v] - hf.hX, wvY[v] - hf.hY);
+          if (age * 1955 >= d) {
+            wvChimed[v] = 1;
+            coreChime(now, 0.6 * wvAmp[v]);
+          }
+        }
       }
     }
     // retire spent waves (order irrelevant — swap-with-last, no allocation)
@@ -895,6 +976,9 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     hf.esprk.fill(0);
     hSparkT = 600;
     hPulseAt = hfT0 + 8000; // the first heartbeat arrives once the room has woken
+    // the core REMEMBERS: only a first visit seeds it — re-entry finds the body it grew
+    if (!cN) coreSeedBody(hfT0);
+    else coreGrowAt = hfT0 + 1200; // waking, it stirs soon
     hfRaf = requestAnimationFrame(hfTick);
   };
   const hfStop = () => {
@@ -918,6 +1002,218 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     hHon = true;
   };
 
+  // ── THE CORE — the unset casting (the deep pass, 2026-08-01). The room's HEART. ───────────
+  // A living crystalline organism assembles itself at the room's heart and is NEVER
+  // finished — the estate's thesis, literalized. It grows by accretion: each step attaches
+  // one triangular cell to a frontier edge of its own lattice; the newborn cell BURNS
+  // molten candy (additive — light, never paint) and COOLS into near-black glass whose
+  // seams join the body's circulating light (a pulse forever flowing outward from the
+  // nucleus through the lattice, by graph depth). Its colours are TIME-RINGS: every cell
+  // records the hue of the hour it was born in, so the grown body is a record of the
+  // visit. At Fibonacci cell-counts {13,34,55,89,144} the whole organism RINGS — a bright
+  // front propagates through its own lattice and the room answers with a wave from the
+  // heart (the room's heartbeat now comes FROM the core).
+  //
+  // The visitor SHAPES it, not just triggers it:
+  //   · it grows toward where the hand DWELLS — the final silhouette is a map of attention
+  //   · press-and-hold NEAR it FEEDS it — burst growth toward the hand, molten flood,
+  //     the heart flares (a release this close is absorbed: the core eats the wave)
+  //   · touching it BURNS it — the touched cells re-melt and re-cool (the visit scars it)
+  //   · any wave crossing the heart CHIMES the lattice
+  // It REMEMBERS: the organism persists across close/re-open (hf survives), growing on
+  // from where it left off. Reduced motion: a deterministic 55-cell body presents
+  // composed and still (circulation frozen), fully formed.
+  const KV = 420, KC = 180, KE = 640; // vertex / cell / edge caps — maturity, not a wall
+  const cvx = new Float32Array(KV), cvy = new Float32Array(KV);
+  const cvd = new Uint8Array(KV); // graph depth from the seed (the circulation's clock)
+  const cpxA = new Float32Array(KV), cpyA = new Float32Array(KV); // canvas px (per frame)
+  const cca = new Uint16Array(KC), ccb = new Uint16Array(KC), ccc = new Uint16Array(KC);
+  const cbt = new Float32Array(KC); // birth (performance.now clock; re-melts rewrite it)
+  const cfaceCol = new Array(KC); // structural glass — near-black with the era's whisper
+  const cmoltCol = new Array(KC); // the molten face — the era's candy, baked at birth
+  const cce = new Uint16Array(KC * 3); // cell → its three edge indices (molten spill)
+  const eca = new Uint16Array(KE), ecb = new Uint16Array(KE);
+  const ecd = new Uint8Array(KE); // edge depth = min endpoint depth
+  const ecj = new Float32Array(KE); // per-seam jitter
+  const ecol = new Array(KE), ecolW = new Array(KE); // era colour + white-pulled core
+  const eheat = new Float32Array(KE); // per-frame molten spill scratch
+  const edgeIdx = new Map(); // (a<<16|b) → edge index — grown at event time, never per frame
+  const frontier = new Uint16Array(KE);
+  let cvN = 0, cN = 0, ecN = 0, fN = 0;
+  let coreBorn = 0, coreGrowAt = 0, coreRingT0 = -1e9, coreRingN = 0, coreSetLvl = 0;
+  let coreFeedAt = 0, coreFlare = 0, coreEra = 0;
+  const RINGS_AT = [13, 34, 55, 89, 144];
+  const GROW_MS = [620, 900, 1150, 1500, 2100]; // cadence per era — eager young, stately old
+  let coreSeed = 7;
+  const coreRnd = () => {
+    coreSeed |= 0; coreSeed = (coreSeed + 0x6d2b79f5) | 0;
+    let t = Math.imul(coreSeed ^ (coreSeed >>> 15), 1 | coreSeed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  const CL0 = 62; // mean lattice edge, core units (mature radius ≈ 460 units)
+
+  const coreEdge = (a, b, depth, cell) => {
+    const k = a < b ? (a << 16) | b : (b << 16) | a;
+    let e = edgeIdx.get(k);
+    if (e === undefined) {
+      if (ecN >= KE) return 0xffff;
+      e = ecN++;
+      edgeIdx.set(k, e);
+      eca[e] = a; ecb[e] = b;
+      ecd[e] = depth;
+      ecj[e] = 0.75 + 0.5 * coreRnd();
+      ecol[e] = cmoltCol[cell];
+      const c = candyAt(coreEra);
+      ecolW[e] = 'rgb(' + ((c[0] + (255 - c[0]) * 0.6) | 0) + ',' +
+        ((c[1] + (255 - c[1]) * 0.6) | 0) + ',' + ((c[2] + (255 - c[2]) * 0.6) | 0) + ')';
+      frontier[fN++] = e; // born on the rim
+    } else {
+      // knit: a second cell claimed it — the edge turns interior
+      for (let i = 0; i < fN; i++) if (frontier[i] === e) { frontier[i] = frontier[--fN]; break; }
+    }
+    return e;
+  };
+
+  const coreBakeCell = (i, now) => {
+    coreEra = foldT((now - coreBorn) * 0.000019 + 0.03); // the hour's hue — time-rings
+    const c = candyAt(coreEra);
+    cmoltCol[i] = 'rgb(' + (c[0] | 0) + ',' + (c[1] | 0) + ',' + (c[2] | 0) + ')';
+    // the cooled glass — its own material, a shade deeper and more hued than the room's
+    // facets, so the body reads as a BODY even between pulses
+    cfaceCol[i] = 'rgb(' + ((9 + c[0] * 0.05) | 0) + ',' + ((7 + c[1] * 0.04) | 0) + ',' +
+      ((12 + c[2] * 0.055) | 0) + ')';
+  };
+
+  const coreSeedBody = (now) => {
+    cvN = cN = ecN = fN = 0;
+    edgeIdx.clear();
+    coreBorn = now;
+    coreGrowAt = now + 900;
+    coreRingN = 0; coreSetLvl = 0; coreFlare = 1;
+    const a0 = coreRnd() * 6.283;
+    for (let k = 0; k < 3; k++) {
+      cvx[k] = 30 * Math.cos(a0 + k * 2.094);
+      cvy[k] = 30 * Math.sin(a0 + k * 2.094);
+      cvd[k] = 0;
+    }
+    cvN = 3;
+    cbt[0] = now;
+    coreBakeCell(0, now);
+    cca[0] = 0; ccb[0] = 1; ccc[0] = 2;
+    cce[0] = coreEdge(0, 1, 0, 0); cce[1] = coreEdge(1, 2, 0, 0); cce[2] = coreEdge(2, 0, 0, 0);
+    cN = 1;
+  };
+
+  // one accretion step — the organism grows a cell on a frontier edge, leaning toward the
+  // hand when it dwells (attention is the material); forced = the feeding hand's burst
+  const coreGrow = (now, forced) => {
+    if (!hf || cN >= KC || !fN) return;
+    // attention: the damped presence, in core units about the heart
+    const ax = (hpX - hf.hX) / hf.coreS, ay = (hpY - hf.hY) / hf.coreS;
+    const aD = Math.hypot(ax, ay);
+    const attn = forced ? 1 : hpI * Math.max(0, 1 - aD / 1600);
+    let best = -1, bestS = -1e9;
+    const tries = fN < 10 ? fN : 10;
+    for (let t = 0; t < tries; t++) {
+      const e = frontier[fN < 10 ? t : (coreRnd() * fN) | 0];
+      const mx = (cvx[eca[e]] + cvx[ecb[e]]) / 2, my = (cvy[eca[e]] + cvy[ecb[e]]) / 2;
+      const md = Math.hypot(mx, my) || 1;
+      // the young body knits INWARD (a coherent nucleus before it reaches); age lets it roam
+      let s = (cN < 22 ? -md * 0.006 : md * 0.004) + coreRnd() * 1.4;
+      if (attn > 0.05 && aD > 1) {
+        s += 2.6 * attn * ((mx * ax + my * ay) / (md * aD)); // lean toward the hand
+      }
+      if (s > bestS) { bestS = s; best = e; }
+    }
+    if (best < 0) return;
+    const a = eca[best], b = ecb[best];
+    const mx = (cvx[a] + cvx[b]) / 2, my = (cvy[a] + cvy[b]) / 2;
+    const exl = cvx[b] - cvx[a], eyl = cvy[b] - cvy[a];
+    const el = Math.hypot(exl, eyl) || 1;
+    let nx = -eyl / el, ny = exl / el; // edge normal — flip outward
+    if (nx * mx + ny * my < 0) { nx = -nx; ny = -ny; }
+    const gl = CL0 * (0.72 + 0.5 * coreRnd());
+    let vxn = mx + nx * gl + (coreRnd() - 0.5) * 22;
+    let vyn = my + ny * gl + (coreRnd() - 0.5) * 22;
+    const vr = Math.hypot(vxn, vyn);
+    if (vr > 460) { vxn *= 460 / vr; vyn *= 460 / vr; } // the rim rounds, never spikes
+    coreR = Math.max(coreR, Math.min(vr, 460) + 40); // the heart's glow keeps the body's pace
+    // weld to a near vertex — the lattice knits shut instead of fanning open
+    let vi = -1;
+    for (let i = 0; i < cvN; i++) {
+      if (i === a || i === b) continue;
+      const dx2 = cvx[i] - vxn, dy2 = cvy[i] - vyn;
+      if (dx2 * dx2 + dy2 * dy2 < CL0 * CL0 * 0.31) { vi = i; break; }
+    }
+    if (vi < 0) {
+      if (cvN >= KV) return;
+      vi = cvN++;
+      cvx[vi] = vxn; cvy[vi] = vyn;
+      cvd[vi] = (cvd[a] < cvd[b] ? cvd[a] : cvd[b]) + 1;
+    }
+    const i = cN++;
+    cbt[i] = now - (forced ? 180 : 0);
+    coreBakeCell(i, now);
+    cca[i] = a; ccb[i] = b; ccc[i] = vi;
+    const dpt = ecd[best];
+    // the claimed edge turns interior
+    for (let f = 0; f < fN; f++) if (frontier[f] === best) { frontier[f] = frontier[--fN]; break; }
+    cce[i * 3] = best;
+    cce[i * 3 + 1] = coreEdge(a, vi, dpt + 1, i);
+    cce[i * 3 + 2] = coreEdge(b, vi, dpt + 1, i);
+    // the thresholds — the body RINGS as it comes of age, and the room answers
+    if (coreRingN < RINGS_AT.length && cN >= RINGS_AT[coreRingN]) {
+      coreRingN++;
+      coreSetLvl = coreRingN;
+      coreRingT0 = now;
+      coreFlare = Math.min(2, coreFlare + 1.2);
+      hfSpawnWave(hf.hX, hf.hY, 0.5 + 0.12 * coreRingN);
+      wordChime(); // the type answers the body's coming of age
+    }
+  };
+
+  // the words answer the body — every ring/chime flares the inscriptions' ems for a breath
+  let chimeT = 0;
+  const wordChime = () => {
+    if (reduce || !room) return;
+    room.classList.add('hollow--chime');
+    clearTimeout(chimeT);
+    chimeT = setTimeout(() => room.classList.remove('hollow--chime'), 1400);
+  };
+
+  // the chime — a wave (or the keyboard's ring) washes the heart: the lattice answers
+  const coreChime = (now, amp) => {
+    if (!cN) return;
+    if (now - coreRingT0 > 900) coreRingT0 = now;
+    coreFlare = Math.min(2, coreFlare + amp);
+    wordChime();
+  };
+
+  // the burn — the hand touched the body: the nearest cells re-melt and re-cool
+  const coreBurn = (x, y, now) => {
+    if (!hf || !cN) return false;
+    const cx2 = (x - hf.hX) / hf.coreS, cy2 = (y - hf.hY) / hf.coreS;
+    let hit = -1, hd = 1e9;
+    for (let i = 0; i < cN; i++) {
+      const mx = (cvx[cca[i]] + cvx[ccb[i]] + cvx[ccc[i]]) / 3;
+      const my = (cvy[cca[i]] + cvy[ccb[i]] + cvy[ccc[i]]) / 3;
+      const d2 = (mx - cx2) * (mx - cx2) + (my - cy2) * (my - cy2);
+      if (d2 < hd) { hd = d2; hit = i; }
+    }
+    if (hit < 0 || hd > CL0 * CL0 * 4) return false;
+    for (let i = 0; i < cN; i++) {
+      const mx = (cvx[cca[i]] + cvx[ccb[i]] + cvx[ccc[i]]) / 3;
+      const my = (cvy[cca[i]] + cvy[ccb[i]] + cvy[ccc[i]]) / 3;
+      const d = Math.hypot(mx - cx2, my - cy2);
+      if (d < CL0 * 2.3 && now - cbt[i] > 3200) {
+        cbt[i] = now - 350 - d * 3; // re-molten, radiating out from the touch
+      }
+    }
+    coreFlare = Math.min(2, coreFlare + 0.7);
+    return true;
+  };
+
   // the hush at a point — used for the sprite bodies (the vertex pass fuses its own copy)
   const hushAt = (x, y) => {
     if (!hHon) return 1;
@@ -929,6 +1225,112 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     return 0.28 + 0.72 * hq * hq * (3 - 2 * hq);
   };
 
+  // the body's grown reach (core units) — the heart's glow and the feed range follow it
+  let coreR = 90;
+
+  // one frame of the organism: transform, molten spill, glass body, circulating seams,
+  // the ring front, the nucleus — called from hfDraw between the room's light and the
+  // sprites (the core is focal: it sits above the field's own light)
+  const coreDraw = (now2, still, al) => {
+    if (!hf || !cN) return;
+    const g2 = hf.hg;
+    const cs = hf.coreS * hf.scale;
+    const hpx = hf.hX * hf.scale + hf.ox, hpy = hf.hY * hf.scale + hf.oy;
+    const th = still ? 0 : (now2 - coreBorn) * 0.000021; // ~1 rev / 5 min — barely, surely
+    const cosT = Math.cos(th), sinT = Math.sin(th);
+    const brC = still ? 0 : 1 + 0.012 * Math.sin(now2 * 0.0011); // the body's breath
+    for (let i = 0; i < cvN; i++) {
+      const rx = cvx[i] * (still ? 1 : brC), ry = cvy[i] * (still ? 1 : brC);
+      cpxA[i] = (rx * cosT - ry * sinT) * cs + hpx;
+      cpyA[i] = (rx * sinT + ry * cosT) * cs + hpy;
+    }
+    for (let e = 0; e < ecN; e++) eheat[e] = 0;
+    if (!still) {
+      // molten spill — young (and re-melted) cells heat their own three edges
+      for (let i = 0; i < cN; i++) {
+        const age = now2 - cbt[i];
+        if (age < 3400) {
+          const h = 1 - age / 3400;
+          for (let q = i * 3; q < i * 3 + 3; q++) {
+            const e = cce[q];
+            if (e !== 0xffff && eheat[e] < h) eheat[e] = h;
+          }
+        }
+      }
+    }
+    // the glass body — cooled cells, near-black with the era's whisper (painted over the
+    // room's seams: the organism has a BODY, not just light)
+    g2.globalCompositeOperation = 'source-over';
+    for (let i = 0; i < cN; i++) {
+      const age = still ? 1e9 : now2 - cbt[i];
+      if (age < 1100) continue;
+      let a2 = (age - 1100) / 2200;
+      if (a2 > 1) a2 = 1;
+      g2.globalAlpha = a2;
+      g2.fillStyle = cfaceCol[i];
+      g2.beginPath();
+      g2.moveTo(cpxA[cca[i]], cpyA[cca[i]]);
+      g2.lineTo(cpxA[ccb[i]], cpyA[ccb[i]]);
+      g2.lineTo(cpxA[ccc[i]], cpyA[ccc[i]]);
+      g2.closePath();
+      g2.fill();
+    }
+    // the light — molten faces first (the newborn burns), then the lattice's seams
+    g2.globalCompositeOperation = 'lighter';
+    if (!still) {
+      for (let i = 0; i < cN; i++) {
+        const age = now2 - cbt[i];
+        if (age >= 3000) continue;
+        let m = 1 - age / 3000;
+        m *= m;
+        g2.globalAlpha = Math.min(0.6, 0.66 * m) * al;
+        g2.fillStyle = cmoltCol[i];
+        g2.beginPath();
+        g2.moveTo(cpxA[cca[i]], cpyA[cca[i]]);
+        g2.lineTo(cpxA[ccb[i]], cpyA[ccb[i]]);
+        g2.lineTo(cpxA[ccc[i]], cpyA[ccc[i]]);
+        g2.closePath();
+        g2.fill();
+      }
+    }
+    const ringAge = now2 - coreRingT0;
+    const circT = still ? 1.6 : now2 * 0.0016;
+    const wHalo = Math.max(4, 30 * hf.coreS * hf.scale); // the seam bloom, scaled with the body
+    for (let e = 0; e < ecN; e++) {
+      // base light of the set body + the circulation (a pulse forever leaving the heart)
+      let a2 = 0.15 + 0.05 * coreSetLvl;
+      const cv2 = Math.cos(ecd[e] * 0.8 - circT);
+      if (cv2 > 0) a2 += 0.36 * cv2 * cv2 * cv2;
+      if (!still && ringAge < 2600) {
+        // the ring — a bright front propagating outward through the lattice by depth
+        const q = (ecd[e] * 150 - ringAge) / 320;
+        if (q > -1 && q < 1) a2 += 1.1 * (1 - q * q) * (1 - ringAge / 2600);
+      }
+      a2 = (a2 * ecj[e] + eheat[e] * 0.95) * al;
+      if (a2 < 0.02) continue;
+      g2.beginPath();
+      g2.moveTo(cpxA[eca[e]], cpyA[eca[e]]);
+      g2.lineTo(cpxA[ecb[e]], cpyA[ecb[e]]);
+      if (a2 > 0.1) {
+        g2.globalAlpha = Math.min(0.7, a2 * 0.6);
+        g2.lineWidth = wHalo;
+        g2.strokeStyle = ecol[e];
+        g2.stroke();
+      }
+      g2.globalAlpha = Math.min(1, a2);
+      g2.lineWidth = hf.coreW;
+      g2.strokeStyle = ecolW[e];
+      g2.stroke();
+    }
+    // the nucleus — the heart burns in the hour's own hue, flaring at every event
+    const era = still ? 0.06 : foldT((now2 - coreBorn) * 0.000019 + 0.03);
+    const hIdx = (era * 11) | 0;
+    const hSize = (coreR * 2.1 * hf.coreS + 90) * hf.scale * (1 + 0.22 * coreFlare);
+    g2.globalAlpha = Math.min(0.92, (0.42 + 0.16 * Math.sin(still ? 0 : now2 * 0.0021) *
+      (still ? 0 : 1) + 0.32 * coreFlare)) * al;
+    g2.drawImage(hf.pspr[hIdx], hpx - hSize / 2, hpy - hSize / 2, hSize, hSize);
+  };
+
   const hfSpawnWave = (x, y, amp) => {
     if (!hf) return;
     let v = 0;
@@ -938,6 +1340,7 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
       // a fifth wave recycles the ELDEST ring (the one nearest its own end)
       for (let i = 1; i < WV; i++) if (wvT0[i] < wvT0[v]) v = i;
     }
+    wvChimed[v] = 0;
     wvX[v] = x; wvY[v] = y;
     wvT0[v] = performance.now();
     wvAmp[v] = amp;
@@ -969,6 +1372,7 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
       return;
     }
     hCharging = true;
+    hFed = false;
   };
   const onFieldUp = () => {
     if (!hf) return;
@@ -981,7 +1385,15 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     }
     if (!hCharging) return;
     hCharging = false;
-    hfSpawnWave(hpX, hpY, 0.55 + 0.9 * hCharge); // release — the room rings
+    const now = performance.now();
+    // a quick touch ON the body burns it (the visit scars the casting); a hold that fed
+    // the core is ABSORBED (the heart drinks the wave); anywhere else, the room rings
+    if (hCharge < 0.22 && cN && coreBurn(hpX, hpY, now)) return;
+    if (hFed) {
+      coreFlare = Math.min(2, coreFlare + 0.5);
+      return;
+    }
+    hfSpawnWave(hpX, hpY, 0.55 + 0.9 * hCharge);
   };
   const onFieldLeave = () => {
     hpOn = false;
@@ -1283,7 +1695,9 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
 
   const settleRoomShut = () => {
     clearRoomTimers(); // a browser-forced close must not leave a delayed second settle armed
-    room.classList.remove('hollow--in', 'hollow--flight', 'hollow--out', 'hollow--return');
+    clearTimeout(chimeT);
+    room.classList.remove('hollow--in', 'hollow--flight', 'hollow--out', 'hollow--return',
+      'hollow--chime');
     if (iris) {
       iris.style.display = 'none';
       iris.style.transform = '';
@@ -1311,9 +1725,18 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     fieldPointerOn();
     if (reduce) {
       // composed and still: a quiet fade, no flight (the iris is display:none in CSS);
-      // the field presents ONE composed frame — presences at rest, motes settled.
+      // the field presents ONE composed frame — presences at rest, motes settled, and
+      // the core as a fully-grown composed body (deterministic, circulation frozen).
       // (Exit under reduced motion is the estate's hard cut, like the set-veil's.)
       hRmPress = 0;
+      if (hf && !cN) {
+        const t0 = performance.now() - 60000;
+        coreSeedBody(t0);
+        for (let i = 0; i < 54; i++) coreGrow(t0, false);
+        wvN = 0; // the growth rings' waves are no part of the still frame
+        coreFlare = 0;
+        coreSetLvl = 3;
+      }
       room.showModal();
       room.focus({ preventScroll: true }); // the room itself receives the visitor (below)
       hfMeasureHush(); // the column is measurable only once the dialog renders
