@@ -54,7 +54,7 @@
     <!-- The post-hero body: the cooled-chrome engineering broadsheet (docs/DESIGN.md). -->
     <link rel="stylesheet" href="src/styles/body.css?v=19" />
     <!-- The crystallisation: the dark plane fractures into the cream editorial close (docs/DESIGN.md). -->
-    <link rel="stylesheet" href="src/styles/fracture.css?v=18" />
+    <link rel="stylesheet" href="src/styles/fracture.css?v=19" />
     <!-- The blob craft-reveal ("see how the chrome is made") — the zoom study over the live
          blob: trigger, hero recede, shell, explain-dots, technique tab, figure panels. -->
     <link rel="stylesheet" href="src/styles/craft.css?v=12" />
@@ -1352,15 +1352,15 @@ col += <span class="cm-kw">vec3</span>(<span class="cm-num">1.00</span>, <span c
 <polygon points="1598.3,986.7 1680.5,978.8 1583.7,1062.1" data-d="7 7 11"/><polygon points="1680.5,978.8 1666.1,1067.2 1583.7,1062.1" data-d="8 7 11"/>
 </svg>
           <div class="hollow__nave" aria-hidden="true"></div>
-          <!-- the words — the author at his most considered, hung WITHIN the field on the
-               nave's feathered dark (the field runs on beneath them, dimmed, never absent).
-               Three short MOVEMENTS under the display line, each on a candy-numbered station
-               (i pink · ii tangerine · iii periwinkle — the palette structurally in the
-               type): the loose facet as a thesis about making — i. the flaw kept on purpose,
-               ii. what escapes the system, iii. to the finder. The display lines condense
-               out of the dark (blur → sharp); each movement rises on the estate cadence, its
-               numeral's hairline scribing in its own hue. The centre column scrolls ITSELF
-               on short viewports (margin:auto grid centring — never clipped). -->
+          <!-- the words — the estate's most considered writing, cut until only the
+               essential burns. The display line, then TWO INSCRIPTIONS of one line each
+               (the old three movements distilled to their theses), hung WITHIN the field
+               on the nave's feathered dark. The column traverses Clara's ramp in order:
+               pink lives in the display's ember (burns), tangerine in inscription i,
+               periwinkle in inscription ii — the palette structurally in the type. Every
+               line condenses out of the dark (blur → sharp) on the estate cadence. The
+               centre column scrolls ITSELF on short viewports (margin:auto grid centring
+               — never clipped). -->
           <div class="hollow__center">
             <div class="hollow__col">
               <p class="hollow__kicker" data-hv="1">fig. ø — the hollow · off the ledger</p>
@@ -1368,12 +1368,11 @@ col += <span class="cm-kw">vec3</span>(<span class="cm-num">1.00</span>, <span c
                 <span data-hv="2">what never set,</span>
                 <span data-hv="3">still <em>burns</em>.</span>
               </h2>
-              <div class="hollow__mvts">
-                <p class="hollow__mvt hollow__mvt--i" data-hv="4"><span class="hollow__mvt-no" aria-hidden="true">i</span>every casting keeps one hollow the metal never fills. the foundry calls it a flaw and grinds it away; i think it is the room the work keeps for itself. seal every seam and the thing is finished — and <em>finished means it has stopped listening</em>.</p>
-                <p class="hollow__mvt hollow__mvt--ii" data-hv="5"><span class="hollow__mvt-no" aria-hidden="true">ii</span>a system is a promise that nothing will move again. but light only enters a crystal through what the lattice failed to close — the loose seam, the unset face, the one error the process survived. what escapes the system is not the waste of the work; <em>it is the proof the work was alive</em>.</p>
-                <p class="hollow__mvt hollow__mvt--iii" data-hv="6"><span class="hollow__mvt-no" aria-hidden="true">iii</span>so this facet was left loose — not lost: left. anyone can polish a surface; it takes nerve to keep the seam that breathes. you pressed the one crystal that never set, and a wall admitted it had always been a door. you looked closely; it likes that. <em>everything worth entering is entered at the flaw</em>.</p>
+              <div class="hollow__ins">
+                <p class="hollow__line hollow__line--i" data-hv="4">finished means it has <em>stopped listening</em>.</p>
+                <p class="hollow__line hollow__line--ii" data-hv="5">everything worth entering is <em>entered at the flaw</em>.</p>
               </div>
-              <div class="hollow__sigrow" data-hv="7">
+              <div class="hollow__sigrow" data-hv="6">
                 <svg class="hollow__mark" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
                   <defs>
                     <linearGradient id="hv-candy" x1="0" y1="0" x2="1" y2="1">
@@ -1387,10 +1386,10 @@ col += <span class="cm-kw">vec3</span>(<span class="cm-num">1.00</span>, <span c
                   <line class="hollow__mark-tick" x1="24" y1="4.5" x2="24" y2="10.5"/>
                   <circle class="hollow__mark-punctum" cx="36" cy="12" r="4.25"/>
                 </svg>
-                <p class="hollow__sig"><b>— the author</b><br/>the facet was loose on purpose<br/>hel · mmxxvi · found, not shown</p>
+                <p class="hollow__sig">the facet was loose on purpose<br/>hel · mmxxvi · found, not shown</p>
               </div>
-              <button class="hollow__seal" type="button" data-hv="8">[ seal the seam ]</button>
-              <p class="hollow__esc" data-hv="8">or esc</p>
+              <button class="hollow__seal" type="button" data-hv="7">[ seal the seam ]</button>
+              <p class="hollow__esc" data-hv="7">or esc</p>
             </div>
           </div>
         </div>
@@ -1763,7 +1762,7 @@ col += <span class="cm-kw">vec3</span>(<span class="cm-num">1.00</span>, <span c
     <script type="module" src="src/scripts/main.js?v=12"></script>
     <!-- The post-hero broadsheet: annealing light, diegetic reveals, the hel clock, AND the
          fracture (crystallisation) scroll signal. Passive scroll→rAF. -->
-    <script type="module" src="src/scripts/body.js?v=21"></script>
+    <script type="module" src="src/scripts/body.js?v=22"></script>
     <!-- The blob craft-reveal: the zoom study (camera flights over the live blob, explain-dots,
          technique tab, figure panels). Native <dialog>; one rAF only while the study is open. -->
     <script type="module" src="src/scripts/craft.js?v=15"></script>

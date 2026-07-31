@@ -355,6 +355,10 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
   let hpX = 800, hpY = 500, hpTX = 800, hpTY = 500, hpI = 0, hpOn = false;
   let hLeanX = 0, hLeanY = 0, hLeanTX = 0, hLeanTY = 0;
   let hCharging = false, hCharge = 0, hGather = 0, hRmPress = 0;
+  let hSparkT = 600, hPulseAt = 0; // the crackle's next spark / the heartbeat's next ring
+  // the hush — the words' column in field units; the LIGHT quiets beneath the type
+  // (legibility as physics, not a heavier veil). Measured while the dialog is open.
+  let hHon = false, hHx0 = 0, hHx1 = 0, hHy0 = 0, hHy1 = 0;
   // the waves — four slots, no per-frame allocation
   const WV = 4;
   const wvX = new Float32Array(WV), wvY = new Float32Array(WV);
@@ -427,7 +431,7 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
       vz[i] = z < 0 ? 0 : z > 1 ? 1 : z;
       vphx[i] = x * 0.006 + f1 * 1.9;
       vphy[i] = y * 0.0052 + f1 * 4.4;
-      vamp[i] = 5.2 + 3.0 * f1;
+      vamp[i] = 8.5 + 4.5 * f1;
     }
     // — per-seam character: nearer seams stroke wider; every seam keeps its own jitter —
     const ew = new Float32Array(NE), ej = new Float32Array(NE);
@@ -452,9 +456,9 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     };
     // the three presences — the movements' own stations; periwinkle inked up to read on black
     const wisps = [
-      { r: 255, g: 46, b: 136, wr: 1, wg: 0.180, wb: 0.533, R: 330, I: 0.62, spr: mkGlow(255, 46, 136, 256) },
-      { r: 255, g: 158, b: 46, wr: 1, wg: 0.620, wb: 0.180, R: 300, I: 0.55, spr: mkGlow(255, 158, 46, 256) },
-      { r: 95, g: 123, b: 255, wr: 0.373, wg: 0.482, wb: 1, R: 355, I: 0.88, spr: mkGlow(95, 123, 255, 256) },
+      { r: 255, g: 46, b: 136, wr: 1, wg: 0.180, wb: 0.533, R: 330, I: 0.78, spr: mkGlow(255, 46, 136, 256) },
+      { r: 255, g: 158, b: 46, wr: 1, wg: 0.620, wb: 0.180, R: 300, I: 0.7, spr: mkGlow(255, 158, 46, 256) },
+      { r: 95, g: 123, b: 255, wr: 0.373, wg: 0.482, wb: 1, R: 355, I: 1.05, spr: mkGlow(95, 123, 255, 256) },
     ];
     const wx = new Float32Array(3), wy = new Float32Array(3);
     // the hand's light takes the room's hue — twelve stations along Clara's ramp
@@ -474,7 +478,7 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
       const f = hash(i * 17.3 + 4.1, i * 9.7 + 1.3), f2 = hash(i * 5.9 + 8.8, i * 13.1 + 3.2);
       mx[i] = -60 + f * (GW + 120);
       my[i] = -60 + f2 * (GH + 120);
-      msp[i] = 9 + f * 11;
+      msp[i] = 12 + f * 14;
       mph[i] = f2 * 6.283;
       msw[i] = 7 + f * 12;
       mtw[i] = 0.0008 + f2 * 0.0009;
@@ -482,7 +486,10 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
       mhue[i] = i % 3;
     }
     const act = new Uint8Array(T), eact = new Uint8Array(NE);
+    // the sparks — transient seam ignitions riding the ambient light (decayed per frame)
+    const esprk = new Float32Array(NE);
     hf = {
+      esprk,
       hg, GW, GH, T, NV, NE, ti, tfill, bx, by, bpx, bpy, vpx, vpy, vz, vphx, vphy, vamp,
       vlr, vlg, vlb, ea, eb: ebb, ew, ej, wisps, wx, wy, pspr,
       NM, mx, my, msp, mph, msw, mtw, msz, mhue, mspr, act, eact,
@@ -547,18 +554,20 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     if (!hf) return;
     const g2 = hf.hg, sc = hf.scale;
     const al = still ? 1 : sstep((now - hfT0) / 2000); // the room WAKES over the first breaths
-    const br = still ? 1 : 1 + 0.16 * Math.sin(now * 0.00086); // the slow global breath (~7.3s)
+    const br = still ? 1 : 1 + 0.22 * Math.sin(now * 0.00106); // the global breath (~5.9s)
+    const wt = still ? 0 : now; // the edge warp's clock — frozen composed under reduced motion
     // — the presences cross the room on slow incommensurate orbits (scaled to the VISIBLE
     //   window, so a narrow crop still hosts all three); a held press GATHERS them —
     if (still) {
       for (let k = 0; k < 3; k++) { hf.wx[k] = hf.rest[k][0]; hf.wy[k] = hf.rest[k][1]; }
     } else {
-      hf.wx[0] = hf.cX + hf.aX * 0.78 * Math.sin(now * 0.000119 + 0.7);
-      hf.wy[0] = hf.cY + hf.aY * 0.77 * Math.sin(now * 0.000153 + 2.0);
-      hf.wx[1] = hf.cX + hf.aX * 0.82 * Math.sin(now * 0.000094 + 3.9);
-      hf.wy[1] = hf.cY + hf.aY * 0.8 * Math.sin(now * 0.000134 + 4.6);
-      hf.wx[2] = hf.cX + hf.aX * 0.74 * Math.sin(now * 0.000107 + 1.9);
-      hf.wy[2] = hf.cY + hf.aY * 0.72 * Math.sin(now * 0.000086 + 0.3);
+      // assertive weather: the presences cross the room in ~25–40 s, not adrift in an hour
+      hf.wx[0] = hf.cX + hf.aX * 0.78 * Math.sin(now * 0.00019 + 0.7);
+      hf.wy[0] = hf.cY + hf.aY * 0.77 * Math.sin(now * 0.000245 + 2.0);
+      hf.wx[1] = hf.cX + hf.aX * 0.82 * Math.sin(now * 0.00015 + 3.9);
+      hf.wy[1] = hf.cY + hf.aY * 0.8 * Math.sin(now * 0.00021 + 4.6);
+      hf.wx[2] = hf.cX + hf.aX * 0.74 * Math.sin(now * 0.00017 + 1.9);
+      hf.wy[2] = hf.cY + hf.aY * 0.72 * Math.sin(now * 0.00014 + 0.3);
       if (hGather > 0.001) {
         for (let k = 0; k < 3; k++) {
           hf.wx[k] += hGather * (hpX - hf.wx[k]);
@@ -574,7 +583,14 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     const presR = 250 * (1 + 0.9 * hCharge), presIk = (0.8 + 1.3 * hCharge) * presI * al;
     const partR = 205 * (1 + 0.85 * hCharge);
     const partP = 12.5 * (1 + 1.6 * hCharge) * (still ? hRmPress : Math.max(presI, 0.001));
-    const t1 = now * 0.00047, t2 = now * 0.00039;
+    const t1 = wt * 0.00062, t2 = wt * 0.00052; // livelier swell (still frozen under RM)
+    // — the edge of the room: the field dissolves into the void before the canvas boundary.
+    //   A WARPED falloff in field units (never a straight isoline): each vertex's distance
+    //   to the visible window's edge is bent by travelling noise, and its LIGHT dies across
+    //   the falloff — the collar (drawn last) sinks the remaining paint to clean black. —
+    const fx0 = hf.cX - hf.aX, fx1 = hf.cX + hf.aX;
+    const fy0 = hf.cY - hf.aY, fy1 = hf.cY + hf.aY;
+    const eSpan = Math.min(hf.aX, hf.aY) * 0.34; // the light's dying breadth
     // per-wave invariants hoisted out of the vertex loop (age, ring radius, envelope)
     for (let v = 0; v < wvN; v++) {
       const age = (now - wvT0[v]) / 1700;
@@ -639,7 +655,27 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
           lr += env * (c[0] / 255); lg += env * (c[1] / 255); lb += env * (c[2] / 255);
         }
       }
-      hf.vlr[i] = lr; hf.vlg[i] = lg; hf.vlb[i] = lb;
+      // the light dies at the warped edge of the room — never along a straight isoline
+      let ed = X - fx0;
+      if (fx1 - X < ed) ed = fx1 - X;
+      if (Y - fy0 < ed) ed = Y - fy0;
+      if (fy1 - Y < ed) ed = fy1 - Y;
+      ed += 26 * Math.sin(X * 0.011 + wt * 0.0002) * Math.sin(Y * 0.009 - wt * 0.00013);
+      let ef = ed / eSpan;
+      ef = ef < 0 ? 0 : ef > 1 ? 1 : ef;
+      ef = ef * ef * (3 - 2 * ef);
+      if (hHon) {
+        // the hush under the words — seams may glimmer beneath the type, never blaze
+        const hx = X < hHx0 ? hHx0 - X : X > hHx1 ? X - hHx1 : 0;
+        const hy = Y < hHy0 ? hHy0 - Y : Y > hHy1 ? Y - hHy1 : 0;
+        const hd = hx > hy ? hx : hy;
+        if (hd < 180) {
+          let hq = hd / 180;
+          hq = hq * hq * (3 - 2 * hq);
+          ef *= 0.28 + 0.72 * hq;
+        }
+      }
+      hf.vlr[i] = lr * ef; hf.vlg[i] = lg * ef; hf.vlb[i] = lb * ef;
     }
     // — paint. Base facets first (their own near-black — the only paint in the room) —
     g2.globalCompositeOperation = 'source-over';
@@ -668,8 +704,8 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
       const bb = (hf.vlb[a] + hf.vlb[b] + hf.vlb[c]) * 0.3333;
       const m2 = r > gg ? (r > bb ? r : bb) : (gg > bb ? gg : bb);
       if (m2 < 0.03) continue;
-      let a2 = m2 * 0.17;
-      if (a2 > 0.14) a2 = 0.14;
+      let a2 = m2 * 0.2;
+      if (a2 > 0.17) a2 = 0.17;
       const inv = 255 / m2;
       g2.globalAlpha = a2;
       g2.fillStyle = 'rgb(' + ((r * inv) | 0) + ',' + ((gg * inv) | 0) + ',' + ((bb * inv) | 0) + ')';
@@ -683,27 +719,33 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     for (let e = 0; e < hf.NE; e++) {
       if (!hf.eact[e]) continue;
       const a = hf.ea[e], b = hf.eb[e];
-      const r = (hf.vlr[a] + hf.vlr[b]) * 0.5;
-      const gg = (hf.vlg[a] + hf.vlg[b]) * 0.5;
-      const bb = (hf.vlb[a] + hf.vlb[b]) * 0.5;
-      const m2 = r > gg ? (r > bb ? r : bb) : (gg > bb ? gg : bb);
-      if (m2 < 0.02) continue;
+      let r = (hf.vlr[a] + hf.vlr[b]) * 0.5;
+      let gg = (hf.vlg[a] + hf.vlg[b]) * 0.5;
+      let bb = (hf.vlb[a] + hf.vlb[b]) * 0.5;
+      let m2 = r > gg ? (r > bb ? r : bb) : (gg > bb ? gg : bb);
+      const sp = hf.esprk[e];
+      if (sp > 0.02 && m2 > 0.012) {
+        // the ignition — a lit seam flares past its ambient light, then settles
+        const bm = 1 + 2.4 * sp;
+        r *= bm; gg *= bm; bb *= bm; m2 *= bm;
+      }
+      if (m2 < 0.016) continue;
       const inv = 255 / m2;
       const rr = (r * inv) | 0, rg = (gg * inv) | 0, rb = (bb * inv) | 0;
       g2.beginPath();
       g2.moveTo(hf.vpx[a], hf.vpy[a]);
       g2.lineTo(hf.vpx[b], hf.vpy[b]);
-      if (m2 > 0.045) {
+      if (m2 > 0.04) {
         // the halo — bloom escaping onto the neighbouring faces
-        let ha = m2 * 0.8 * hf.ej[e];
-        if (ha > 0.7) ha = 0.7;
+        let ha = m2 * 0.9 * hf.ej[e];
+        if (ha > 0.78) ha = 0.78;
         g2.globalAlpha = ha;
         g2.lineWidth = hf.ew[e] * sc;
         g2.strokeStyle = 'rgb(' + rr + ',' + rg + ',' + rb + ')';
         g2.stroke();
       }
       // the core — thin and near-white-hot on the seam line itself
-      let ca = m2 * 1.5 * hf.ej[e];
+      let ca = m2 * 1.7 * hf.ej[e];
       if (ca > 1) ca = 1;
       g2.globalAlpha = ca;
       g2.lineWidth = hf.coreW;
@@ -716,14 +758,16 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
       const wk = hf.wisps[k];
       const size = wk.R * 2.6 * sc;
       const px = hf.wx[k] * sc + hf.ox, py = hf.wy[k] * sc + hf.oy;
-      g2.globalAlpha = (0.30 + 0.07 * Math.sin(now * 0.0004 + k * 2.1)) * br * al;
+      g2.globalAlpha = (0.36 + 0.1 * Math.sin(now * 0.0004 + k * 2.1)) * br * al *
+        hushAt(hf.wx[k], hf.wy[k]);
       g2.drawImage(wk.spr, px - size / 2, py - size / 2, size, size);
     }
     if (presI > 0.02) {
       const idx = (pht * 11) | 0;
       const size = presR * 2.5 * sc;
       const px = hpX * sc + hf.ox, py = hpY * sc + hf.oy;
-      g2.globalAlpha = Math.min(0.85, 0.42 * presI * (1 + 0.6 * hCharge)) * al;
+      g2.globalAlpha = Math.min(0.85, 0.42 * presI * (1 + 0.6 * hCharge)) * al *
+        hushAt(hpX, hpY);
       g2.drawImage(hf.pspr[idx], px - size / 2, py - size / 2, size, size);
     }
     for (let i = 0; i < hf.NM; i++) {
@@ -731,11 +775,51 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
       const sy = hf.my[i] * sc + hf.oy;
       if (sx < -20 || sx > fieldCanvas.width + 20 || sy < -20 || sy > fieldCanvas.height + 20) continue;
       const tw = still ? 0.5 : 0.5 + 0.5 * Math.sin(now * hf.mtw[i] + hf.mph[i] * 3.1);
-      g2.globalAlpha = (0.1 + 0.42 * tw * tw) * al;
+      g2.globalAlpha = (0.12 + 0.5 * tw * tw) * al;
       const s2 = hf.msz[i] * 2.6 * sc;
       g2.drawImage(hf.mspr[hf.mhue[i]], sx - s2 / 2, sy - s2 / 2, s2, s2);
     }
+    // — THE VOID COLLAR, painted last over everything (sprites included): the room's
+    //   boundary. A 72-point perimeter path inset by travelling noise — warped, breathing,
+    //   its corners cut by the sampling itself — solid room-black outside it (evenodd),
+    //   then layered soft strokes bloom the dark inward. No straight canvas edge, no rim,
+    //   no corner can ever read, at any moment of the drift (frozen composed under RM). —
     g2.globalCompositeOperation = 'source-over';
+    g2.globalAlpha = 1;
+    const cw2 = fieldCanvas.width, ch2 = fieldCanvas.height;
+    const mws = cw2 < ch2 ? cw2 : ch2;
+    const per = 2 * (cw2 + ch2);
+    g2.beginPath();
+    g2.moveTo(-4, -4);
+    g2.lineTo(cw2 + 4, -4);
+    g2.lineTo(cw2 + 4, ch2 + 4);
+    g2.lineTo(-4, ch2 + 4);
+    g2.closePath();
+    for (let i = 0; i < 72; i++) {
+      const s = i / 72;
+      let d = s * per, px, py, nx, ny;
+      if (d < cw2) { px = d; py = 0; nx = 0; ny = 1; }
+      else if ((d -= cw2) < ch2) { px = cw2; py = d; nx = -1; ny = 0; }
+      else if ((d -= ch2) < cw2) { px = cw2 - d; py = ch2; nx = 0; ny = -1; }
+      else { d -= cw2; px = 0; py = ch2 - d; nx = 1; ny = 0; }
+      const n = 0.5 + 0.5 * (Math.sin(s * 18.85 + wt * 0.00021) * 0.6 +
+        Math.sin(s * 43.98 - wt * 0.00013 + 2.1) * 0.4);
+      const inset = mws * (0.035 + 0.05 * n);
+      if (i === 0) g2.moveTo(px + nx * inset, py + ny * inset);
+      else g2.lineTo(px + nx * inset, py + ny * inset);
+    }
+    g2.closePath();
+    g2.fillStyle = '#020202';
+    g2.fill('evenodd');
+    g2.lineJoin = 'round';
+    g2.strokeStyle = '#020202';
+    // five layered strokes — near-solid at the ring, decaying inward, so the solid
+    // collar's polygon edge never reads as a step (residual ≈ 2/255 on the dark facets)
+    g2.lineWidth = mws * 0.03; g2.globalAlpha = 0.55; g2.stroke();
+    g2.lineWidth = mws * 0.07; g2.globalAlpha = 0.35; g2.stroke();
+    g2.lineWidth = mws * 0.115; g2.globalAlpha = 0.28; g2.stroke();
+    g2.lineWidth = mws * 0.165; g2.globalAlpha = 0.22; g2.stroke();
+    g2.lineWidth = mws * 0.22; g2.globalAlpha = 0.16; g2.stroke();
     g2.globalAlpha = 1;
     g2.lineWidth = 1;
   };
@@ -761,6 +845,30 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
         hf.my[i] -= hf.msp[i] * dt * 0.001;
         if (hf.my[i] < top) hf.my[i] = bottom;
       }
+      // the crackle — sparks decay, and every few beats a LIT seam ignites past its
+      // ambient light (candidates are drawn from last frame's vertex light, so a spark
+      // can only ever be born where the light already is — never in the dark)
+      const dk = Math.exp(-dt / 420);
+      const es = hf.esprk;
+      for (let e = 0; e < hf.NE; e++) if (es[e] > 0.004) es[e] *= dk;
+      hSparkT -= dt;
+      if (hSparkT <= 0) {
+        hSparkT = 230 + Math.random() * 500;
+        for (let tr = 0; tr < 5; tr++) {
+          const e = (Math.random() * hf.NE) | 0;
+          if (!hf.eact[e]) continue;
+          const a = hf.ea[e], b = hf.eb[e];
+          const m = Math.max(hf.vlr[a] + hf.vlr[b], hf.vlg[a] + hf.vlg[b],
+            hf.vlb[a] + hf.vlb[b]) * 0.5;
+          if (m > 0.05) { es[e] = 0.55 + Math.random() * 0.5; break; }
+        }
+      }
+      // the heartbeat — every so often the room rings itself, softly, from a presence
+      if (now > hPulseAt) {
+        hPulseAt = now + 15000 + Math.random() * 13000;
+        const k = (Math.random() * 3) | 0;
+        hfSpawnWave(hf.wx[k], hf.wy[k], 0.3 + Math.random() * 0.18);
+      }
     }
     // retire spent waves (order irrelevant — swap-with-last, no allocation)
     for (let v = wvN - 1; v >= 0; v--) {
@@ -784,12 +892,41 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     hLeanX = hLeanY = hLeanTX = hLeanTY = 0;
     hpX = hpTX = hf.cX;
     hpY = hpTY = hf.cY;
+    hf.esprk.fill(0);
+    hSparkT = 600;
+    hPulseAt = hfT0 + 8000; // the first heartbeat arrives once the room has woken
     hfRaf = requestAnimationFrame(hfTick);
   };
   const hfStop = () => {
     if (!hfOn) return;
     hfOn = false;
     cancelAnimationFrame(hfRaf);
+  };
+
+  // the words' live rect → field units (only measurable while the dialog is open)
+  const hfMeasureHush = () => {
+    hHon = false;
+    if (!hf || !room) return;
+    const col = room.querySelector('.hollow__col');
+    if (!col) return;
+    const r = col.getBoundingClientRect();
+    if (!r.width || !r.height) return;
+    hHx0 = ((r.left - 14) * hf.dpr - hf.ox) / hf.scale;
+    hHx1 = ((r.right + 14) * hf.dpr - hf.ox) / hf.scale;
+    hHy0 = ((r.top - 14) * hf.dpr - hf.oy) / hf.scale;
+    hHy1 = ((r.bottom + 14) * hf.dpr - hf.oy) / hf.scale;
+    hHon = true;
+  };
+
+  // the hush at a point — used for the sprite bodies (the vertex pass fuses its own copy)
+  const hushAt = (x, y) => {
+    if (!hHon) return 1;
+    const hx = x < hHx0 ? hHx0 - x : x > hHx1 ? x - hHx1 : 0;
+    const hy = y < hHy0 ? hHy0 - y : y > hHy1 ? y - hHy1 : 0;
+    const hd = hx > hy ? hx : hy;
+    if (hd >= 180) return 1;
+    const hq = hd / 180;
+    return 0.28 + 0.72 * hq * hq * (3 - 2 * hq);
   };
 
   const hfSpawnWave = (x, y, amp) => {
@@ -1177,9 +1314,10 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
       // the field presents ONE composed frame — presences at rest, motes settled.
       // (Exit under reduced motion is the estate's hard cut, like the set-veil's.)
       hRmPress = 0;
-      hfDraw(performance.now(), true);
       room.showModal();
       room.focus({ preventScroll: true }); // the room itself receives the visitor (below)
+      hfMeasureHush(); // the column is measurable only once the dialog renders
+      hfDraw(performance.now(), true);
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           // the door may have been shut inside this two-frame window (a scrollbar drag) —
@@ -1203,6 +1341,7 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     // Space means [ seal the seam ] — and the keyboard could never ring the wave. The
     // dialog itself receives the visitor (tabindex="-1"); Tab reaches the seal.
     room.focus({ preventScroll: true });
+    hfMeasureHush(); // one layout read per open, never in the frame loop
     room.classList.add('hollow--flight');
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
@@ -1511,6 +1650,7 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     onScroll();
     if (roomState !== 'idle') {
       hfResize(); // the room refits its cover transform live
+      hfMeasureHush();
       if (reduce) hfDraw(performance.now(), true);
     }
   }, { passive: true });

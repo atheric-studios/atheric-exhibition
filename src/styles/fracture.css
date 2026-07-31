@@ -554,65 +554,36 @@
   50% { background-position: 100% 0; }
 }
 
-/* — the movements: the author's thesis in three stations, i pink · ii tangerine ·
-     iii periwinkle — the palette structurally in the type. Left-set like a manuscript,
-     numerals hanging in the gutter, each numeral's hairline scribing in its own hue. — */
-.hollow__mvts {
-  margin: 36px auto 0;
-  max-width: min(52ch, 84vw);
+/* — the inscriptions: the room's whole thesis in two lines, one breath each. Set larger
+     than body serif (these are inscriptions now, not paragraphs), centred on the display's
+     axis; each line's close carries its station of Clara's ramp — the display's ember is
+     pink, i is tangerine, ii periwinkle — the palette structurally in the type. They
+     CONDENSE out of the dark like the display lines (blur → sharp, a finite entrance). — */
+.hollow__ins {
+  margin: 42px auto 0;
   display: grid;
-  gap: 24px;
-  text-align: left;
+  gap: 19px;
 }
-.hollow__mvt {
-  position: relative;
+.hollow__line {
   margin: 0;
-  padding-left: 46px;
   font-family: var(--font-break);
-  font-size: clamp(0.99rem, 1.45vw, 1.13rem);
-  line-height: 1.68;
+  font-size: clamp(1.12rem, 1.75vw, 1.36rem);
+  line-height: 1.5;
+  letter-spacing: 0.01em;
   color: var(--ink-dim);
 }
-.hollow__mvt-no {
-  position: absolute;
-  left: 0;
-  top: 0.34em;
-  font-family: var(--font-label);
-  font-size: 0.6rem;
-  letter-spacing: 0.16em;
-  line-height: 1;
+.hollow__line[data-hv] {
+  filter: blur(7px);
+  transition-property: opacity, transform, filter;
 }
-.hollow__mvt-no::after {
-  /* the station's hairline — scribes downward in the movement's own hue on arrival */
-  content: '';
-  position: absolute;
-  left: 1px;
-  top: calc(100% + 9px);
-  width: 1px;
-  height: 30px;
-  background: currentColor;
-  opacity: 0.45;
-  transform: scaleY(0);
-  transform-origin: center top;
-  transition: transform 0.8s var(--ease);
+.hollow--in .hollow__line[data-hv] {
+  filter: blur(0);
 }
-.hollow--in .hollow__mvt-no::after {
-  transform: scaleY(1);
-}
-.hollow--in .hollow__mvt--i .hollow__mvt-no::after { transition-delay: 1.15s; }
-.hollow--in .hollow__mvt--ii .hollow__mvt-no::after { transition-delay: 1.3s; }
-.hollow--in .hollow__mvt--iii .hollow__mvt-no::after { transition-delay: 1.45s; }
-.hollow__mvt--i .hollow__mvt-no { color: #ff2e88; }
-.hollow__mvt--ii .hollow__mvt-no { color: #ff9e2e; }
-.hollow__mvt--iii .hollow__mvt-no { color: #7d94ff; }
-.hollow__mvt em {
+.hollow__line em {
   font-style: italic;
-  /* each movement's closing thesis carries its station's light (AA-checked on #020202;
-     periwinkle lifted to #7d94ff for small-type contrast) */
 }
-.hollow__mvt--i em { color: #ff5ea4; filter: drop-shadow(0 0 12px rgba(255, 46, 136, 0.3)); }
-.hollow__mvt--ii em { color: #ffab4d; filter: drop-shadow(0 0 12px rgba(255, 158, 46, 0.26)); }
-.hollow__mvt--iii em { color: #8fa3ff; filter: drop-shadow(0 0 12px rgba(95, 123, 255, 0.3)); }
+.hollow__line--i em { color: #ffab4d; filter: drop-shadow(0 0 14px rgba(255, 158, 46, 0.3)); }
+.hollow__line--ii em { color: #8fa3ff; filter: drop-shadow(0 0 14px rgba(95, 123, 255, 0.34)); }
 
 .hollow__sigrow {
   margin-top: 36px;
@@ -665,11 +636,6 @@
   color: var(--ink-faint);
   line-height: 2;
 }
-.hollow__sig b {
-  font-weight: 400;
-  color: var(--ink-dim);
-}
-
 /* — the way out: seal the seam (or esc). The ring cycles Clara's stations on a pseudo
      (its own layer, so the hover transition on the button's real border never fights the
      ambient animation) — */
@@ -739,7 +705,6 @@
 .hollow--in [data-hv="5"] { transition-delay: 1.12s; }
 .hollow--in [data-hv="6"] { transition-delay: 1.26s; }
 .hollow--in [data-hv="7"] { transition-delay: 1.42s; }
-.hollow--in [data-hv="8"] { transition-delay: 1.54s; }
 .hollow--in [data-hv] {
   opacity: 1;
   transform: none;
@@ -788,13 +753,13 @@
   transition: opacity 0.28s ease-out 0.4s;
 }
 
-/* — short sheets (laptops): the movements tighten so the whole thesis sits inside the fold,
-     centred in the void — the column may still scroll on truly small heights — */
+/* — short sheets (laptops): the column tightens so the whole inscription sits inside the
+     fold — it may still scroll on truly small heights — */
 @media (max-height: 980px) and (min-width: 601px) {
   .hollow__kicker { margin-bottom: 18px; }
   .hollow__display { font-size: clamp(2.1rem, 4.6vw, 3.3rem); }
-  .hollow__mvts { margin-top: 26px; gap: 17px; max-width: min(56ch, 84vw); }
-  .hollow__mvt { font-size: clamp(0.95rem, 1.3vw, 1.04rem); line-height: 1.6; }
+  .hollow__ins { margin-top: 30px; gap: 15px; }
+  .hollow__line { font-size: clamp(1.05rem, 1.5vw, 1.2rem); }
   .hollow__sigrow { margin-top: 26px; }
   .hollow__seal { margin-top: 30px; }
 }
@@ -805,16 +770,15 @@
   .hollow__nave {
     background: radial-gradient(
       ellipse 92% 62% at 50% 50%,
-      rgba(2, 2, 2, 0.74),
-      rgba(2, 2, 2, 0.46) 56%,
+      rgba(2, 2, 2, 0.8),
+      rgba(2, 2, 2, 0.5) 56%,
       rgba(2, 2, 2, 0) 82%
     );
   }
   .hollow__kicker { margin-bottom: 16px; font-size: 0.58rem; letter-spacing: 0.16em; }
   .hollow__display { font-size: clamp(1.95rem, 8.6vw, 2.35rem); }
-  .hollow__mvts { margin-top: 22px; gap: 16px; max-width: 88vw; }
-  .hollow__mvt { padding-left: 32px; font-size: 0.92rem; line-height: 1.6; }
-  .hollow__mvt-no::after { height: 22px; top: calc(100% + 7px); }
+  .hollow__ins { margin-top: 26px; gap: 13px; max-width: 88vw; }
+  .hollow__line { font-size: 1.02rem; line-height: 1.5; }
   .hollow__sigrow { margin-top: 22px; gap: 13px; }
   .hollow__mark { width: 34px; height: 34px; }
   .hollow__sig { font-size: 0.53rem; letter-spacing: 0.13em; }
@@ -844,12 +808,9 @@
   .hollow--in [data-hv] {
     transition-delay: 0s;
   }
-  .hollow__display span[data-hv] {
+  .hollow__display span[data-hv],
+  .hollow__line[data-hv] {
     filter: none;
-  }
-  .hollow__mvt-no::after {
-    transform: none;
-    transition: none;
   }
   .hollow__iris {
     display: none;
