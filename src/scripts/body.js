@@ -323,25 +323,41 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
   const seal = room ? room.querySelector('.hollow__seal') : null;
   const iris = room ? room.querySelector('.hollow__iris') : null;
   const irisDark = room ? room.querySelector('.hollow__iris-dark') : null;
-  // ── THE FIELD — the room itself (v3, 2026-07-30). The vault-object is dead. ───────────────
-  // No ring, no central void, nothing to look AT: the entire viewport is the room — a
-  // full-bleed triangulated field the visitor stands INSIDE. One canvas, one welded
-  // shared-vertex mesh (parsed from #hollow-geo, the slot-in source): the vertices BREATHE —
-  // a slow travelling drift crosses the field as a swell, a smooth per-vertex depth field
-  // shears near past far under the pointer, and the facets PART around the hand — and
-  // because every facet shares its vertices, the living geometry can never open a gap.
+  // ── THE MASS — the room itself (v6, 2026-08-01). The ball-diagram is dead. ────────────────
+  // The v5 sphere read as a DRAWN GLOBE: a lit lattice edge to edge, an iridescent
+  // polyline tracing a hard silhouette — a diagram of a ball, nothing ambiguous, nothing
+  // fading. The owner's verdict killed that reading. What stands in the dark now is an
+  // AMBIGUOUS, evolving volumetric mass — its roundness FELT, never diagrammed:
   //
-  // The light law holds absolutely: the facets' own paint is near-black (baked from
-  // data-d); everything candy is drawn ADDITIVELY (composite 'lighter') — illumination,
-  // never paint. Three wandering PRESENCES (pink / tangerine / periwinkle — the movements'
-  // own stations) cross the room on slow incommensurate orbits; seams ignite as they pass
-  // (wide halo + thin near-white core — the fig. 07 seam-light grammar), faces catch a
-  // faint wash, candy motes rise like incense. The room ANSWERS: light gathers to the
-  // cursor and the field parts around it; press-and-hold GATHERS the room — the presences
-  // lean toward the hand, the parting widens — and release rings a luminous WAVE outward
-  // through the seams (Space rings it from the room's heart for the keyboard; a quick tap
-  // rings a small one). Reduced motion: one composed still frame — presences at rest,
-  // motes settled — and press/Space answer as a STATE (single repaints), never a motion.
+  //   the darkness  the mass itself is dark. The uniform lattice-lift is gone; light is
+  //                 local WEATHER (presences, waves, sparks, aurora pools, the core) on a
+  //                 vast dark body whose extent the eye can never trace. The geometry is
+  //                 still the welded jittered icosphere (#hollow-geo, shared vertices —
+  //                 the living mesh can never open a gap), deformed far past sphere-nature
+  //                 by slow deep metaball lobes: the outline, if you could see it, is
+  //                 lobed and never rests. You cannot see it.
+  //   the veil      every boundary DISSOLVES. All light — and the facet mosaic itself —
+  //                 extinguishes smoothly BEFORE the geometric limb, across a noise-warped,
+  //                 breathing angular falloff (per-vertex, keyed to facing nz), and again
+  //                 across a warped screen-edge falloff where the mass exceeds the frame.
+  //                 The polygonal silhouette exists only in total darkness; no rim, no
+  //                 edge, no polyline, at any moment of the evolution.
+  //   the warp      the thin-film character (the hero blob's own iridAt ramp) is OPTICAL
+  //                 WARP now, never a drawn line: (a) the dispersion veil — light entering
+  //                 the falloff REFRACTS, its colour shearing along the spectral ramp as
+  //                 it dims, so every dissolve boundary is a soft prism zone; (b) the flank
+  //                 seep — a presence orbiting BEHIND the mass no longer paints through:
+  //                 its light bends AROUND the limb as iridescent fringes sliding along the
+  //                 unseen edge, and dies when it swings deep behind (the mass occludes —
+  //                 volume read by light, not by outline).
+  //
+  // The light law holds absolutely: facet paint is near-black (baked data-d, sunk to the
+  // void's own black through the veil); ALL candy/spectral light is ADDITIVE (composite
+  // 'lighter'). The three presences, the seams' halo+core grammar, sparks, the heartbeat,
+  // waves ringing across the surface, attention-light (the surface RISES where you look),
+  // THE CORE (recruitment, condensation, time-rings, Fibonacci rings, persistence) and the
+  // words' hush all survive re-housed on the mass. Reduced motion: one composed still
+  // frame — veil standing, presences at rest — press/Space answer as a STATE, never motion.
   //
   // Budget: geometry parsed and every sprite/colour string baked ONCE at first open (paid
   // under the iris cover); per frame only typed-array math + canvas paths (the few rgb()
@@ -373,10 +389,10 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     if (hf || !fieldCanvas || !hgeoEl || !fieldCanvas.getContext) return;
     const hg = fieldCanvas.getContext('2d');
     if (!hg) return;
-    // — THE ORGANISM (v5): the geometry is the unit-sphere surface — a data-verts table
+    // — THE MASS (v6): the geometry is still the unit-sphere surface — a data-verts table
     //   of x y z triplets and index-wound faces (outward, so one screen-space cross
-    //   product is the backface cull AND the silhouette detector). Watertight by the
-    //   generator's midpoint welding. —
+    //   product is the backface cull). Watertight by the generator's midpoint welding.
+    //   The silhouette is never drawn: the veil extinguishes everything before it. —
     const vraw = (hgeoEl.getAttribute('data-verts') || '').trim().split(/\s+/).map(Number);
     const polys = hgeoEl.querySelectorAll('polygon');
     const T = polys.length;
@@ -389,13 +405,21 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
       n0z[i] = vraw[i * 3 + 2];
     }
     const ti = new Uint16Array(T * 3);
-    const tfill = new Array(T);
+    // the mosaic sinks into the void through the veil: per facet, SIX pre-baked fill
+    // strings stepping the room's own black (#020202) → the facet's data-d tone — no
+    // per-frame strings; steps ≤4/255, spread across the mosaic veil's wide band so
+    // neighbouring facets never print a perceivable tone-step at the coast
+    const tfillL = new Array(T * 6);
     for (let i = 0; i < T; i++) {
       const pg = polys[i];
       const ix = (pg.getAttribute('data-i') || '0 0 0').split(' ');
       ti[i * 3] = +ix[0]; ti[i * 3 + 1] = +ix[1]; ti[i * 3 + 2] = +ix[2];
-      const d = (pg.getAttribute('data-d') || '8 8 11').split(' ');
-      tfill[i] = 'rgb(' + d[0] + ',' + d[1] + ',' + d[2] + ')';
+      const d = (pg.getAttribute('data-d') || '8 8 11').split(' ').map(Number);
+      for (let k = 0; k <= 5; k++) {
+        const m = k / 5;
+        tfillL[i * 6 + k] = 'rgb(' + ((2 + (d[0] - 2) * m + 0.5) | 0) + ',' +
+          ((2 + (d[1] - 2) * m + 0.5) | 0) + ',' + ((2 + (d[2] - 2) * m + 0.5) | 0) + ')';
+      }
     }
     // — unique seams (shared edges once) + full edge↔facet ADJACENCY: the core is built
     //   FROM this mesh (facets recruited, seams continuous), so every edge knows its one
@@ -451,7 +475,9 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     //   (the metaball lobes carry the macro deformation) —
     const vph = new Float32Array(NV), vamp = new Float32Array(NV);
     const vpx = new Float32Array(NV), vpy = new Float32Array(NV); // canvas px (per frame)
-    const vfz = new Float32Array(NV); // world-normal z (facing) — light modelling + limb
+    const vV = new Float32Array(NV); // the veil — per-vertex light dissolve (per frame)
+    const vVm = new Float32Array(NV); // the mosaic's own gentler veil (wider band — no steps)
+    const tArea = new Float32Array(T); // per-frame projected area — foreshortening damper
     const vlr = new Float32Array(NV), vlg = new Float32Array(NV), vlb = new Float32Array(NV);
     for (let i = 0; i < NV; i++) {
       const f1 = hash(n0x[i] * 91.7 + 3.1, n0y[i] * 77.3 + n0z[i] * 31.7);
@@ -464,7 +490,7 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     for (let i = 0; i < NE; i++) {
       const f = hash(n0x[ea[i]] * 57.1 + 3.7, n0y[ebb[i]] * 43.3 + 9.1);
       ew[i] = 3.6 * (0.78 + 0.5 * f);
-      ej[i] = 0.7 + 0.55 * f;
+      ej[i] = 0.45 + 0.8 * f; // wide character spread — even inside lit weather, some seams stay dark
       let mx2 = (n0x[ea[i]] + n0x[ebb[i]]) / 2, my2 = (n0y[ea[i]] + n0y[ebb[i]]) / 2;
       let mz2 = (n0z[ea[i]] + n0z[ebb[i]]) / 2;
       const l = Math.hypot(mx2, my2, mz2) || 1;
@@ -483,13 +509,14 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
       cg.fillRect(0, 0, px, px);
       return c;
     };
-    // the three presences — lights that ORBIT the organism (unit directions, slow
-    //   incommensurate paths; behind the body they dim and pass BEHIND the limb).
-    //   W = angular width of the light's fall on the surface; periwinkle inked up.
+    // the three presences — lights that ORBIT the mass (unit directions, slow
+    //   incommensurate paths). In front they pool on the surface; swinging BEHIND they are
+    //   OCCLUDED — their light survives only as the flank seep (iridescent fringes bending
+    //   around the unseen limb), then dies. W = angular width of the light's fall.
     const wisps = [
-      { wr: 1, wg: 0.180, wb: 0.533, W: 0.5, I: 0.85, spr: mkGlow(255, 46, 136, 256) },
-      { wr: 1, wg: 0.620, wb: 0.180, W: 0.44, I: 0.75, spr: mkGlow(255, 158, 46, 256) },
-      { wr: 0.373, wg: 0.482, wb: 1, W: 0.54, I: 1.1, spr: mkGlow(95, 123, 255, 256) },
+      { wr: 1, wg: 0.180, wb: 0.533, W: 0.42, I: 0.62, spr: mkGlow(255, 46, 136, 256) },
+      { wr: 1, wg: 0.620, wb: 0.180, W: 0.36, I: 0.52, spr: mkGlow(255, 158, 46, 256) },
+      { wr: 0.373, wg: 0.482, wb: 1, W: 0.46, I: 0.8, spr: mkGlow(95, 123, 255, 256) },
     ];
     const wx = new Float32Array(3), wy = new Float32Array(3), wz = new Float32Array(3);
     // the hand's light takes the room's hue — twelve stations along Clara's ramp
@@ -497,6 +524,13 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     for (let i = 0; i < 12; i++) {
       const c = candyAt(i / 11);
       pspr.push(mkGlow(c[0] | 0, c[1] | 0, c[2] | 0, 256));
+    }
+    // the flank seep's spectra — eight thin-film stations, rastered once (the refraction
+    // of an occluded light bending around the limb is drawn from these, never computed)
+    const ispr = [];
+    for (let i = 0; i < 8; i++) {
+      const c = iridAt(i / 7);
+      ispr.push(mkGlow(c[0] | 0, c[1] | 0, c[2] | 0, 192));
     }
     // — the motes: candy dust ORBITING the organism in tilted shells (each mote keeps an
     //   orthonormal basis u,w of its orbital plane; front/back split at draw time) —
@@ -535,8 +569,8 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     const esprk = new Float32Array(NE);
     hf = {
       esprk, tFront,
-      hg, T, NV, NE, ti, tfill, n0x, n0y, n0z, vph, vamp, vpx, vpy, vfz,
-      vlr, vlg, vlb, ea, eb: ebb, ew, ej, wisps, wx, wy, wz, pspr,
+      hg, T, NV, NE, ti, tfillL, n0x, n0y, n0z, vph, vamp, vpx, vpy, vV, vVm, tArea,
+      vlr, vlg, vlb, ea, eb: ebb, ew, ej, wisps, wx, wy, wz, pspr, ispr,
       NM, mux, muy, muz, mwx, mwy, mwz, mph, msp, msh, mtw, msz, mhue, mspr, act, eact,
       // the core's fabric — the surface's OWN adjacency and body state (no second mesh)
       et1, et2, tedge, tdx, tdy, tdz, h0x, h0y, h0z,
@@ -563,15 +597,33 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     hf.cY = (fieldCanvas.height / 2 - hf.oy) / hf.scale;
     hf.aX = fieldCanvas.width / 2 / hf.scale;
     hf.aY = fieldCanvas.height / 2 / hf.scale;
-    // the organism's seat: upper centre, the words keep the lower band; its radius fits
-    // the narrower of the window's halves — one body, dominant but never cropped
+    // the mass's seat: upper centre, the words keep the lower band
     hf.sX = hf.cX;
     hf.sY = hf.cY - hf.aY * 0.34;
-    // imposing: the body fills the frame's upper reach and may exceed it — its scale is
-    // felt; the words keep the lower band and read on its quiet lower limb
-    hf.R0 = Math.min(hf.aX * 1.02, hf.aY * 0.7);
+    // imposing: the mass fills most of the frame and EXCEEDS it at its widest swells —
+    // the veil (angular + screen-edge) dissolves it into the dark long before any
+    // boundary could read; the words keep the lower band under the hush
+    hf.R0 = Math.min(hf.aX * 1.28, hf.aY * 0.85);
     hf.act.fill(1); // facing is per-frame now — no viewport cull exists on a sphere
     hf.eact.fill(1);
+    // the feather — four eased void-black gradients, baked per resize, composited
+    // over the FINISHED frame: strokes and sprites that cross the border (a stroke's
+    // alpha is uniform along its length — the per-vertex falloff cannot save it)
+    // still dissolve into the room's black before the straight canvas edge
+    const fW = fieldCanvas.width, fH = fieldCanvas.height;
+    hf.fE = 0.1 * (fW < fH ? fW : fH);
+    const mkFade = (x0, y0, x1, y1) => {
+      const gr = hf.hg.createLinearGradient(x0, y0, x1, y1);
+      gr.addColorStop(0, 'rgba(2,2,2,1)');
+      gr.addColorStop(0.35, 'rgba(2,2,2,0.62)');
+      gr.addColorStop(0.7, 'rgba(2,2,2,0.18)');
+      gr.addColorStop(1, 'rgba(2,2,2,0)');
+      return gr;
+    };
+    hf.fadeT = mkFade(0, 0, 0, hf.fE);
+    hf.fadeB = mkFade(0, fH, 0, fH - hf.fE);
+    hf.fadeL = mkFade(0, 0, hf.fE, 0);
+    hf.fadeR = mkFade(fW, 0, fW - hf.fE, 0);
   };
 
   const foldT = (u) => {
@@ -579,15 +631,16 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     return u > 1 ? 2 - u : u;
   };
 
-  // ── one frame of the ORGANISM — still=true paints the composed reduced-motion state ──────
-  // The field is the surface of one evolving, warped sphere (v5): a jittered icosphere,
-  // deformed per frame by travelling metaball lobes + breath + the hand's bump + the
-  // body's raised crust, rotated about an axis tilted toward the visitor (the heart pole
-  // rides the axis, so the grown body stays facing you while the surface streams around
-  // it), projected with gentle perspective. Facing is ONE screen-space cross per face —
-  // and edges whose two faces straddle front/back ARE the silhouette: the thin-film
-  // refraction lives on that living polyline. All light is angular (dot products on
-  // world normals), modelled by facing (limb darkening makes the ball a ball).
+  // ── one frame of the MASS — still=true paints the composed reduced-motion state ──────────
+  // The room's presence is one evolving, deeply-warped volumetric mass (v6): the jittered
+  // icosphere, deformed per frame by slow deep metaball lobes + breath + the hand's bump +
+  // the body's raised crust, rotated about an axis tilted toward the visitor (the heart
+  // pole rides the axis), projected with gentle perspective. Facing is ONE screen-space
+  // cross per face — a cull only, NEVER a drawn silhouette. All light is angular (dot
+  // products on world normals) and every boundary is THE VEIL: light and mosaic dissolve
+  // to the void's own black before the geometric limb (noise-warped, breathing) and
+  // before the screen edge, while the thin-film ramp shears the dying light's colour —
+  // the dissolve is a prism zone, the roundness is felt, the outline is never seen.
   const hM = new Float32Array(9); // this frame's rotation (shared with event-time code)
   let hDirWx = 0, hDirWy = -0.2, hDirWz = 0.98; // the heart pole, world (per frame)
   const PD = [0, 0, 1]; // scratch — the hand's surface direction (presDirInto fills it)
@@ -635,7 +688,8 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     hDirWy = a10 * hf.h0x + a11 * hf.h0y + a12 * hf.h0z;
     hDirWz = a20 * hf.h0x + a21 * hf.h0y + a22 * hf.h0z;
     // — the metaball lobes: slow deep swells + one broad asymmetric rise + one DENT —
-    //   the mass evolves over tens of seconds; its sphere-nature is felt, not diagrammed
+    //   amplitudes far past sphere-nature (±½ R0 between swell and hollow): the outline,
+    //   were it visible, is lobed and never rests; the mass evolves over tens of seconds
     let lx1 = Math.sin(wt * 0.00004 + 1.2), ly1 = Math.cos(wt * 0.000034 + 0.4), lz1 = Math.sin(wt * 0.000027 + 2.6);
     let lx2 = Math.cos(wt * 0.00003 + 4.0), ly2 = Math.sin(wt * 0.000045 + 1.9), lz2 = Math.cos(wt * 0.000023 + 0.7);
     let lx3 = Math.sin(wt * 0.000022 + 3.3), ly3 = Math.sin(wt * 0.000038 + 5.1), lz3 = Math.cos(wt * 0.000042 + 1.5);
@@ -646,11 +700,11 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     l = Math.hypot(lx3, ly3, lz3) || 1; lx3 /= l; ly3 /= l; lz3 /= l;
     l = Math.hypot(lx4, ly4, lz4) || 1; lx4 /= l; ly4 /= l; lz4 /= l;
     l = Math.hypot(lx5, ly5, lz5) || 1; lx5 /= l; ly5 /= l; lz5 /= l;
-    const A1 = 0.15 * (0.55 + 0.45 * Math.sin(wt * 0.00005));
-    const A2 = 0.12 * (0.55 + 0.45 * Math.cos(wt * 0.000065));
-    const A3 = 0.1;
-    const A4 = 0.17 * (0.5 + 0.5 * Math.sin(wt * 0.00003 + 2)); // the broad rise
-    const A5 = -0.11; // the dent — the mass remembers it is not a diagram
+    const A1 = 0.26 * (0.55 + 0.45 * Math.sin(wt * 0.00005));
+    const A2 = 0.22 * (0.55 + 0.45 * Math.cos(wt * 0.000065));
+    const A3 = 0.16;
+    const A4 = 0.32 * (0.5 + 0.5 * Math.sin(wt * 0.00003 + 2)); // the broad rise
+    const A5 = -0.2; // the dent — the mass is not a ball
     // — the hand's surface direction (damped screen point → sphere) —
     presDirInto(PD);
     const presDx = PD[0], presDy = PD[1], presDz = PD[2];
@@ -691,20 +745,24 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
       eraT = still ? 0.06 : foldT((now - coreBorn) * 0.000019 + 0.03);
       const hc = candyAt(eraT);
       hcr = hc[0] / 255; hcg = hc[1] / 255; hcb = hc[2] / 255;
-      heartI = (0.22 + 0.5 * (bodyN / KB) + 0.35 * coreFlare) * al;
+      heartI = (0.16 + 0.3 * (bodyN / KB) + 0.3 * coreFlare) * al;
     }
     const presI = still ? hRmPress : hpI;
-    const presW = 0.42 * (1 + 0.7 * hCharge);
-    const presIk = (0.85 + 1.3 * hCharge) * presI * al;
-    const bumpK = 0.06 * (1 + 1.1 * hCharge) * (still ? hRmPress : Math.max(presI, 0.001));
+    const presW = 0.3 * (1 + 0.35 * hCharge);
+    const presIk = (0.55 + 0.6 * hCharge) * presI * al;
+    const bumpK = 0.08 * (1 + 1.1 * hCharge) * (still ? hRmPress : Math.max(presI, 0.001));
     const kP = 1 / (3.4 * R0);
     const shim = wt * 0.0007;
+    // the veil's screen frame — where the mass exceeds the window, its light dies across
+    // a warped falloff well inside the canvas edge (never a straight cut of anything)
+    const vgW = fieldCanvas.width, vgH = fieldCanvas.height;
+    const vgE = 0.12 * (vgW < vgH ? vgW : vgH);
     // per-wave invariants — waves live in ANGULAR (1−dot) space on the surface
     for (let v = 0; v < wvN; v++) {
       const age = (now - wvT0[v]) / 1700;
-      wvSig[v] = 0.1 + 0.1 * age;
+      wvSig[v] = 0.07 + 0.08 * age; // a narrower crest — the travelling ring READS
       wvRad[v] = age * 2.3;
-      wvEnv[v] = age < 1 ? Math.pow(1 - age, 1.8) * wvAmp[v] : 0;
+      wvEnv[v] = age < 1 ? Math.pow(1 - age, 1.8) * wvAmp[v] * 1.2 : 0;
     }
     // — the vertex pass: rotate, deform, project; then gather every light —
     for (let i = 0; i < hf.NV; i++) {
@@ -738,14 +796,15 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
       const persp = 1 / (1 - nz * R * kP);
       hf.vpx[i] = (hf.sX + nx * R * persp) * sc + hf.ox;
       hf.vpy[i] = (hf.sY + ny * R * persp) * sc + hf.oy;
-      hf.vfz[i] = nz;
       let lr = 0, lg = 0, lb = 0;
       for (let k = 0; k < 3; k++) {
         const wk = hf.wisps[k];
         const dd = nx * hf.wx[k] + ny * hf.wy[k] + nz * hf.wz[k];
         const qq = 1 - (1 - dd) / wk.W;
         if (qq > 0) {
-          const s2 = wk.I * qq * qq * br * al;
+          // the composed still frame carries all three pools at once — dimmed a shade
+          // there, so the resting union of light never re-tiles the ball
+          const s2 = wk.I * (still ? 0.72 : 1) * qq * qq * br * al;
           lr += s2 * wk.wr; lg += s2 * wk.wg; lb += s2 * wk.wb;
         }
       }
@@ -771,29 +830,75 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
       }
       if (heartI > 0.01) {
         const dd = nx * hDirWx + ny * hDirWy + nz * hDirWz;
-        const qq = 1 - (1 - dd) / 0.6;
+        const qq = 1 - (1 - dd) / 0.38;
         if (qq > 0) {
           const s2 = heartI * qq * qq;
           lr += s2 * hcr; lg += s2 * hcg; lb += s2 * hcb;
         }
       }
-      // the luminous air — aurora patches sliding over the surface
+      // the luminous air — sparse aurora pools drifting over the surface, with deep
+      // troughs of true dark between them (the mass is dark; light is weather; the
+      // cubed profile keeps dark continents standing even in a hot late state)
       const ambN = Math.sin(nx * 3.1 + wt * 0.0001 + 1.2) *
         Math.sin(ny * 2.7 - wt * 0.00007 + 0.5);
-      let amb = (0.032 + 0.1 * (0.5 + 0.5 * ambN)) * br * al;
+      const ambQ = 0.5 + 0.5 * ambN;
+      let amb = (0.01 + 0.08 * ambQ * ambQ * ambQ) * br * al;
       if (pl > 0.02) amb *= Math.max(0.12, 1 - pl * 1.5); // the air stays out of the body
       const ca2 = candyAt(foldT(nx * 0.3 + ny * 0.22 + wt * 0.000018));
       lr += amb * (ca2[0] / 255); lg += amb * (ca2[1] / 255); lb += amb * (ca2[2] / 255);
-      // the limb band — thin-film refraction gathering toward the silhouette
-      if (nz < 0.38) {
-        const rim = 1 - (nz > 0 ? nz : 0) / 0.38;
-        const ir = iridAt(foldT(nx * 0.33 + ny * 0.26 + wt * 0.00007));
-        let ra = rim * (2 - rim); // rises to the very limb
-        ra = ra * ra * 0.2 * br * al;
-        lr += ra * (ir[0] / 255); lg += ra * (ir[1] / 255); lb += ra * (ir[2] / 255);
+      // — THE VEIL: every boundary dissolves. The angular falloff extinguishes all light
+      //   strictly BEFORE the geometric limb (nz reaches 0 only inside total darkness),
+      //   its threshold and width bent by slow travelling noise so the dying line is
+      //   never a circle and never rests; the screen-edge falloff does the same where
+      //   the mass exceeds the frame. The mosaic fill sinks by the same law (vV). —
+      const nv1 = Math.sin(nx * 2.9 + wt * 0.00005 + 1.7) *
+        Math.sin(ny * 3.3 - wt * 0.000038 + 0.6);
+      const nv2 = Math.sin((nx - ny) * 3.4 + wt * 0.000027 + 3.2);
+      // deep: extinction lands at nz 0.28–0.68 (projected, the dissolve BITES to ~0.73·R
+      // at its deepest and never survives past ~0.96·R) — the die-line is a wandering
+      // coast, never a circle, and the geometric limb sits far inside the dark. The
+      // width is capped so the mass's heart always clears the veil.
+      const t0v = 0.48 + 0.2 * nv1;
+      let wv2 = 0.34 + 0.1 * nv2;
+      if (wv2 > 1 - t0v) wv2 = 1 - t0v;
+      let v0 = (nz - t0v) / wv2;
+      v0 = v0 < 0 ? 0 : v0 > 1 ? 1 : v0;
+      v0 = v0 * v0 * (3 - 2 * v0);
+      // the mosaic's own veil — same coast, a wider gentler band, so the dark facet
+      // tones sink to the void across several facet rings and no tone-step can print
+      let vm = (nz - (t0v - 0.08)) / (wv2 + 0.28);
+      vm = vm < 0 ? 0 : vm > 1 ? 1 : vm;
+      vm = vm * vm * (3 - 2 * vm);
+      // the screen-edge falloff, warped per vertex so no straight edge can print
+      // (the feather mask at the end of the frame catches strokes and sprites that
+      // cross the border — this per-vertex falloff does the organic first pass)
+      const ew2 = vgE * (0.75 + 0.35 * Math.sin(hf.vph[i] + wt * 0.00006));
+      const pxi = hf.vpx[i], pyi = hf.vpy[i];
+      let evg = (pxi < vgW - pxi ? pxi : vgW - pxi);
+      const evy = (pyi < vgH - pyi ? pyi : vgH - pyi);
+      if (evy < evg) evg = evy;
+      evg /= ew2;
+      evg = evg < 0 ? 0 : evg > 1 ? 1 : evg;
+      evg = evg * evg * (3 - 2 * evg);
+      // the dispersion — light entering EITHER dissolve (angular or screen-edge)
+      // REFRACTS: its colour shears along the thin-film ramp (the hero blob's own
+      // spectrum) as it dims. Optical warp, never a drawn rim: a broad soft prism
+      // zone riding every boundary of the mass.
+      const vd = v0 * evg;
+      if (vd < 0.98) {
+        const m2f = lr > lg ? (lr > lb ? lr : lb) : (lg > lb ? lg : lb);
+        if (m2f > 0.004) {
+          const ir = iridAt(foldT(nx * 0.31 + ny * 0.24 + wt * 0.000055));
+          const mixK = 0.8 * (1 - vd);
+          lr += (m2f * (ir[0] / 255) - lr) * mixK;
+          lg += (m2f * (ir[1] / 255) - lg) * mixK;
+          lb += (m2f * (ir[2] / 255) - lb) * mixK;
+        }
       }
-      // limb darkening — the modelling that makes the ball a BALL
-      const lf = nz <= 0 ? 0.12 : 0.24 + 0.76 * (nz * 1.9 < 1 ? nz * 1.9 : 1);
+      hf.vV[i] = vd;
+      hf.vVm[i] = vm * evg;
+      // gentle volume modelling (front faces a touch brighter) × the veil
+      const lf = (0.45 + 0.55 * (nz < 0 ? 0 : nz > 1 ? 1 : nz)) * vd;
       lr *= lf; lg *= lf; lb *= lf;
       if (hHon) {
         // the hush under the words (screen-space, unchanged law)
@@ -816,6 +921,7 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
       const cross = (hf.vpx[b] - hf.vpx[a]) * (hf.vpy[c] - hf.vpy[a]) -
         (hf.vpy[b] - hf.vpy[a]) * (hf.vpx[c] - hf.vpx[a]);
       hf.tFront[t] = cross > 0 ? 1 : 0;
+      hf.tArea[t] = cross > 0 ? cross : -cross;
     }
     // — paint. The void, the far dust and far presences, then the body —
     g2.globalCompositeOperation = 'source-over';
@@ -839,23 +945,34 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
       const s2 = hf.msz[i] * sc * persp;
       g2.drawImage(hf.mspr[hf.mhue[i]], sx - s2 / 2, sy - s2 / 2, s2, s2);
     }
-    for (let k = 0; k < 3; k++) {
-      if (hf.wz[k] >= -0.05) continue;
-      const wk = hf.wisps[k];
-      const persp = 1 / (1 - hf.wz[k] * 1.06 * R0 * kP);
-      const sx = (hf.sX + hf.wx[k] * R0 * 1.06 * persp) * sc + hf.ox;
-      const sy = (hf.sY + hf.wy[k] * R0 * 1.06 * persp) * sc + hf.oy;
-      const size = R0 * 1.5 * sc * persp;
-      g2.globalAlpha = 0.16 * br * al;
-      g2.drawImage(wk.spr, sx - size / 2, sy - size / 2, size, size);
-    }
-    // the body's facets — front faces only; recruited facets wear the era's glass
+    // (a presence swinging behind the mass is OCCLUDED — no light is painted through;
+    //  its refracted flank seep is drawn after the body, with the front sprites)
+    // the mass's facets — front faces only, each fill picked from its pre-baked
+    // void→tone steps by the mosaic veil at its corners: the mosaic itself dissolves
+    // into the room's black at every boundary. Recruited facets wear the era's glass —
+    // faded by the SAME veil (the body may ride the pole into the coast; its paint
+    // must die there like everything else).
     g2.globalCompositeOperation = 'source-over';
     g2.globalAlpha = 1;
     for (let t = 0; t < hf.T; t++) {
       if (!hf.tFront[t]) continue;
       const a = hf.ti[t * 3], b = hf.ti[t * 3 + 1], c = hf.ti[t * 3 + 2];
-      g2.fillStyle = hf.tState[t] ? hf.tGlass[t] : hf.tfill[t];
+      if (hf.tState[t]) {
+        const vmA = (hf.vVm[a] + hf.vVm[b] + hf.vVm[c]) * 0.3333;
+        g2.fillStyle = hf.tGlass[t];
+        g2.globalAlpha = vmA;
+        g2.beginPath();
+        g2.moveTo(hf.vpx[a], hf.vpy[a]);
+        g2.lineTo(hf.vpx[b], hf.vpy[b]);
+        g2.lineTo(hf.vpx[c], hf.vpy[c]);
+        g2.closePath();
+        g2.fill();
+        g2.globalAlpha = 1;
+        continue;
+      }
+      let lv = ((hf.vVm[a] + hf.vVm[b] + hf.vVm[c]) * 1.6667 + 0.5) | 0;
+      if (lv > 5) lv = 5;
+      g2.fillStyle = hf.tfillL[t * 6 + lv];
       g2.beginPath();
       g2.moveTo(hf.vpx[a], hf.vpy[a]);
       g2.lineTo(hf.vpx[b], hf.vpy[b]);
@@ -863,7 +980,12 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
       g2.closePath();
       g2.fill();
     }
-    // — then LIGHT, strictly additive: wash, molten body, seams, the heart, near dust —
+    // — then LIGHT, strictly additive: wash, molten body, seams, the heart, near dust.
+    //   Every face/seam alpha carries the FORESHORTENING DAMPER (projected area over a
+    //   reference): where the surface turns away, dense tiny triangles would otherwise
+    //   pile their additive light into a bright band hugging the limb — the residue of
+    //   the old drawn rim. Damped, the compression dims instead of igniting. —
+    const aRef = R0 * sc * R0 * sc * 0.005;
     g2.globalCompositeOperation = 'lighter';
     g2.lineCap = 'round';
     for (let t = 0; t < hf.T; t++) {
@@ -873,9 +995,11 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
       const gg = (hf.vlg[a] + hf.vlg[b] + hf.vlg[c]) * 0.3333;
       const bb = (hf.vlb[a] + hf.vlb[b] + hf.vlb[c]) * 0.3333;
       const m2 = r > gg ? (r > bb ? r : bb) : (gg > bb ? gg : bb);
-      if (m2 < 0.065) continue;
-      let a2 = m2 * 0.2;
-      if (a2 > 0.17) a2 = 0.17;
+      if (m2 < 0.09) continue;
+      let af = hf.tArea[t] / aRef;
+      if (af > 1) af = 1; else af = af * af * (3 - 2 * af);
+      let a2 = m2 * 0.16 * af;
+      if (a2 > 0.1) a2 = 0.1;
       const inv = 255 / m2;
       g2.globalAlpha = a2;
       g2.fillStyle = 'rgb(' + ((r * inv) | 0) + ',' + ((gg * inv) | 0) + ',' + ((bb * inv) | 0) + ')';
@@ -897,7 +1021,9 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
         let m = 1 - age / 3000;
         m *= m;
         const a = hf.ti[t * 3], b = hf.ti[t * 3 + 1], c = hf.ti[t * 3 + 2];
-        g2.globalAlpha = Math.min(0.38, 0.42 * m) * al;
+        // the burn dies with the veil too — no molten face may stand alone in the coast
+        g2.globalAlpha = Math.min(0.38, 0.42 * m) * al *
+          ((hf.vVm[a] + hf.vVm[b] + hf.vVm[c]) * 0.3333);
         g2.fillStyle = hf.tMolt[t];
         g2.beginPath();
         g2.moveTo(hf.vpx[a], hf.vpy[a]);
@@ -907,39 +1033,18 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
         g2.fill();
       }
     }
-    // — the seams. Four natures now: far side (skipped), the SILHOUETTE (the thin-film
-    //   rim — the sphere's living outline), a seam of the body/frontier, or the field's.
+    // — the seams. Three natures: far side / limb (skipped — the limb lives in total
+    //   darkness, nothing is ever stroked there), a seam of the body/frontier, or the
+    //   field's (its vertex light already carries the veil and the dispersion).
     const ringAge = now - coreRingT0;
     const circT = still ? 1.6 : now * 0.001;
-    const flowAmp = (0.22 + 0.5 * hCharge) * al * br;
+    const flowAmp = (0.16 + 0.42 * hCharge) * al * br;
     const flowR = bodyR + 0.5; // angular
     for (let e = 0; e < hf.NE; e++) {
       const q1 = hf.et1[e], q2 = hf.et2[e];
       const f1 = hf.tFront[q1], f2v = hf.tFront[q2];
-      if (!f1 && !f2v) continue; // the far side of the body
+      if (!f1 || !f2v) continue; // the far side — and the unseen limb between
       const a = hf.ea[e], b = hf.eb[e];
-      if (f1 !== f2v) {
-        // THE SILHOUETTE — the rim where the surface turns away: the thin-film spectrum
-        // (the hero blob's own vocabulary) rides this living polyline; it hushes under
-        // the words like every other light
-        const hue = foldT(((hf.vpx[a] - hf.ox) / sc) * 0.0016 +
-          ((hf.vpy[a] - hf.oy) / sc) * 0.0012 + wt * 0.00004);
-        const ir = iridAt(hue);
-        const shh = hushAt((hf.vpx[a] - hf.ox) / sc, (hf.vpy[a] - hf.oy) / sc);
-        g2.beginPath();
-        g2.moveTo(hf.vpx[a], hf.vpy[a]);
-        g2.lineTo(hf.vpx[b], hf.vpy[b]);
-        g2.globalAlpha = 0.5 * br * al * hf.ej[e] * shh;
-        g2.lineWidth = hf.ew[e] * sc * 1.4;
-        g2.strokeStyle = 'rgb(' + (ir[0] | 0) + ',' + (ir[1] | 0) + ',' + (ir[2] | 0) + ')';
-        g2.stroke();
-        g2.globalAlpha = Math.min(1, 0.85 * br) * al * shh;
-        g2.lineWidth = hf.coreW;
-        g2.strokeStyle = 'rgb(' + ((ir[0] + (255 - ir[0]) * 0.5) | 0) + ',' +
-          ((ir[1] + (255 - ir[1]) * 0.5) | 0) + ',' + ((ir[2] + (255 - ir[2]) * 0.5) | 0) + ')';
-        g2.stroke();
-        continue;
-      }
       const s1 = hf.tState[q1] === 1;
       const s2 = hf.tState[q2] === 1;
       if (s1 || s2) {
@@ -966,9 +1071,9 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
           if (heat > 0) a2 += heat * 0.9;
         }
         a2 *= hf.ej[e] * al;
-        // the body's light obeys the limb — and the hush beneath the words
-        const zf = (hf.vfz[a] + hf.vfz[b]) * 0.5;
-        a2 *= zf <= 0 ? 0.2 : 0.3 + 0.7 * (zf * 1.9 < 1 ? zf * 1.9 : 1);
+        // the body's light obeys the veil FULLY (no floor — a burning frontier seam
+        // must never stand alone in the darkness of the coast) — and the hush
+        a2 *= (hf.vV[a] + hf.vV[b]) * 0.5;
         if (hHon) a2 *= hushAt((hf.vpx[a] - hf.ox) / sc, (hf.vpy[a] - hf.oy) / sc);
         if (a2 < 0.02) continue;
         g2.beginPath();
@@ -1005,27 +1110,39 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
         const bm = 1 + 2.4 * sp;
         r *= bm; gg *= bm; bb *= bm; m2 *= bm;
       }
-      if (m2 < 0.042) continue;
+      if (m2 < 0.1) continue; // nothing strokes below the halo gate — skip early
+      // the foreshortening damper (min of the two faces) — compressed limb seams dim
+      let afe = (hf.tArea[q1] < hf.tArea[q2] ? hf.tArea[q1] : hf.tArea[q2]) / aRef;
+      if (afe > 1) afe = 1; else afe = afe * afe * (3 - 2 * afe);
       const inv = 255 / m2;
       const rr = (r * inv) | 0, rg = (gg * inv) | 0, rb = (bb * inv) | 0;
       g2.beginPath();
       g2.moveTo(hf.vpx[a], hf.vpy[a]);
       g2.lineTo(hf.vpx[b], hf.vpy[b]);
-      if (m2 > 0.11) {
-        let ha = m2 * 0.9 * hf.ej[e];
-        if (ha > 0.78) ha = 0.78;
-        g2.globalAlpha = ha;
-        g2.lineWidth = hf.ew[e] * sc;
-        g2.strokeStyle = 'rgb(' + rr + ',' + rg + ',' + rb + ')';
-        g2.stroke();
-      }
-      let ca = m2 * 1.7 * hf.ej[e];
-      if (ca > 1) ca = 1;
-      g2.globalAlpha = ca;
-      g2.lineWidth = hf.coreW;
-      g2.strokeStyle = 'rgb(' + ((rr + (255 - rr) * 0.55) | 0) + ',' +
-        ((rg + (255 - rg) * 0.55) | 0) + ',' + ((rb + (255 - rb) * 0.55) | 0) + ')';
+      // light POOLS as coloured halo first — the mass glows, it is not wireframed
+      let ha = m2 * 0.85 * hf.ej[e] * afe;
+      if (ha > 0.7) ha = 0.7;
+      g2.globalAlpha = ha;
+      g2.lineWidth = hf.ew[e] * sc;
+      g2.strokeStyle = 'rgb(' + rr + ',' + rg + ',' + rb + ')';
       g2.stroke();
+      // the near-white core is reserved for genuine heat (sparks, wave crests, the
+      // presences' hearts) — and it is GATED BY THE VEIL: light entering the dissolve
+      // dies in refracted colour, never in white wire
+      if (m2 > 0.12) {
+        const vve = (hf.vV[a] + hf.vV[b]) * 0.5;
+        let cg = (vve - 0.35) / 0.3;
+        cg = cg < 0 ? 0 : cg > 1 ? 1 : cg;
+        let ca = (m2 - 0.12) * 1.3 * hf.ej[e] * afe * cg * (3 - 2 * cg) * cg;
+        if (ca > 0.85) ca = 0.85;
+        if (ca > 0.01) {
+          g2.globalAlpha = ca;
+          g2.lineWidth = hf.coreW;
+          g2.strokeStyle = 'rgb(' + ((rr + (255 - rr) * 0.55) | 0) + ',' +
+            ((rg + (255 - rg) * 0.55) | 0) + ',' + ((rb + (255 - rb) * 0.55) | 0) + ')';
+          g2.stroke();
+        }
+      }
     }
     // the heart's glow — projected at the pole, in the hour's hue
     if (bodyN) {
@@ -1038,17 +1155,56 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
         (still ? 0 : 0.06 * Math.sin(now * 0.0021))) * al;
       g2.drawImage(hf.pspr[hIdx], sx - hSize / 2, sy - hSize / 2, hSize, hSize);
     }
-    // presences + dust IN FRONT of the body
+    // the presences — in front, the pool's own candy sprite, easing out as it sinks
+    // toward the limb; behind, ONLY the flank seep: the occluded light refracted
+    // around the unseen edge as iridescent fringes (thin-film as optical warp), dying
+    // entirely once the presence swings deep behind the mass
     for (let k = 0; k < 3; k++) {
-      if (hf.wz[k] < -0.05) continue;
+      const wzk = hf.wz[k];
       const wk = hf.wisps[k];
-      const persp = 1 / (1 - hf.wz[k] * 1.06 * R0 * kP);
-      const sx = (hf.sX + hf.wx[k] * R0 * 1.06 * persp) * sc + hf.ox;
-      const sy = (hf.sY + hf.wy[k] * R0 * 1.06 * persp) * sc + hf.oy;
-      const size = R0 * 1.7 * sc * persp;
-      g2.globalAlpha = (0.24 + 0.07 * Math.sin(now * 0.0004 + k * 2.1)) * br * al *
-        hushAt((sx - hf.ox) / sc, (sy - hf.oy) / sc);
-      g2.drawImage(wk.spr, sx - size / 2, sy - size / 2, size, size);
+      const seep = sstep((0.3 - wzk) / 0.55) * sstep((wzk + 0.85) / 0.5);
+      // crossfade: as the seep rises the front sprite yields (never both at full pay)
+      const ff = sstep((wzk + 0.45) / 0.5) * (1 - 0.7 * seep);
+      if (ff > 0.02) {
+        const persp = 1 / (1 - wzk * 1.06 * R0 * kP);
+        const sx = (hf.sX + hf.wx[k] * R0 * 1.06 * persp) * sc + hf.ox;
+        const sy = (hf.sY + hf.wy[k] * R0 * 1.06 * persp) * sc + hf.oy;
+        const size = R0 * 1.7 * sc * persp;
+        // the breath term holds a fixed phase in the composed still frame — a
+        // reduced-motion press repaint must never shift unrelated light
+        g2.globalAlpha = (0.24 + (still ? 0 : 0.07 * Math.sin(now * 0.0004 + k * 2.1))) *
+          ff * br * al * hushAt((sx - hf.ox) / sc, (sy - hf.oy) / sc);
+        g2.drawImage(wk.spr, sx - size / 2, sy - size / 2, size, size);
+      }
+      if (seep > 0.02) {
+        const az = Math.atan2(hf.wy[k], hf.wx[k]);
+        const cax = Math.cos(az), say = Math.sin(az);
+        // the mass's deformed reach at that azimuth — the seep hugs the true flank
+        let rr2 = 1;
+        let d2 = cax * lx1 + say * ly1;
+        if (d2 > 0) { d2 *= d2; rr2 += A1 * d2 * d2; }
+        d2 = cax * lx2 + say * ly2;
+        if (d2 > 0) { d2 *= d2; rr2 += A2 * d2 * d2; }
+        d2 = cax * lx3 + say * ly3;
+        if (d2 > 0) { d2 *= d2; d2 *= d2; rr2 += A3 * d2 * d2; }
+        d2 = cax * lx4 + say * ly4;
+        if (d2 > 0) { rr2 += A4 * d2 * d2; }
+        d2 = cax * lx5 + say * ly5;
+        if (d2 > 0) { d2 *= d2; rr2 += A5 * d2 * d2; }
+        if (rr2 > 1.5) rr2 = 1.5; else if (rr2 < 0.68) rr2 = 0.68;
+        const Rv = R0 * rr2 * 0.92;
+        const tx2 = -say, ty2 = cax;
+        for (let o = -1; o <= 1; o++) {
+          const j = (foldT(az * 0.159 + wt * 0.00005 + o * 0.14 + k * 0.31) * 7.99) | 0;
+          const off = o * R0 * 0.2;
+          const sx = (hf.sX + cax * Rv + tx2 * off) * sc + hf.ox;
+          const sy = (hf.sY + say * Rv + ty2 * off) * sc + hf.oy;
+          const size = R0 * (o === 0 ? 0.85 : 0.6) * sc;
+          g2.globalAlpha = (o === 0 ? 0.2 : 0.11) * seep * wk.I * br * al *
+            hushAt((sx - hf.ox) / sc, (sy - hf.oy) / sc);
+          g2.drawImage(hf.ispr[j], sx - size / 2, sy - size / 2, size, size);
+        }
+      }
     }
     if (presI > 0.02) {
       const idx = (pht * 11) | 0;
@@ -1075,8 +1231,20 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
       const s2 = hf.msz[i] * sc * persp;
       g2.drawImage(hf.mspr[hf.mhue[i]], sx - s2 / 2, sy - s2 / 2, s2, s2);
     }
+    // — the feather, painted LAST over everything: the frame never guillotines the
+    //   mass — where it exceeds the window, its light dies into the room's own black
+    //   before the straight edge (the per-vertex falloff does the organic first pass;
+    //   this catches uniform-alpha strokes and sprite blooms crossing the border) —
     g2.globalCompositeOperation = 'source-over';
     g2.globalAlpha = 1;
+    g2.fillStyle = hf.fadeT;
+    g2.fillRect(0, 0, fieldCanvas.width, hf.fE);
+    g2.fillStyle = hf.fadeB;
+    g2.fillRect(0, fieldCanvas.height - hf.fE, fieldCanvas.width, hf.fE);
+    g2.fillStyle = hf.fadeL;
+    g2.fillRect(0, 0, hf.fE, fieldCanvas.height);
+    g2.fillStyle = hf.fadeR;
+    g2.fillRect(fieldCanvas.width - hf.fE, 0, hf.fE, fieldCanvas.height);
     g2.lineWidth = 1;
   };
 
@@ -1176,8 +1344,8 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     for (let v = wvN - 1; v >= 0; v--) {
       if (now - wvT0[v] >= 1700) {
         wvN--;
-        wvX[v] = wvX[wvN]; wvY[v] = wvY[wvN]; wvT0[v] = wvT0[wvN];
-        wvAmp[v] = wvAmp[wvN]; wvHue[v] = wvHue[wvN];
+        wvX[v] = wvX[wvN]; wvY[v] = wvY[wvN]; wvZ[v] = wvZ[wvN]; wvT0[v] = wvT0[wvN];
+        wvAmp[v] = wvAmp[wvN]; wvHue[v] = wvHue[wvN]; wvChimed[v] = wvChimed[wvN];
       }
     }
     hfDraw(now, false);
@@ -1288,7 +1456,7 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
       coreSetLvl = coreRingN;
       coreRingT0 = now;
       coreFlare = Math.min(2, coreFlare + 1.2);
-      hfSpawnWave(hDirWx, hDirWy, hDirWz, 0.5 + 0.12 * coreRingN);
+      hfSpawnWave(hDirWx, hDirWy, hDirWz, 0.42 + 0.1 * coreRingN);
       wordChime();
     }
   };
@@ -1506,10 +1674,12 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     if (!keyBtn || on === keyLive) return;
     keyLive = on;
     if (on && !hf) {
-      // pre-build the organism at idle — entry must never pay the parse under the click
+      // pre-build the mass at idle — entry must never pay the parse under the click.
+      // Guarded: if the visitor is ALREADY inside when this fires (opened within the
+      // idle window), a resize here would wipe the reduced-motion composed frame —
+      // buildField() no-ops once hf exists and openRoom did its own resize.
       (window.requestIdleCallback || ((f) => setTimeout(f, 120)))(() => {
-        buildField();
-        hfResize();
+        if (!hf) buildField(); // buildField ends in hfResize()
       });
     }
     keyBtn.classList.toggle('facet-key--live', on);
