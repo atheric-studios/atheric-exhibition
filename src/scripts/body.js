@@ -364,6 +364,7 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
   const WV = 4;
   const wvX = new Float32Array(WV), wvY = new Float32Array(WV);
   const wvT0 = new Float32Array(WV), wvAmp = new Float32Array(WV), wvHue = new Float32Array(WV);
+  const wvZ = new Float32Array(WV); // waves live on the SURFACE: origin is a direction
   const wvSig = new Float32Array(WV), wvRad = new Float32Array(WV), wvEnv = new Float32Array(WV);
   const wvChimed = new Uint8Array(WV); // a wave chimes the core ONCE, as it washes the heart
   let wvN = 0;
@@ -372,36 +373,30 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     if (hf || !fieldCanvas || !hgeoEl || !fieldCanvas.getContext) return;
     const hg = fieldCanvas.getContext('2d');
     if (!hg) return;
-    const GW = +hgeoEl.getAttribute('data-w') || 1600;
-    const GH = +hgeoEl.getAttribute('data-h') || 1000;
+    // — THE ORGANISM (v5): the geometry is the unit-sphere surface — a data-verts table
+    //   of x y z triplets and index-wound faces (outward, so one screen-space cross
+    //   product is the backface cull AND the silhouette detector). Watertight by the
+    //   generator's midpoint welding. —
+    const vraw = (hgeoEl.getAttribute('data-verts') || '').trim().split(/\s+/).map(Number);
     const polys = hgeoEl.querySelectorAll('polygon');
     const T = polys.length;
-    if (!T) return;
-    // — weld: identical coordinate strings are one vertex (the generator guarantees the
-    //   strings match exactly for shared corners), so the mesh is watertight by parse —
-    const keyToIdx = new Map();
-    const bxA = [], byA = [];
+    const NV = (vraw.length / 3) | 0;
+    if (!T || !NV) return;
+    const n0x = new Float32Array(NV), n0y = new Float32Array(NV), n0z = new Float32Array(NV);
+    for (let i = 0; i < NV; i++) {
+      n0x[i] = vraw[i * 3];
+      n0y[i] = vraw[i * 3 + 1];
+      n0z[i] = vraw[i * 3 + 2];
+    }
     const ti = new Uint16Array(T * 3);
     const tfill = new Array(T);
     for (let i = 0; i < T; i++) {
       const pg = polys[i];
-      const pts = pg.getAttribute('points').trim().split(' ');
-      for (let e = 0; e < 3; e++) {
-        let vi = keyToIdx.get(pts[e]);
-        if (vi === undefined) {
-          vi = bxA.length;
-          keyToIdx.set(pts[e], vi);
-          const c = pts[e].split(',');
-          bxA.push(+c[0]);
-          byA.push(+c[1]);
-        }
-        ti[i * 3 + e] = vi;
-      }
+      const ix = (pg.getAttribute('data-i') || '0 0 0').split(' ');
+      ti[i * 3] = +ix[0]; ti[i * 3 + 1] = +ix[1]; ti[i * 3 + 2] = +ix[2];
       const d = (pg.getAttribute('data-d') || '8 8 11').split(' ');
       tfill[i] = 'rgb(' + d[0] + ',' + d[1] + ',' + d[2] + ')';
     }
-    const NV = bxA.length;
-    const bx = Float32Array.from(bxA), by = Float32Array.from(byA);
     // — unique seams (shared edges once) + full edge↔facet ADJACENCY: the core is built
     //   FROM this mesh (facets recruited, seams continuous), so every edge knows its one
     //   or two facets and every facet its three edges —
@@ -429,12 +424,19 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     const NE = eaA.length;
     const ea = Uint16Array.from(eaA), ebb = Uint16Array.from(ebA);
     const et1 = Int16Array.from(et1A), et2 = Int16Array.from(et2A);
-    // facet centroids (field units) — the core's growth, burn and feed all reason on them
-    const tcx = new Float32Array(T), tcy = new Float32Array(T);
+    // facet centroid DIRECTIONS (unit-ish) — growth, burn and feed reason on the surface
+    const tdx = new Float32Array(T), tdy = new Float32Array(T), tdz = new Float32Array(T);
     for (let i = 0; i < T; i++) {
-      tcx[i] = (bxA[ti[i * 3]] + bxA[ti[i * 3 + 1]] + bxA[ti[i * 3 + 2]]) / 3;
-      tcy[i] = (byA[ti[i * 3]] + byA[ti[i * 3 + 1]] + byA[ti[i * 3 + 2]]) / 3;
+      let cx2 = (n0x[ti[i * 3]] + n0x[ti[i * 3 + 1]] + n0x[ti[i * 3 + 2]]) / 3;
+      let cy2 = (n0y[ti[i * 3]] + n0y[ti[i * 3 + 1]] + n0y[ti[i * 3 + 2]]) / 3;
+      let cz2 = (n0z[ti[i * 3]] + n0z[ti[i * 3 + 1]] + n0z[ti[i * 3 + 2]]) / 3;
+      const l = Math.hypot(cx2, cy2, cz2) || 1;
+      tdx[i] = cx2 / l; tdy[i] = cy2 / l; tdz[i] = cz2 / l;
     }
+    // the heart's pole — a body-space direction sitting almost on the rotation axis, so
+    // the body you grow stays facing the visitor while the surface streams around it
+    const h0l = Math.hypot(0.38, -0.2, 0.92);
+    const h0x = 0.38 / h0l, h0y = -0.2 / h0l, h0z = 0.92 / h0l;
     // the body's state on the field's OWN facets — no second mesh exists
     const tState = new Uint8Array(T); // 0 field · 1 recruited (part of the body)
     const tBorn = new Float32Array(T);
@@ -445,29 +447,28 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     const ehd = new Float32Array(NE); // edge midpoint → heart distance (set at resize)
     const frac = (v) => v - Math.floor(v);
     const hash = (x, y) => frac(Math.sin(x * 12.9898 + y * 78.233) * 43758.5453);
-    // — per-vertex character: a smooth depth field (parallax shears, never tears), a
-    //   travelling drift phase (the swell crosses the room), an amplitude of its own —
-    const vz = new Float32Array(NV), vphx = new Float32Array(NV), vphy = new Float32Array(NV);
-    const vamp = new Float32Array(NV);
-    const bpx = new Float32Array(NV), bpy = new Float32Array(NV); // base canvas px (resize)
-    const vpx = new Float32Array(NV), vpy = new Float32Array(NV); // living canvas px (frame)
+    // — per-vertex character: a phase and amplitude for the surface's micro-shimmer
+    //   (the metaball lobes carry the macro deformation) —
+    const vph = new Float32Array(NV), vamp = new Float32Array(NV);
+    const vpx = new Float32Array(NV), vpy = new Float32Array(NV); // canvas px (per frame)
+    const vfz = new Float32Array(NV); // world-normal z (facing) — light modelling + limb
     const vlr = new Float32Array(NV), vlg = new Float32Array(NV), vlb = new Float32Array(NV);
     for (let i = 0; i < NV; i++) {
-      const x = bx[i], y = by[i], f1 = hash(x, y);
-      let z = 0.5 + 0.28 * Math.sin(x * 0.0017 + 0.9) * Math.sin(y * 0.0023 + 2.1) +
-        0.22 * Math.sin((x - y) * 0.0011);
-      vz[i] = z < 0 ? 0 : z > 1 ? 1 : z;
-      vphx[i] = x * 0.006 + f1 * 1.9;
-      vphy[i] = y * 0.0052 + f1 * 4.4;
-      vamp[i] = 8.5 + 4.5 * f1;
+      const f1 = hash(n0x[i] * 91.7 + 3.1, n0y[i] * 77.3 + n0z[i] * 31.7);
+      vph[i] = f1 * 6.283;
+      vamp[i] = 0.006 + 0.008 * f1; // radial shimmer, fractions of R0
     }
-    // — per-seam character: nearer seams stroke wider; every seam keeps its own jitter —
+    // — per-seam character: width + jitter; ehd = ANGULAR distance (1 − dot) from the
+    //   seam's midpoint to the heart pole, in BODY space — constant forever —
     const ew = new Float32Array(NE), ej = new Float32Array(NE);
     for (let i = 0; i < NE; i++) {
-      const zm = (vz[ea[i]] + vz[ebb[i]]) * 0.5;
-      const f = hash(bx[ea[i]] + 3.7, by[ebb[i]] + 9.1);
-      ew[i] = (4.7 - 2.2 * zm) * (0.78 + 0.5 * f);
+      const f = hash(n0x[ea[i]] * 57.1 + 3.7, n0y[ebb[i]] * 43.3 + 9.1);
+      ew[i] = 3.6 * (0.78 + 0.5 * f);
       ej[i] = 0.7 + 0.55 * f;
+      let mx2 = (n0x[ea[i]] + n0x[ebb[i]]) / 2, my2 = (n0y[ea[i]] + n0y[ebb[i]]) / 2;
+      let mz2 = (n0z[ea[i]] + n0z[ebb[i]]) / 2;
+      const l = Math.hypot(mx2, my2, mz2) || 1;
+      ehd[i] = 1 - (mx2 * h0x + my2 * h0y + mz2 * h0z) / l;
     }
     // — the light sprites: radial glows rastered ONCE (no per-frame gradients, no filters) —
     const mkGlow = (r, g2, b, px) => {
@@ -482,53 +483,67 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
       cg.fillRect(0, 0, px, px);
       return c;
     };
-    // the three presences — the movements' own stations; periwinkle inked up to read on black
+    // the three presences — lights that ORBIT the organism (unit directions, slow
+    //   incommensurate paths; behind the body they dim and pass BEHIND the limb).
+    //   W = angular width of the light's fall on the surface; periwinkle inked up.
     const wisps = [
-      { r: 255, g: 46, b: 136, wr: 1, wg: 0.180, wb: 0.533, R: 330, I: 0.78, spr: mkGlow(255, 46, 136, 256) },
-      { r: 255, g: 158, b: 46, wr: 1, wg: 0.620, wb: 0.180, R: 300, I: 0.7, spr: mkGlow(255, 158, 46, 256) },
-      { r: 95, g: 123, b: 255, wr: 0.373, wg: 0.482, wb: 1, R: 355, I: 1.05, spr: mkGlow(95, 123, 255, 256) },
+      { wr: 1, wg: 0.180, wb: 0.533, W: 0.5, I: 0.85, spr: mkGlow(255, 46, 136, 256) },
+      { wr: 1, wg: 0.620, wb: 0.180, W: 0.44, I: 0.75, spr: mkGlow(255, 158, 46, 256) },
+      { wr: 0.373, wg: 0.482, wb: 1, W: 0.54, I: 1.1, spr: mkGlow(95, 123, 255, 256) },
     ];
-    const wx = new Float32Array(3), wy = new Float32Array(3);
+    const wx = new Float32Array(3), wy = new Float32Array(3), wz = new Float32Array(3);
     // the hand's light takes the room's hue — twelve stations along Clara's ramp
     const pspr = [];
     for (let i = 0; i < 12; i++) {
       const c = candyAt(i / 11);
       pspr.push(mkGlow(c[0] | 0, c[1] | 0, c[2] | 0, 256));
     }
-    // — the motes: candy dust rising like incense —
+    // — the motes: candy dust ORBITING the organism in tilted shells (each mote keeps an
+    //   orthonormal basis u,w of its orbital plane; front/back split at draw time) —
     const NM = 64;
-    const mx = new Float32Array(NM), my = new Float32Array(NM), msp = new Float32Array(NM);
-    const mph = new Float32Array(NM), msw = new Float32Array(NM), mtw = new Float32Array(NM);
-    const msz = new Float32Array(NM);
+    const mux = new Float32Array(NM), muy = new Float32Array(NM), muz = new Float32Array(NM);
+    const mwx = new Float32Array(NM), mwy = new Float32Array(NM), mwz = new Float32Array(NM);
+    const mph = new Float32Array(NM), msp = new Float32Array(NM), msh = new Float32Array(NM);
+    const mtw = new Float32Array(NM), msz = new Float32Array(NM);
     const mhue = new Uint8Array(NM);
     const mspr = [mkGlow(255, 92, 164, 40), mkGlow(255, 171, 77, 40), mkGlow(143, 163, 255, 40)];
     for (let i = 0; i < NM; i++) {
       const f = hash(i * 17.3 + 4.1, i * 9.7 + 1.3), f2 = hash(i * 5.9 + 8.8, i * 13.1 + 3.2);
-      mx[i] = -60 + f * (GW + 120);
-      my[i] = -60 + f2 * (GH + 120);
-      msp[i] = 12 + f * 14;
+      const f3 = hash(i * 7.7 + 2.9, i * 11.3 + 6.1);
+      // a random orbital axis → u,w span its plane
+      let axx = f - 0.5, axy = f2 - 0.5, axz = f3 - 0.5;
+      let l = Math.hypot(axx, axy, axz) || 1;
+      axx /= l; axy /= l; axz /= l;
+      let ux2 = -axy, uy2 = axx, uz2 = 0;
+      l = Math.hypot(ux2, uy2, uz2);
+      if (l < 0.1) { ux2 = 1; uy2 = 0; uz2 = 0; l = 1; }
+      ux2 /= l; uy2 /= l; uz2 /= l;
+      mux[i] = ux2; muy[i] = uy2; muz[i] = uz2;
+      mwx[i] = axy * uz2 - axz * uy2;
+      mwy[i] = axz * ux2 - axx * uz2;
+      mwz[i] = axx * uy2 - axy * ux2;
       mph[i] = f2 * 6.283;
-      msw[i] = 7 + f * 12;
+      msp[i] = (0.00004 + f * 0.00006) * (f3 < 0.5 ? 1 : -1); // rad/ms, both directions
+      msh[i] = 1.1 + f * 0.55; // shell radius, ×R0
       mtw[i] = 0.0008 + f2 * 0.0009;
-      msz[i] = 2.1 + f * 2.6;
+      msz[i] = 5 + f * 6; // px-ish at scale 1
       mhue[i] = i % 3;
     }
     const act = new Uint8Array(T), eact = new Uint8Array(NE);
+    const tFront = new Uint8Array(T); // per-frame facing (screen-space winding)
     // the sparks — transient seam ignitions riding the ambient light (decayed per frame)
     const esprk = new Float32Array(NE);
     hf = {
-      esprk,
-      hg, GW, GH, T, NV, NE, ti, tfill, bx, by, bpx, bpy, vpx, vpy, vz, vphx, vphy, vamp,
-      vlr, vlg, vlb, ea, eb: ebb, ew, ej, wisps, wx, wy, pspr,
-      NM, mx, my, msp, mph, msw, mtw, msz, mhue, mspr, act, eact,
-      // the core's fabric — the field's OWN adjacency and body state (no second mesh)
-      et1, et2, tedge, tcx, tcy, tState, tBorn, tDepth, tMolt, tMoltW, tGlass, bodyList,
-      vPull, vPullT, ehd,
+      esprk, tFront,
+      hg, T, NV, NE, ti, tfill, n0x, n0y, n0z, vph, vamp, vpx, vpy, vfz,
+      vlr, vlg, vlb, ea, eb: ebb, ew, ej, wisps, wx, wy, wz, pspr,
+      NM, mux, muy, muz, mwx, mwy, mwz, mph, msp, msh, mtw, msz, mhue, mspr, act, eact,
+      // the core's fabric — the surface's OWN adjacency and body state (no second mesh)
+      et1, et2, tedge, tdx, tdy, tdz, h0x, h0y, h0z,
+      tState, tBorn, tDepth, tMolt, tMoltW, tGlass, bodyList, vPull, vPullT, ehd,
       scale: 1, ox: 0, oy: 0, dpr: 1, coreW: 1,
-      // the visible window in field units (set at resize) — the presences wander THIS room,
-      // not the abstract stage, so a narrow crop (phones) is never left dark
-      cX: 800, cY: 500, aX: 800, aY: 500, rest: [[430, 330], [1190, 620], [760, 830]],
-      hX: 800, hY: 350, // the heart (set at resize)
+      cX: 800, cY: 500, aX: 800, aY: 500,
+      sX: 800, sY: 360, R0: 250, // the organism's screen seat + radius (set at resize)
     };
     hfResize();
   };
@@ -539,51 +554,22 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     hf.dpr = Math.min(devicePixelRatio || 1, 1.5);
     fieldCanvas.width = Math.round(w * hf.dpr);
     fieldCanvas.height = Math.round(h * hf.dpr);
-    hf.scale = Math.max(fieldCanvas.width / hf.GW, fieldCanvas.height / hf.GH); // cover
-    hf.ox = (fieldCanvas.width - hf.GW * hf.scale) / 2;
-    hf.oy = (fieldCanvas.height - hf.GH * hf.scale) / 2;
+    // the abstract 1600×1000 stage remains the unit frame for screen math (cover-fit)
+    hf.scale = Math.max(fieldCanvas.width / 1600, fieldCanvas.height / 1000);
+    hf.ox = (fieldCanvas.width - 1600 * hf.scale) / 2;
+    hf.oy = (fieldCanvas.height - 1000 * hf.scale) / 2;
     hf.coreW = Math.max(1, 1.25 * hf.dpr);
-    // the visible window in field units — the cover crop this viewport actually shows
     hf.cX = (fieldCanvas.width / 2 - hf.ox) / hf.scale;
     hf.cY = (fieldCanvas.height / 2 - hf.oy) / hf.scale;
     hf.aX = fieldCanvas.width / 2 / hf.scale;
     hf.aY = fieldCanvas.height / 2 / hf.scale;
-    // the heart — the body organizes in the upper centre (the words keep the lower band;
-    // CSS pads the column below its reach). The body is field facets, in FIELD units.
-    hf.hX = hf.cX;
-    hf.hY = hf.cY - hf.aY * 0.42;
-    // every seam's distance to the heart — the feeding flow's clock (it streams inward)
-    for (let e = 0; e < hf.NE; e++) {
-      const mx2 = (hf.bx[hf.ea[e]] + hf.bx[hf.eb[e]]) / 2 - hf.hX;
-      const my2 = (hf.by[hf.ea[e]] + hf.by[hf.eb[e]]) / 2 - hf.hY;
-      hf.ehd[e] = Math.hypot(mx2, my2);
-    }
-    // reduced motion's rest stations sit inside the same window, asymmetric — never an emblem
-    hf.rest = [
-      [hf.cX - hf.aX * 0.58, hf.cY - hf.aY * 0.38],
-      [hf.cX + hf.aX * 0.6, hf.cY + hf.aY * 0.2],
-      [hf.cX - hf.aX * 0.06, hf.cY + hf.aY * 0.66],
-    ];
-    for (let i = 0; i < hf.NV; i++) {
-      hf.bpx[i] = hf.bx[i] * hf.scale + hf.ox;
-      hf.bpy[i] = hf.by[i] * hf.scale + hf.oy;
-    }
-    // cull to the viewport once per resize — off-screen margin facets never cost a path
-    const m = 90 * hf.dpr, cw = fieldCanvas.width + m, ch = fieldCanvas.height + m;
-    for (let t = 0; t < hf.T; t++) {
-      const a = hf.ti[t * 3], b = hf.ti[t * 3 + 1], c = hf.ti[t * 3 + 2];
-      const x0 = Math.min(hf.bpx[a], hf.bpx[b], hf.bpx[c]);
-      const x1 = Math.max(hf.bpx[a], hf.bpx[b], hf.bpx[c]);
-      const y0 = Math.min(hf.bpy[a], hf.bpy[b], hf.bpy[c]);
-      const y1 = Math.max(hf.bpy[a], hf.bpy[b], hf.bpy[c]);
-      hf.act[t] = x1 > -m && x0 < cw && y1 > -m && y0 < ch ? 1 : 0;
-    }
-    for (let e = 0; e < hf.NE; e++) {
-      const a = hf.ea[e], b = hf.eb[e];
-      const x0 = Math.min(hf.bpx[a], hf.bpx[b]), x1 = Math.max(hf.bpx[a], hf.bpx[b]);
-      const y0 = Math.min(hf.bpy[a], hf.bpy[b]), y1 = Math.max(hf.bpy[a], hf.bpy[b]);
-      hf.eact[e] = x1 > -m && x0 < cw && y1 > -m && y0 < ch ? 1 : 0;
-    }
+    // the organism's seat: upper centre, the words keep the lower band; its radius fits
+    // the narrower of the window's halves — one body, dominant but never cropped
+    hf.sX = hf.cX;
+    hf.sY = hf.cY - hf.aY * 0.44;
+    hf.R0 = Math.min(hf.aX * 0.76, hf.aY * 0.48);
+    hf.act.fill(1); // facing is per-frame now — no viewport cull exists on a sphere
+    hf.eact.fill(1);
   };
 
   const foldT = (u) => {
@@ -591,205 +577,270 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     return u > 1 ? 2 - u : u;
   };
 
-  // one frame of the room — still=true paints the composed reduced-motion state
+  // ── one frame of the ORGANISM — still=true paints the composed reduced-motion state ──────
+  // The field is the surface of one evolving, warped sphere (v5): a jittered icosphere,
+  // deformed per frame by travelling metaball lobes + breath + the hand's bump + the
+  // body's raised crust, rotated about an axis tilted toward the visitor (the heart pole
+  // rides the axis, so the grown body stays facing you while the surface streams around
+  // it), projected with gentle perspective. Facing is ONE screen-space cross per face —
+  // and edges whose two faces straddle front/back ARE the silhouette: the thin-film
+  // refraction lives on that living polyline. All light is angular (dot products on
+  // world normals), modelled by facing (limb darkening makes the ball a ball).
+  const hM = new Float32Array(9); // this frame's rotation (shared with event-time code)
+  let hDirWx = 0, hDirWy = -0.2, hDirWz = 0.98; // the heart pole, world (per frame)
+  const PD = [0, 0, 1]; // scratch — the hand's surface direction (presDirInto fills it)
+  const presDirInto = (out) => {
+    // the damped cursor maps to the nearest surface point (or clamps to the rim)
+    const R0 = hf.R0;
+    let dx = (hpX - hf.sX) / R0, dy = (hpY - hf.sY) / R0;
+    const r2 = dx * dx + dy * dy;
+    if (r2 < 0.99) {
+      out[0] = dx; out[1] = dy; out[2] = Math.sqrt(1 - r2);
+    } else {
+      const l = Math.sqrt(r2) || 1;
+      out[0] = (dx / l) * 0.995; out[1] = (dy / l) * 0.995; out[2] = 0.0999;
+    }
+  };
   const hfDraw = (now, still) => {
     if (!hf) return;
     const g2 = hf.hg, sc = hf.scale;
-    const al = still ? 1 : sstep((now - hfT0) / 2000); // the room WAKES over the first breaths
+    const al = still ? 1 : sstep((now - hfT0) / 2000); // the room WAKES over first breaths
     const br = still ? 1 : 1 + 0.22 * Math.sin(now * 0.00106); // the global breath (~5.9s)
-    const wt = still ? 0 : now; // the edge warp's clock — frozen composed under reduced motion
-    // — the presences cross the room on slow incommensurate orbits (scaled to the VISIBLE
-    //   window, so a narrow crop still hosts all three); a held press GATHERS them —
+    const wt = still ? 0 : now;
+    const R0 = hf.R0;
+    // — the rotation: slow turn + gentle axis precession + a lean toward the hand —
+    const ax0 = 0.3 + 0.1 * Math.sin(wt * 0.00006);
+    const ay0 = -0.25 + 0.1 * Math.cos(wt * 0.00005);
+    let l = Math.hypot(ax0, ay0, 0.92);
+    const axx = ax0 / l, axy = ay0 / l, axz = 0.92 / l;
+    const th = wt * 0.00035 + 0.55; // ~1 revolution / 3 minutes
+    const ct = Math.cos(th), st = Math.sin(th), omc = 1 - ct;
+    const m00 = ct + axx * axx * omc, m01 = axx * axy * omc - axz * st, m02 = axx * axz * omc + axy * st;
+    const m10 = axy * axx * omc + axz * st, m11 = ct + axy * axy * omc, m12 = axy * axz * omc - axx * st;
+    const m20 = axz * axx * omc - axy * st, m21 = axz * axy * omc + axx * st, m22 = ct + axz * axz * omc;
+    const rx = hLeanY * 0.08, ry = hLeanX * 0.1; // the body tips a few degrees to the hand
+    const cyr = Math.cos(ry), syr = Math.sin(ry), cxr = Math.cos(rx), sxr = Math.sin(rx);
+    const l00 = cyr, l01 = 0, l02 = syr;
+    const l10 = sxr * syr, l11 = cxr, l12 = -sxr * cyr;
+    const l20 = -cxr * syr, l21 = sxr, l22 = cxr * cyr;
+    const a00 = l00 * m00 + l02 * m20, a01 = l00 * m01 + l02 * m21, a02 = l00 * m02 + l02 * m22;
+    const a10 = l10 * m00 + l11 * m10 + l12 * m20, a11 = l10 * m01 + l11 * m11 + l12 * m21, a12 = l10 * m02 + l11 * m12 + l12 * m22;
+    const a20 = l20 * m00 + l21 * m10 + l22 * m20, a21 = l20 * m01 + l21 * m11 + l22 * m21, a22 = l20 * m02 + l21 * m12 + l22 * m22;
+    hM[0] = a00; hM[1] = a01; hM[2] = a02;
+    hM[3] = a10; hM[4] = a11; hM[5] = a12;
+    hM[6] = a20; hM[7] = a21; hM[8] = a22;
+    hDirWx = a00 * hf.h0x + a01 * hf.h0y + a02 * hf.h0z;
+    hDirWy = a10 * hf.h0x + a11 * hf.h0y + a12 * hf.h0z;
+    hDirWz = a20 * hf.h0x + a21 * hf.h0y + a22 * hf.h0z;
+    // — the metaball lobes: three soft swells travelling the surface —
+    let lx1 = Math.sin(wt * 0.00011 + 1.2), ly1 = Math.cos(wt * 0.00009 + 0.4), lz1 = Math.sin(wt * 0.00007 + 2.6);
+    let lx2 = Math.cos(wt * 0.00008 + 4.0), ly2 = Math.sin(wt * 0.00012 + 1.9), lz2 = Math.cos(wt * 0.00006 + 0.7);
+    let lx3 = Math.sin(wt * 0.00006 + 3.3), ly3 = Math.sin(wt * 0.0001 + 5.1), lz3 = Math.cos(wt * 0.00011 + 1.5);
+    l = Math.hypot(lx1, ly1, lz1) || 1; lx1 /= l; ly1 /= l; lz1 /= l;
+    l = Math.hypot(lx2, ly2, lz2) || 1; lx2 /= l; ly2 /= l; lz2 /= l;
+    l = Math.hypot(lx3, ly3, lz3) || 1; lx3 /= l; ly3 /= l; lz3 /= l;
+    const A1 = 0.085 * (0.6 + 0.4 * Math.sin(wt * 0.00013));
+    const A2 = 0.07 * (0.6 + 0.4 * Math.cos(wt * 0.00017));
+    const A3 = 0.06;
+    // — the hand's surface direction (damped screen point → sphere) —
+    presDirInto(PD);
+    const presDx = PD[0], presDy = PD[1], presDz = PD[2];
+    // — the presences: unit dirs orbiting the body (rest stations under RM) —
     if (still) {
-      for (let k = 0; k < 3; k++) { hf.wx[k] = hf.rest[k][0]; hf.wy[k] = hf.rest[k][1]; }
+      hf.wx[0] = -0.62; hf.wy[0] = -0.35; hf.wz[0] = 0.7;
+      hf.wx[1] = 0.7; hf.wy[1] = 0.25; hf.wz[1] = 0.66;
+      hf.wx[2] = -0.05; hf.wy[2] = 0.75; hf.wz[2] = 0.65;
+      for (let k = 0; k < 3; k++) {
+        const wl = Math.hypot(hf.wx[k], hf.wy[k], hf.wz[k]) || 1;
+        hf.wx[k] /= wl; hf.wy[k] /= wl; hf.wz[k] /= wl;
+      }
     } else {
-      // assertive weather: the presences cross the room in ~25–40 s, not adrift in an hour
-      hf.wx[0] = hf.cX + hf.aX * 0.78 * Math.sin(now * 0.00019 + 0.7);
-      hf.wy[0] = hf.cY + hf.aY * 0.77 * Math.sin(now * 0.000245 + 2.0);
-      hf.wx[1] = hf.cX + hf.aX * 0.82 * Math.sin(now * 0.00015 + 3.9);
-      hf.wy[1] = hf.cY + hf.aY * 0.8 * Math.sin(now * 0.00021 + 4.6);
-      hf.wx[2] = hf.cX + hf.aX * 0.74 * Math.sin(now * 0.00017 + 1.9);
-      hf.wy[2] = hf.cY + hf.aY * 0.72 * Math.sin(now * 0.00014 + 0.3);
-      if (hGather > 0.001) {
-        for (let k = 0; k < 3; k++) {
-          hf.wx[k] += hGather * (hpX - hf.wx[k]);
-          hf.wy[k] += hGather * (hpY - hf.wy[k]);
+      for (let k = 0; k < 3; k++) {
+        const sp1 = k === 0 ? 0.00019 : k === 1 ? 0.00015 : 0.00017;
+        const sp2 = k === 0 ? 0.000245 : k === 1 ? 0.00021 : 0.00014;
+        const ph = k === 0 ? 0.7 : k === 1 ? 3.9 : 1.9;
+        hf.wx[k] = Math.sin(now * sp1 + ph);
+        hf.wy[k] = Math.sin(now * sp2 + ph * 2.1) * 0.85;
+        hf.wz[k] = Math.cos(now * sp1 + ph);
+        if (hGather > 0.001) {
+          // a held press GATHERS the presences toward the hand's surface point
+          hf.wx[k] += hGather * (presDx - hf.wx[k]);
+          hf.wy[k] += hGather * (presDy - hf.wy[k]);
+          hf.wz[k] += hGather * (presDz - hf.wz[k]);
         }
+        const wl = Math.hypot(hf.wx[k], hf.wy[k], hf.wz[k]) || 1;
+        hf.wx[k] /= wl; hf.wy[k] /= wl; hf.wz[k] /= wl;
       }
     }
     // presence light colour — the room's hue at this hour (one sample, the CC scratch)
     const pht = foldT(now * 0.000021 + hpX * 0.0005);
     const pc = candyAt(pht);
     const pcr = pc[0] / 255, pcg = pc[1] / 255, pcb = pc[2] / 255;
-    // the heart as a light source — the room brightens as the body grows; its hue is the
-    // current era's, so the whole field keeps the body's hour
-    let hcr = 0, hcg = 0, hcb = 0, heartR2 = 0, heartI = 0, eraT = 0.06;
+    // the heart as a light source — the body's own hour on its own surface
+    let hcr = 0, hcg = 0, hcb = 0, heartI = 0, eraT = 0.06;
     if (bodyN) {
       eraT = still ? 0.06 : foldT((now - coreBorn) * 0.000019 + 0.03);
       const hc = candyAt(eraT);
       hcr = hc[0] / 255; hcg = hc[1] / 255; hcb = hc[2] / 255;
-      const hR = bodyR * 1.6 + 150;
-      heartR2 = hR * hR;
-      heartI = (0.2 + 0.5 * (bodyN / KB) + 0.35 * coreFlare) * al;
+      heartI = (0.22 + 0.5 * (bodyN / KB) + 0.35 * coreFlare) * al;
     }
     const presI = still ? hRmPress : hpI;
-    const presR = 250 * (1 + 0.9 * hCharge), presIk = (0.8 + 1.3 * hCharge) * presI * al;
-    const partR = 205 * (1 + 0.85 * hCharge);
-    const partP = 12.5 * (1 + 1.6 * hCharge) * (still ? hRmPress : Math.max(presI, 0.001));
-    const t1 = wt * 0.00062, t2 = wt * 0.00052; // livelier swell (still frozen under RM)
-    // — the edge of the room: the field dissolves into the void before the canvas boundary.
-    //   A WARPED falloff in field units (never a straight isoline): each vertex's distance
-    //   to the visible window's edge is bent by travelling noise, and its LIGHT dies across
-    //   the falloff — the collar (drawn last) sinks the remaining paint to clean black. —
-    const fx0 = hf.cX - hf.aX, fx1 = hf.cX + hf.aX;
-    const fy0 = hf.cY - hf.aY, fy1 = hf.cY + hf.aY;
-    const eSpan = Math.min(hf.aX, hf.aY) * 0.34; // the light's dying breadth
-    // per-wave invariants hoisted out of the vertex loop (age, ring radius, envelope)
+    const presW = 0.42 * (1 + 0.7 * hCharge);
+    const presIk = (0.85 + 1.3 * hCharge) * presI * al;
+    const bumpK = 0.06 * (1 + 1.1 * hCharge) * (still ? hRmPress : Math.max(presI, 0.001));
+    const kP = 1 / (3.4 * R0);
+    const shim = wt * 0.0012;
+    // per-wave invariants — waves live in ANGULAR (1−dot) space on the surface
     for (let v = 0; v < wvN; v++) {
       const age = (now - wvT0[v]) / 1700;
-      wvSig[v] = 85 + 70 * age;
-      wvRad[v] = age * 1955; // 1150 units/s across the 1.7 s life
+      wvSig[v] = 0.1 + 0.1 * age;
+      wvRad[v] = age * 2.3;
       wvEnv[v] = age < 1 ? Math.pow(1 - age, 1.8) * wvAmp[v] : 0;
     }
-    // — the vertex pass: breathe, shear, part; then gather every light into r/g/b —
+    // — the vertex pass: rotate, deform, project; then gather every light —
     for (let i = 0; i < hf.NV; i++) {
-      const X = hf.bx[i], Y = hf.by[i];
-      let ox = 0, oy = 0;
-      // distance to the visible boundary, shared by the rim's warp, its refraction and
-      // the edge falloff below
-      let edB = X - fx0;
-      if (fx1 - X < edB) edB = fx1 - X;
-      if (Y - fy0 < edB) edB = Y - fy0;
-      if (fy1 - Y < edB) edB = fy1 - Y;
-      const rimN = edB < eSpan ? 1 - (edB < 0 ? 0 : edB) / eSpan : 0;
-      if (!still) {
-        ox = hf.vamp[i] * Math.sin(t1 + hf.vphx[i]) + hLeanX * 24 * (0.55 - hf.vz[i]);
-        oy = hf.vamp[i] * 0.8 * Math.sin(t2 + hf.vphy[i]) + hLeanY * 17 * (0.55 - hf.vz[i]);
-        if (rimN > 0.02) {
-          // OPTICAL WARP at the dissolve — near the void the mesh itself smears
-          // tangentially, light bending through the meniscus (not just dimming)
-          ox += rimN * rimN * 9 * Math.sin(Y * 0.013 + wt * 0.00042 + X * 0.002);
-          oy += rimN * rimN * 7 * Math.sin(X * 0.011 - wt * 0.00036);
+      const bx0 = hf.n0x[i], by0 = hf.n0y[i], bz0 = hf.n0z[i];
+      const nx = a00 * bx0 + a01 * by0 + a02 * bz0;
+      const ny = a10 * bx0 + a11 * by0 + a12 * bz0;
+      const nz = a20 * bx0 + a21 * by0 + a22 * bz0;
+      let rr = 1 + (still ? 0 : 0.016 * Math.sin(wt * 0.00045));
+      let d = nx * lx1 + ny * ly1 + nz * lz1;
+      if (d > 0) { d *= d; rr += A1 * d * d; }
+      d = nx * lx2 + ny * ly2 + nz * lz2;
+      if (d > 0) { d *= d; rr += A2 * d * d; }
+      d = nx * lx3 + ny * ly3 + nz * lz3;
+      if (d > 0) { d *= d; rr += A3 * d * d; }
+      if (!still) rr += hf.vamp[i] * Math.sin(shim + hf.vph[i]);
+      if (bumpK > 0.002) {
+        const pd = nx * presDx + ny * presDy + nz * presDz;
+        if (pd > 0.55) {
+          const q = (pd - 0.55) / 0.45;
+          rr += bumpK * q * q; // the surface RISES where you look
         }
       }
-      if (partP > 0.02) {
-        const dxp = X - hpX, dyp = Y - hpY;
-        const d2 = dxp * dxp + dyp * dyp;
-        if (d2 < partR * partR) {
-          const d = Math.sqrt(d2) || 1;
-          let f = 1 - d / partR;
-          f *= f;
-          const push = partP * f;
-          ox += (dxp / d) * push;
-          oy += (dyp / d) * push;
-        }
-      }
-      // the condensation — recruited corners pull toward the heart, and because the mesh
-      // shares its vertices, the field around the body visibly bends with it (RM: the
-      // composed pull stands, breathless)
       const pl = hf.vPull[i];
-      if (pl > 0.004) {
-        const dxh = hf.hX - X, dyh = hf.hY - Y;
-        const dh = Math.hypot(dxh, dyh) || 1;
-        const pk = pl * 13 * (still ? 1 : 1 + 0.12 * Math.sin(now * 0.0011));
-        ox += (dxh / dh) * pk;
-        oy += (dyh / dh) * pk;
-      }
-      hf.vpx[i] = hf.bpx[i] + ox * sc;
-      hf.vpy[i] = hf.bpy[i] + oy * sc;
+      if (pl > 0.004) rr += pl * 0.05; // the body's raised crust
+      const R = R0 * rr;
+      const persp = 1 / (1 - nz * R * kP);
+      hf.vpx[i] = (hf.sX + nx * R * persp) * sc + hf.ox;
+      hf.vpy[i] = (hf.sY + ny * R * persp) * sc + hf.oy;
+      hf.vfz[i] = nz;
       let lr = 0, lg = 0, lb = 0;
       for (let k = 0; k < 3; k++) {
         const wk = hf.wisps[k];
-        const dx = X - hf.wx[k], dy = Y - hf.wy[k];
-        const d2 = dx * dx + dy * dy, R2 = wk.R * wk.R;
-        if (d2 < R2) {
-          let q = 1 - d2 / R2;
-          q *= q;
-          const s = wk.I * q * br * al;
-          lr += s * wk.wr; lg += s * wk.wg; lb += s * wk.wb;
+        const dd = nx * hf.wx[k] + ny * hf.wy[k] + nz * hf.wz[k];
+        const qq = 1 - (1 - dd) / wk.W;
+        if (qq > 0) {
+          const s2 = wk.I * qq * qq * br * al;
+          lr += s2 * wk.wr; lg += s2 * wk.wg; lb += s2 * wk.wb;
         }
       }
       if (presIk > 0.01) {
-        const dx = X - hpX, dy = Y - hpY;
-        const d2 = dx * dx + dy * dy, R2 = presR * presR;
-        if (d2 < R2) {
-          let q = 1 - d2 / R2;
-          q *= q;
-          const s = presIk * q;
-          lr += s * pcr; lg += s * pcg; lb += s * pcb;
+        const dd = nx * presDx + ny * presDy + nz * presDz;
+        const qq = 1 - (1 - dd) / presW;
+        if (qq > 0) {
+          const s2 = presIk * qq * qq;
+          lr += s2 * pcr; lg += s2 * pcg; lb += s2 * pcb;
         }
       }
       for (let v = 0; v < wvN; v++) {
         if (wvEnv[v] <= 0) continue;
-        const dx = X - wvX[v], dy = Y - wvY[v];
-        const d = Math.sqrt(dx * dx + dy * dy);
-        let q = (d - wvRad[v]) / wvSig[v];
+        const ad = 1 - (nx * wvX[v] + ny * wvY[v] + nz * wvZ[v]);
+        let q = (ad - wvRad[v]) / wvSig[v];
         if (q > -1 && q < 1) {
           q = 1 - q * q;
           q *= q;
           const env = wvEnv[v] * q;
-          const c = candyAt(foldT(d * 0.00085 + wvHue[v]));
+          const c = candyAt(foldT(ad * 0.8 + wvHue[v]));
           lr += env * (c[0] / 255); lg += env * (c[1] / 255); lb += env * (c[2] / 255);
         }
       }
       if (heartI > 0.01) {
-        const dx = X - hf.hX, dy = Y - hf.hY;
-        const d2 = dx * dx + dy * dy;
-        if (d2 < heartR2) {
-          let q = 1 - d2 / heartR2;
-          q *= q;
-          const s = heartI * q;
-          lr += s * hcr; lg += s * hcg; lb += s * hcb;
+        const dd = nx * hDirWx + ny * hDirWy + nz * hDirWz;
+        const qq = 1 - (1 - dd) / 0.6;
+        if (qq > 0) {
+          const s2 = heartI * qq * qq;
+          lr += s2 * hcr; lg += s2 * hcg; lb += s2 * hcb;
         }
       }
-      // THE UNIVERSAL LIFT — the luminous air: slow aurora PATCHES drift through the whole
-      // field (hue flowing along the ramp), so the mesh glimmers wherever the air is,
-      // with breathing troughs of quiet between — and the seam pass strokes only where
-      // there is genuinely light (the troughs are the draw budget)
-      const ambN = Math.sin(X * 0.004 + wt * 0.00016 + 1.2) *
-        Math.sin(Y * 0.0034 - wt * 0.00012 + 0.5);
+      // the luminous air — aurora patches sliding over the surface
+      const ambN = Math.sin(nx * 3.1 + wt * 0.00016 + 1.2) *
+        Math.sin(ny * 2.7 - wt * 0.00012 + 0.5);
       let amb = (0.032 + 0.1 * (0.5 + 0.5 * ambN)) * br * al;
-      // the air stays OUT of the body — inside, the only light is the body's own
-      // (vPull doubles as per-vertex body-ness; the silhouette needs the contrast)
-      if (pl > 0.02) amb *= Math.max(0.12, 1 - pl * 1.5);
-      const ca2 = candyAt(foldT(X * 0.00035 + Y * 0.00022 + wt * 0.000018));
+      if (pl > 0.02) amb *= Math.max(0.12, 1 - pl * 1.5); // the air stays out of the body
+      const ca2 = candyAt(foldT(nx * 0.3 + ny * 0.22 + wt * 0.000018));
       lr += amb * (ca2[0] / 255); lg += amb * (ca2[1] / 255); lb += amb * (ca2[2] / 255);
-      // the rim REFRACTS in colour — the thin-film vocabulary (the hero blob's own
-      // gold→magenta→blue→violet ramp) shifting through the meniscus where the field
-      // dies into the void: spectral bands riding the dissolve, alive, never a plain fade
-      if (rimN > 0.03) {
-        const ir = iridAt(foldT(edB * 0.0042 + hf.vz[i] * 0.35 + wt * 0.00007));
-        let ra = Math.sin(rimN * 3.14159);
+      // the limb band — thin-film refraction gathering toward the silhouette
+      if (nz < 0.38) {
+        const rim = 1 - (nz > 0 ? nz : 0) / 0.38;
+        const ir = iridAt(foldT(nx * 0.33 + ny * 0.26 + wt * 0.00007));
+        let ra = rim * (2 - rim); // rises to the very limb
         ra = ra * ra * 0.2 * br * al;
         lr += ra * (ir[0] / 255); lg += ra * (ir[1] / 255); lb += ra * (ir[2] / 255);
       }
-      // the light dies at the warped edge of the room — never along a straight isoline
-      let ed = edB + 26 * Math.sin(X * 0.011 + wt * 0.0002) * Math.sin(Y * 0.009 - wt * 0.00013);
-      let ef = ed / eSpan;
-      ef = ef < 0 ? 0 : ef > 1 ? 1 : ef;
-      ef = ef * ef * (3 - 2 * ef);
+      // limb darkening — the modelling that makes the ball a BALL
+      const lf = nz <= 0 ? 0.12 : 0.24 + 0.76 * (nz * 1.9 < 1 ? nz * 1.9 : 1);
+      lr *= lf; lg *= lf; lb *= lf;
       if (hHon) {
-        // the hush under the words — seams may glimmer beneath the type, never blaze
-        const hx = X < hHx0 ? hHx0 - X : X > hHx1 ? X - hHx1 : 0;
-        const hy = Y < hHy0 ? hHy0 - Y : Y > hHy1 ? Y - hHy1 : 0;
+        // the hush under the words (screen-space, unchanged law)
+        const sxf = (hf.vpx[i] - hf.ox) / sc, syf = (hf.vpy[i] - hf.oy) / sc;
+        const hx = sxf < hHx0 ? hHx0 - sxf : sxf > hHx1 ? sxf - hHx1 : 0;
+        const hy = syf < hHy0 ? hHy0 - syf : syf > hHy1 ? syf - hHy1 : 0;
         const hd = hx > hy ? hx : hy;
         if (hd < 180) {
           let hq = hd / 180;
           hq = hq * hq * (3 - 2 * hq);
-          ef *= 0.28 + 0.72 * hq;
+          const hu = 0.28 + 0.72 * hq;
+          lr *= hu; lg *= hu; lb *= hu;
         }
       }
-      hf.vlr[i] = lr * ef; hf.vlg[i] = lg * ef; hf.vlb[i] = lb * ef;
+      hf.vlr[i] = lr; hf.vlg[i] = lg; hf.vlb[i] = lb;
     }
-    // — paint. Base facets first (their own near-black — the only paint in the room) —
+    // — facing: one screen-space cross per face; silhouette edges fall out for free —
+    for (let t = 0; t < hf.T; t++) {
+      const a = hf.ti[t * 3], b = hf.ti[t * 3 + 1], c = hf.ti[t * 3 + 2];
+      const cross = (hf.vpx[b] - hf.vpx[a]) * (hf.vpy[c] - hf.vpy[a]) -
+        (hf.vpy[b] - hf.vpy[a]) * (hf.vpx[c] - hf.vpx[a]);
+      hf.tFront[t] = cross > 0 ? 1 : 0;
+    }
+    // — paint. The void, the far dust and far presences, then the body —
     g2.globalCompositeOperation = 'source-over';
     g2.globalAlpha = 1;
     g2.fillStyle = '#020202';
     g2.fillRect(0, 0, fieldCanvas.width, fieldCanvas.height);
+    g2.globalCompositeOperation = 'lighter';
+    // dust + presences BEHIND the limb (z < 0), dimmed — the body occludes them
+    for (let i = 0; i < hf.NM; i++) {
+      const ph = hf.mph[i];
+      const cph = Math.cos(ph), sph = Math.sin(ph);
+      const px3 = (hf.mux[i] * cph + hf.mwx[i] * sph) * hf.msh[i];
+      const py3 = (hf.muy[i] * cph + hf.mwy[i] * sph) * hf.msh[i];
+      const pz3 = (hf.muz[i] * cph + hf.mwz[i] * sph) * hf.msh[i];
+      if (pz3 >= 0) continue;
+      const persp = 1 / (1 - pz3 * R0 * kP);
+      const sx = (hf.sX + px3 * R0 * persp) * sc + hf.ox;
+      const sy = (hf.sY + py3 * R0 * persp) * sc + hf.oy;
+      const tw = still ? 0.5 : 0.5 + 0.5 * Math.sin(now * hf.mtw[i] + ph * 3.1);
+      g2.globalAlpha = (0.05 + 0.22 * tw * tw) * al;
+      const s2 = hf.msz[i] * sc * persp;
+      g2.drawImage(hf.mspr[hf.mhue[i]], sx - s2 / 2, sy - s2 / 2, s2, s2);
+    }
+    for (let k = 0; k < 3; k++) {
+      if (hf.wz[k] >= -0.05) continue;
+      const wk = hf.wisps[k];
+      const persp = 1 / (1 - hf.wz[k] * 1.06 * R0 * kP);
+      const sx = (hf.sX + hf.wx[k] * R0 * 1.06 * persp) * sc + hf.ox;
+      const sy = (hf.sY + hf.wy[k] * R0 * 1.06 * persp) * sc + hf.oy;
+      const size = R0 * 1.5 * sc * persp;
+      g2.globalAlpha = 0.16 * br * al;
+      g2.drawImage(wk.spr, sx - size / 2, sy - size / 2, size, size);
+    }
+    // the body's facets — front faces only; recruited facets wear the era's glass
+    g2.globalCompositeOperation = 'source-over';
+    g2.globalAlpha = 1;
     for (let t = 0; t < hf.T; t++) {
-      if (!hf.act[t]) continue;
+      if (!hf.tFront[t]) continue;
       const a = hf.ti[t * 3], b = hf.ti[t * 3 + 1], c = hf.ti[t * 3 + 2];
-      // a recruited facet wears the body's era-hued glass; the field keeps its own dark
       g2.fillStyle = hf.tState[t] ? hf.tGlass[t] : hf.tfill[t];
       g2.beginPath();
       g2.moveTo(hf.vpx[a], hf.vpy[a]);
@@ -798,17 +849,17 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
       g2.closePath();
       g2.fill();
     }
-    // — then LIGHT, strictly additive: face wash, seam halo + core, presences, motes —
+    // — then LIGHT, strictly additive: wash, molten body, seams, the heart, near dust —
     g2.globalCompositeOperation = 'lighter';
     g2.lineCap = 'round';
     for (let t = 0; t < hf.T; t++) {
-      if (!hf.act[t]) continue;
+      if (!hf.tFront[t]) continue;
       const a = hf.ti[t * 3], b = hf.ti[t * 3 + 1], c = hf.ti[t * 3 + 2];
       const r = (hf.vlr[a] + hf.vlr[b] + hf.vlr[c]) * 0.3333;
       const gg = (hf.vlg[a] + hf.vlg[b] + hf.vlg[c]) * 0.3333;
       const bb = (hf.vlb[a] + hf.vlb[b] + hf.vlb[c]) * 0.3333;
       const m2 = r > gg ? (r > bb ? r : bb) : (gg > bb ? gg : bb);
-      if (m2 < 0.065) continue; // the wash is for real light — the air alone rides seams
+      if (m2 < 0.065) continue;
       let a2 = m2 * 0.2;
       if (a2 > 0.17) a2 = 0.17;
       const inv = 255 / m2;
@@ -821,19 +872,17 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
       g2.closePath();
       g2.fill();
     }
-    // — the body's molten faces: newborn and re-melted cells BURN (era candy, additive),
-    //   cooling into the glass the base pass already paints beneath —
     if (!still) {
+      // the body's molten faces — newborn and re-melted cells burn (soft inner light;
+      // the hot seams carry the birth)
       for (let bi = 0; bi < bodyN; bi++) {
         const t = hf.bodyList[bi];
-        if (!hf.act[t]) continue;
+        if (!hf.tFront[t]) continue;
         const age = now - hf.tBorn[t];
         if (age >= 3000) continue;
         let m = 1 - age / 3000;
         m *= m;
         const a = hf.ti[t * 3], b = hf.ti[t * 3 + 1], c = hf.ti[t * 3 + 2];
-        // soft inner light only — the hot seams carry the birth (a flat molten pane
-        // reads as a glitch in a line-built room)
         g2.globalAlpha = Math.min(0.38, 0.42 * m) * al;
         g2.fillStyle = hf.tMolt[t];
         g2.beginPath();
@@ -844,27 +893,45 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
         g2.fill();
       }
     }
-    // — the seams. One loop, three natures: a seam OF the body (interior — circulation,
-    //   rings, molten spill), its burning FRONTIER (the unfinished edge), or a seam of
-    //   the field (ambient/presence light + sparks + the feeding flow toward the body).
-    //   Seams are continuous across all three — same mesh, same endpoints. —
+    // — the seams. Four natures now: far side (skipped), the SILHOUETTE (the thin-film
+    //   rim — the sphere's living outline), a seam of the body/frontier, or the field's.
     const ringAge = now - coreRingT0;
     const circT = still ? 1.6 : now * 0.0016;
     const flowAmp = (0.22 + 0.5 * hCharge) * al * br;
-    const flowR = bodyR + 340;
+    const flowR = bodyR + 0.5; // angular
     for (let e = 0; e < hf.NE; e++) {
-      if (!hf.eact[e]) continue;
-      const a = hf.ea[e], b = hf.eb[e];
       const q1 = hf.et1[e], q2 = hf.et2[e];
-      const s1 = q1 >= 0 && hf.tState[q1] === 1;
-      const s2 = q2 >= 0 && hf.tState[q2] === 1;
+      const f1 = hf.tFront[q1], f2v = hf.tFront[q2];
+      if (!f1 && !f2v) continue; // the far side of the body
+      const a = hf.ea[e], b = hf.eb[e];
+      if (f1 !== f2v) {
+        // THE SILHOUETTE — the rim where the surface turns away: the thin-film spectrum
+        // (the hero blob's own vocabulary) rides this living polyline
+        const hue = foldT(((hf.vpx[a] - hf.ox) / sc) * 0.0016 +
+          ((hf.vpy[a] - hf.oy) / sc) * 0.0012 + wt * 0.00007);
+        const ir = iridAt(hue);
+        g2.beginPath();
+        g2.moveTo(hf.vpx[a], hf.vpy[a]);
+        g2.lineTo(hf.vpx[b], hf.vpy[b]);
+        g2.globalAlpha = 0.5 * br * al * hf.ej[e];
+        g2.lineWidth = hf.ew[e] * sc * 1.4;
+        g2.strokeStyle = 'rgb(' + (ir[0] | 0) + ',' + (ir[1] | 0) + ',' + (ir[2] | 0) + ')';
+        g2.stroke();
+        g2.globalAlpha = Math.min(1, 0.85 * br) * al;
+        g2.lineWidth = hf.coreW;
+        g2.strokeStyle = 'rgb(' + ((ir[0] + (255 - ir[0]) * 0.5) | 0) + ',' +
+          ((ir[1] + (255 - ir[1]) * 0.5) | 0) + ',' + ((ir[2] + (255 - ir[2]) * 0.5) | 0) + ')';
+        g2.stroke();
+        continue;
+      }
+      const s1 = hf.tState[q1] === 1;
+      const s2 = hf.tState[q2] === 1;
       if (s1 || s2) {
         const bt = s1 && s2
-          ? (hf.tBorn[q1] > hf.tBorn[q2] ? q1 : q2) // the younger side names the era
+          ? (hf.tBorn[q1] > hf.tBorn[q2] ? q1 : q2)
           : (s1 ? q1 : q2);
         let a2;
         if (s1 && s2) {
-          // interior — the set body's light + the circulation leaving the heart + rings
           const dpt = hf.tDepth[q1] < hf.tDepth[q2] ? hf.tDepth[q1] : hf.tDepth[q2];
           a2 = 0.16 + 0.05 * coreSetLvl;
           const cv2 = Math.cos(dpt * 0.8 - circT);
@@ -874,17 +941,18 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
             if (rq > -1 && rq < 1) a2 += 1.1 * (1 - rq * rq) * (1 - ringAge / 2600);
           }
         } else {
-          // the FRONTIER — the growing edge is the unfinished edge, and it BURNS:
-          // the body's silhouette is this rim
           a2 = still ? 0.72 : 0.72 + 0.22 * Math.sin(now * 0.003 + e * 1.7) + 0.35 * hGather;
         }
         if (!still) {
           const h1 = s1 ? 1 - (now - hf.tBorn[q1]) / 3400 : 0;
           const h2 = s2 ? 1 - (now - hf.tBorn[q2]) / 3400 : 0;
           const heat = h1 > h2 ? h1 : h2;
-          if (heat > 0) a2 += heat * 0.9; // molten spill from a newborn neighbour
+          if (heat > 0) a2 += heat * 0.9;
         }
         a2 *= hf.ej[e] * al;
+        // the body's light obeys the limb too
+        const zf = (hf.vfz[a] + hf.vfz[b]) * 0.5;
+        a2 *= zf <= 0 ? 0.2 : 0.3 + 0.7 * (zf * 1.9 < 1 ? zf * 1.9 : 1);
         if (a2 < 0.02) continue;
         g2.beginPath();
         g2.moveTo(hf.vpx[a], hf.vpy[a]);
@@ -903,10 +971,9 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
       let gg = (hf.vlg[a] + hf.vlg[b]) * 0.5;
       let bb = (hf.vlb[a] + hf.vlb[b]) * 0.5;
       let m2 = r > gg ? (r > bb ? r : bb) : (gg > bb ? gg : bb);
-      // the field FEEDS the body — its own light streams INWARD along seams near the
-      // heart (phase runs down the distance clock), swelling while the hand holds
+      // the surface FEEDS the body — its light streams along the seams toward the pole
       if (bodyN && hf.ehd[e] < flowR && m2 > 0.01) {
-        const fl = Math.cos(hf.ehd[e] * 0.03 + (still ? 0 : now * 0.0019));
+        const fl = Math.cos(hf.ehd[e] * 14 + (still ? 0 : now * 0.0019));
         if (fl > 0) {
           let pr2 = 1 - hf.ehd[e] / flowR;
           const boost = flowAmp * pr2 * pr2 * fl * fl * fl;
@@ -918,19 +985,16 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
       }
       const sp = hf.esprk[e];
       if (sp > 0.02 && m2 > 0.012) {
-        // the ignition — a lit seam flares past its ambient light, then settles
         const bm = 1 + 2.4 * sp;
         r *= bm; gg *= bm; bb *= bm; m2 *= bm;
       }
-      if (m2 < 0.042) continue; // beneath the air's floor — the troughs keep their dark
+      if (m2 < 0.042) continue;
       const inv = 255 / m2;
       const rr = (r * inv) | 0, rg = (gg * inv) | 0, rb = (bb * inv) | 0;
       g2.beginPath();
       g2.moveTo(hf.vpx[a], hf.vpy[a]);
       g2.lineTo(hf.vpx[b], hf.vpy[b]);
       if (m2 > 0.11) {
-        // the halo — bloom escaping onto the neighbouring faces; reserved for REAL light
-        // (presence, waves, the heart), so the air's glimmer stays one thin line
         let ha = m2 * 0.9 * hf.ej[e];
         if (ha > 0.78) ha = 0.78;
         g2.globalAlpha = ha;
@@ -938,7 +1002,6 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
         g2.strokeStyle = 'rgb(' + rr + ',' + rg + ',' + rb + ')';
         g2.stroke();
       }
-      // the core stroke — thin and near-white-hot on the seam line itself
       let ca = m2 * 1.7 * hf.ej[e];
       if (ca > 1) ca = 1;
       g2.globalAlpha = ca;
@@ -947,84 +1010,55 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
         ((rg + (255 - rg) * 0.55) | 0) + ',' + ((rb + (255 - rb) * 0.55) | 0) + ')';
       g2.stroke();
     }
-    // the heart — the nucleus glow in the hour's hue (modest: the body's own recruited
-    // seams carry the light now — the glow only warms them)
+    // the heart's glow — projected at the pole, in the hour's hue
     if (bodyN) {
       const hIdx = (eraT * 11) | 0;
-      const hpx2 = hf.hX * sc + hf.ox, hpy2 = hf.hY * sc + hf.oy;
-      const hSize = (bodyR * 1.9 + 130) * sc * (1 + 0.2 * coreFlare);
+      const persp = 1 / (1 - hDirWz * R0 * kP);
+      const sx = (hf.sX + hDirWx * R0 * persp) * sc + hf.ox;
+      const sy = (hf.sY + hDirWy * R0 * persp) * sc + hf.oy;
+      const hSize = R0 * (0.9 + 1.1 * (bodyN / KB)) * sc * (1 + 0.2 * coreFlare);
       g2.globalAlpha = Math.min(0.8, 0.3 + 0.28 * coreFlare +
         (still ? 0 : 0.06 * Math.sin(now * 0.0021))) * al;
-      g2.drawImage(hf.pspr[hIdx], hpx2 - hSize / 2, hpy2 - hSize / 2, hSize, hSize);
+      g2.drawImage(hf.pspr[hIdx], sx - hSize / 2, sy - hSize / 2, hSize, hSize);
     }
-    // the presences' own bodies — pre-rastered glows riding the field (a shade quieter
-    // than before: the core is the focal event now, the presences are its weather)
+    // presences + dust IN FRONT of the body
     for (let k = 0; k < 3; k++) {
+      if (hf.wz[k] < -0.05) continue;
       const wk = hf.wisps[k];
-      const size = wk.R * 2.6 * sc;
-      const px = hf.wx[k] * sc + hf.ox, py = hf.wy[k] * sc + hf.oy;
-      g2.globalAlpha = (0.3 + 0.08 * Math.sin(now * 0.0004 + k * 2.1)) * br * al *
-        hushAt(hf.wx[k], hf.wy[k]);
-      g2.drawImage(wk.spr, px - size / 2, py - size / 2, size, size);
+      const persp = 1 / (1 - hf.wz[k] * 1.06 * R0 * kP);
+      const sx = (hf.sX + hf.wx[k] * R0 * 1.06 * persp) * sc + hf.ox;
+      const sy = (hf.sY + hf.wy[k] * R0 * 1.06 * persp) * sc + hf.oy;
+      const size = R0 * 1.7 * sc * persp;
+      g2.globalAlpha = (0.24 + 0.07 * Math.sin(now * 0.0004 + k * 2.1)) * br * al *
+        hushAt((sx - hf.ox) / sc, (sy - hf.oy) / sc);
+      g2.drawImage(wk.spr, sx - size / 2, sy - size / 2, size, size);
     }
     if (presI > 0.02) {
       const idx = (pht * 11) | 0;
-      const size = presR * 2.5 * sc;
-      const px = hpX * sc + hf.ox, py = hpY * sc + hf.oy;
+      const persp = 1 / (1 - presDz * R0 * kP);
+      const sx = (hf.sX + presDx * R0 * persp) * sc + hf.ox;
+      const sy = (hf.sY + presDy * R0 * persp) * sc + hf.oy;
+      const size = R0 * presW * 3.4 * sc;
       g2.globalAlpha = Math.min(0.85, 0.42 * presI * (1 + 0.6 * hCharge)) * al *
-        hushAt(hpX, hpY);
-      g2.drawImage(hf.pspr[idx], px - size / 2, py - size / 2, size, size);
+        hushAt((sx - hf.ox) / sc, (sy - hf.oy) / sc);
+      g2.drawImage(hf.pspr[idx], sx - size / 2, sy - size / 2, size, size);
     }
     for (let i = 0; i < hf.NM; i++) {
-      const sx = (hf.mx[i] + (still ? 0 : Math.sin(now * 0.00052 + hf.mph[i]) * hf.msw[i])) * sc + hf.ox;
-      const sy = hf.my[i] * sc + hf.oy;
-      if (sx < -20 || sx > fieldCanvas.width + 20 || sy < -20 || sy > fieldCanvas.height + 20) continue;
-      const tw = still ? 0.5 : 0.5 + 0.5 * Math.sin(now * hf.mtw[i] + hf.mph[i] * 3.1);
-      g2.globalAlpha = (0.12 + 0.5 * tw * tw) * al;
-      const s2 = hf.msz[i] * 2.6 * sc;
+      const ph = hf.mph[i];
+      const cph = Math.cos(ph), sph = Math.sin(ph);
+      const px3 = (hf.mux[i] * cph + hf.mwx[i] * sph) * hf.msh[i];
+      const py3 = (hf.muy[i] * cph + hf.mwy[i] * sph) * hf.msh[i];
+      const pz3 = (hf.muz[i] * cph + hf.mwz[i] * sph) * hf.msh[i];
+      if (pz3 < 0) continue;
+      const persp = 1 / (1 - pz3 * R0 * kP);
+      const sx = (hf.sX + px3 * R0 * persp) * sc + hf.ox;
+      const sy = (hf.sY + py3 * R0 * persp) * sc + hf.oy;
+      const tw = still ? 0.5 : 0.5 + 0.5 * Math.sin(now * hf.mtw[i] + ph * 3.1);
+      g2.globalAlpha = (0.1 + 0.4 * tw * tw) * al;
+      const s2 = hf.msz[i] * sc * persp;
       g2.drawImage(hf.mspr[hf.mhue[i]], sx - s2 / 2, sy - s2 / 2, s2, s2);
     }
-    // — THE VOID COLLAR, painted last over everything (sprites included): the room's
-    //   boundary. A 72-point perimeter path inset by travelling noise — warped, breathing,
-    //   its corners cut by the sampling itself — solid room-black outside it (evenodd),
-    //   then layered soft strokes bloom the dark inward. No straight canvas edge, no rim,
-    //   no corner can ever read, at any moment of the drift (frozen composed under RM). —
     g2.globalCompositeOperation = 'source-over';
-    g2.globalAlpha = 1;
-    const cw2 = fieldCanvas.width, ch2 = fieldCanvas.height;
-    const mws = cw2 < ch2 ? cw2 : ch2;
-    const per = 2 * (cw2 + ch2);
-    g2.beginPath();
-    g2.moveTo(-4, -4);
-    g2.lineTo(cw2 + 4, -4);
-    g2.lineTo(cw2 + 4, ch2 + 4);
-    g2.lineTo(-4, ch2 + 4);
-    g2.closePath();
-    for (let i = 0; i < 72; i++) {
-      const s = i / 72;
-      let d = s * per, px, py, nx, ny;
-      if (d < cw2) { px = d; py = 0; nx = 0; ny = 1; }
-      else if ((d -= cw2) < ch2) { px = cw2; py = d; nx = -1; ny = 0; }
-      else if ((d -= ch2) < cw2) { px = cw2 - d; py = ch2; nx = 0; ny = -1; }
-      else { d -= cw2; px = 0; py = ch2 - d; nx = 1; ny = 0; }
-      const n = 0.5 + 0.5 * (Math.sin(s * 18.85 + wt * 0.00021) * 0.6 +
-        Math.sin(s * 43.98 - wt * 0.00013 + 2.1) * 0.4);
-      const inset = mws * (0.035 + 0.05 * n);
-      if (i === 0) g2.moveTo(px + nx * inset, py + ny * inset);
-      else g2.lineTo(px + nx * inset, py + ny * inset);
-    }
-    g2.closePath();
-    g2.fillStyle = '#020202';
-    g2.fill('evenodd');
-    g2.lineJoin = 'round';
-    g2.strokeStyle = '#020202';
-    // five layered strokes — near-solid at the ring, decaying inward, so the solid
-    // collar's polygon edge never reads as a step (residual ≈ 2/255 on the dark facets)
-    g2.lineWidth = mws * 0.03; g2.globalAlpha = 0.55; g2.stroke();
-    g2.lineWidth = mws * 0.07; g2.globalAlpha = 0.35; g2.stroke();
-    g2.lineWidth = mws * 0.115; g2.globalAlpha = 0.28; g2.stroke();
-    g2.lineWidth = mws * 0.165; g2.globalAlpha = 0.22; g2.stroke();
-    g2.lineWidth = mws * 0.22; g2.globalAlpha = 0.16; g2.stroke();
     g2.globalAlpha = 1;
     g2.lineWidth = 1;
   };
@@ -1042,13 +1076,10 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     hLeanY += (hLeanTY - hLeanY) * Math.min(1, dt / 300);
     hCharge = hCharging ? Math.min(1, hCharge + dt / 1100) : Math.max(0, hCharge - dt / 450);
     hGather += ((hCharging ? 0.30 * hCharge : 0) - hGather) * Math.min(1, dt / 320);
-    // the motes rise; past the visible ceiling they return beneath the visible floor
-    // (window bounds, not stage bounds — a short crop would otherwise hide most of the climb)
+    // the dust orbits — each mote advances along its own tilted shell
     if (hf) {
-      const top = hf.cY - hf.aY - 60, bottom = hf.cY + hf.aY + 60;
       for (let i = 0; i < hf.NM; i++) {
-        hf.my[i] -= hf.msp[i] * dt * 0.001;
-        if (hf.my[i] < top) hf.my[i] = bottom;
+        hf.mph[i] += hf.msp[i] * dt;
       }
       // the crackle — sparks decay, and every few beats a LIT seam ignites past its
       // ambient light (candidates are drawn from last frame's vertex light, so a spark
@@ -1072,7 +1103,7 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
       // heart every so often (and immediately chimes the lattice on its way out)
       if (now > hPulseAt) {
         hPulseAt = now + 15000 + Math.random() * 13000;
-        hfSpawnWave(hf.hX, hf.hY, 0.3 + Math.random() * 0.18);
+        hfSpawnWave(hDirWx, hDirWy, hDirWz, 0.3 + Math.random() * 0.18);
       }
       // THE CORE's clock — accretion, feeding, maturity, the chime
       if (bodyN) {
@@ -1083,8 +1114,9 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
           if (d2 > 0.001 || d2 < -0.001) hf.vPull[i] += d2 * pk2;
         }
         if (hCharging && now >= coreFeedAt) {
-          const d = Math.hypot(hpX - hf.hX, hpY - hf.hY);
-          if (d < bodyR * 1.6 + 240) {
+          presDirInto(PD);
+          const d = 1 - (PD[0] * hDirWx + PD[1] * hDirWy + PD[2] * hDirWz);
+          if (d < bodyR * 1.6 + 0.32) {
             // the feeding hand — burst growth toward it, the heart drinks
             coreFeedAt = now + 240;
             coreGrow(now, true);
@@ -1095,8 +1127,9 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
         if (now >= coreGrowAt) {
           if (bodyN < KB) {
             coreGrow(now, false);
-            const d = Math.hypot(hpX - hf.hX, hpY - hf.hY);
-            const pf = hpI * Math.max(0, 1 - d / 700); // dwelling nearby quickens it
+            presDirInto(PD);
+            const d = 1 - (PD[0] * hDirWx + PD[1] * hDirWy + PD[2] * hDirWz);
+            const pf = hpI * Math.max(0, 1 - d); // dwelling on the body quickens it
             const base = GROW_MS[coreRingN < 4 ? coreRingN : 4];
             coreGrowAt = now + (base * (0.8 + 0.4 * Math.random())) / (1 + 1.6 * pf);
           } else {
@@ -1113,8 +1146,8 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
           if (wvChimed[v]) continue;
           const age = (now - wvT0[v]) / 1700;
           if (age >= 1) continue;
-          const d = Math.hypot(wvX[v] - hf.hX, wvY[v] - hf.hY);
-          if (age * 1955 >= d) {
+          const d = 1 - (wvX[v] * hDirWx + wvY[v] * hDirWy + wvZ[v] * hDirWz);
+          if (age * 2.3 >= d) {
             wvChimed[v] = 1;
             coreChime(now, 0.6 * wvAmp[v]);
           }
@@ -1141,8 +1174,8 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     // last visit (the field must compose at rest, then answer THIS visitor)
     hCharge = 0; hGather = 0; hCharging = false; hpI = 0; hpOn = false; wvN = 0;
     hLeanX = hLeanY = hLeanTX = hLeanTY = 0;
-    hpX = hpTX = hf.cX;
-    hpY = hpTY = hf.cY;
+    hpX = hpTX = hf.sX;
+    hpY = hpTY = hf.sY;
     hf.esprk.fill(0);
     hSparkT = 600;
     hPulseAt = hfT0 + 8000; // the first heartbeat arrives once the room has woken
@@ -1185,7 +1218,7 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
   // Fibonacci RINGS {8,21,34,55,89} that chime the room and the type, attention-directed
   // growth, feeding, burning, waves chiming, persistence across re-entry, and a
   // deterministic composed body under reduced motion.
-  let bodyN = 0, bodyR = 60; // recruited count + the body's grown reach (field units)
+  let bodyN = 0, bodyR = 0.1; // recruited count + angular reach (1 − dot, body space)
   let coreBorn = 0, coreGrowAt = 0, coreRingT0 = -1e9, coreRingN = 0, coreSetLvl = 0;
   let coreFeedAt = 0, coreFlare = 0, coreEra = 0;
   const RINGS_AT = [8, 21, 34, 55, 89];
@@ -1222,8 +1255,8 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     hf.tBorn[t] = now - (forced ? 180 : 0);
     hf.tDepth[t] = depth > 254 ? 254 : depth;
     hf.bodyList[bodyN++] = t;
-    const d = Math.hypot(hf.tcx[t] - hf.hX, hf.tcy[t] - hf.hY);
-    if (d + 70 > bodyR) bodyR = d + 70;
+    const d = 1 - (hf.tdx[t] * hf.h0x + hf.tdy[t] * hf.h0y + hf.tdz[t] * hf.h0z);
+    if (d + 0.1 > bodyR) bodyR = d + 0.1; // angular reach (1 − dot), body space
     // the condensation — the recruited corners pull toward the order; shared vertices
     // bend the surrounding field around the body
     const pw = Math.max(0.35, 1 - depth * 0.055);
@@ -1237,7 +1270,7 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
       coreSetLvl = coreRingN;
       coreRingT0 = now;
       coreFlare = Math.min(2, coreFlare + 1.2);
-      hfSpawnWave(hf.hX, hf.hY, 0.5 + 0.12 * coreRingN);
+      hfSpawnWave(hDirWx, hDirWy, hDirWz, 0.5 + 0.12 * coreRingN);
       wordChime();
     }
   };
@@ -1246,15 +1279,14 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     if (!hf) return;
     coreBorn = now;
     coreGrowAt = now + 900;
-    coreRingN = 0; coreSetLvl = 0; coreFlare = 1; bodyN = 0; bodyR = 60;
+    coreRingN = 0; coreSetLvl = 0; coreFlare = 1; bodyN = 0; bodyR = 0.1;
     hf.tState.fill(0);
     hf.vPullT.fill(0);
     hf.vPull.fill(0);
-    let s = -1, sd = 1e9;
+    let s = -1, sd = -1e9;
     for (let t = 0; t < hf.T; t++) {
-      const dx = hf.tcx[t] - hf.hX, dy = hf.tcy[t] - hf.hY;
-      const d2 = dx * dx + dy * dy;
-      if (d2 < sd) { sd = d2; s = t; }
+      const d = hf.tdx[t] * hf.h0x + hf.tdy[t] * hf.h0y + hf.tdz[t] * hf.h0z;
+      if (d > sd) { sd = d; s = t; }
     }
     if (s >= 0) recruit(s, now, false, 0);
   };
@@ -1263,21 +1295,26 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
   // dwelling hand (attention is the material); forced = the feeding hand's burst
   const coreGrow = (now, forced) => {
     if (!hf || !bodyN || bodyN >= KB) return;
-    const ax = hpX - hf.hX, ay = hpY - hf.hY;
-    const aD = Math.hypot(ax, ay);
-    const attn = forced ? 1 : hpI * Math.max(0, 1 - aD / 700);
+    // the hand on the surface (world) — attention leans the frontier toward it
+    presDirInto(PD);
+    const attn = forced ? 1 : hpI;
     let best = -1, bestD = 1, bestS = -1e9;
     for (let bi = 0; bi < bodyN; bi++) {
       const bt = hf.bodyList[bi];
       for (let e = 0; e < 3; e++) {
         const ei = hf.tedge[bt * 3 + e];
         const o = hf.et1[ei] === bt ? hf.et2[ei] : hf.et1[ei];
-        if (o < 0 || hf.tState[o] || !hf.act[o]) continue;
-        const dx = hf.tcx[o] - hf.hX, dy = hf.tcy[o] - hf.hY;
-        const md = Math.hypot(dx, dy) || 1;
-        // compact young nucleus, roaming elder; the hand's pull rides on top
-        let sc = -md * (bodyN < 18 ? 0.007 : 0.003) + coreRnd() * 1.3;
-        if (attn > 0.05 && aD > 1) sc += 2.8 * attn * ((dx * ax + dy * ay) / (md * aD));
+        if (o < 0 || hf.tState[o]) continue;
+        // compactness in body space (the pole never moves there)
+        const md = 1 - (hf.tdx[o] * hf.h0x + hf.tdy[o] * hf.h0y + hf.tdz[o] * hf.h0z);
+        let sc = -md * (bodyN < 18 ? 4.6 : 2.0) + coreRnd() * 1.3;
+        if (attn > 0.05) {
+          // the candidate's WORLD direction leaning toward the hand's surface point
+          const wxc = hM[0] * hf.tdx[o] + hM[1] * hf.tdy[o] + hM[2] * hf.tdz[o];
+          const wyc = hM[3] * hf.tdx[o] + hM[4] * hf.tdy[o] + hM[5] * hf.tdz[o];
+          const wzc = hM[6] * hf.tdx[o] + hM[7] * hf.tdy[o] + hM[8] * hf.tdz[o];
+          sc += 2.8 * attn * (wxc * PD[0] + wyc * PD[1] + wzc * PD[2]);
+        }
         if (sc > bestS) { bestS = sc; best = o; bestD = hf.tDepth[bt] + 1; }
       }
     }
@@ -1293,21 +1330,27 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
   };
 
   // the burn — the hand touched the body: the touched cells re-melt and re-cool
-  const coreBurn = (x, y, now) => {
+  const coreBurn = (tx, ty, tz, now) => {
     if (!hf || !bodyN) return false;
+    // angular nearness of the touch to the body's facets (world dirs, event-time)
     let hd = 1e9;
     for (let bi = 0; bi < bodyN; bi++) {
       const t = hf.bodyList[bi];
-      const dx = hf.tcx[t] - x, dy = hf.tcy[t] - y;
-      const d2 = dx * dx + dy * dy;
-      if (d2 < hd) hd = d2;
+      const wxc = hM[0] * hf.tdx[t] + hM[1] * hf.tdy[t] + hM[2] * hf.tdz[t];
+      const wyc = hM[3] * hf.tdx[t] + hM[4] * hf.tdy[t] + hM[5] * hf.tdz[t];
+      const wzc = hM[6] * hf.tdx[t] + hM[7] * hf.tdy[t] + hM[8] * hf.tdz[t];
+      const d = 1 - (wxc * tx + wyc * ty + wzc * tz);
+      if (d < hd) hd = d;
     }
-    if (hd > 120 * 120) return false;
+    if (hd > 0.06) return false;
     for (let bi = 0; bi < bodyN; bi++) {
       const t = hf.bodyList[bi];
-      const d = Math.hypot(hf.tcx[t] - x, hf.tcy[t] - y);
-      if (d < 200 && now - hf.tBorn[t] > 3200) {
-        hf.tBorn[t] = now - 350 - d * 2; // re-molten, radiating out from the touch
+      const wxc = hM[0] * hf.tdx[t] + hM[1] * hf.tdy[t] + hM[2] * hf.tdz[t];
+      const wyc = hM[3] * hf.tdx[t] + hM[4] * hf.tdy[t] + hM[5] * hf.tdz[t];
+      const wzc = hM[6] * hf.tdx[t] + hM[7] * hf.tdy[t] + hM[8] * hf.tdz[t];
+      const d = 1 - (wxc * tx + wyc * ty + wzc * tz);
+      if (d < 0.16 && now - hf.tBorn[t] > 3200) {
+        hf.tBorn[t] = now - 350 - d * 2600; // re-molten, radiating out from the touch
       }
     }
     coreFlare = Math.min(2, coreFlare + 0.7);
@@ -1325,7 +1368,7 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     return 0.28 + 0.72 * hq * hq * (3 - 2 * hq);
   };
 
-  const hfSpawnWave = (x, y, amp) => {
+  const hfSpawnWave = (dx, dy, dz, amp) => {
     if (!hf) return;
     let v = 0;
     if (wvN < WV) {
@@ -1335,7 +1378,8 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
       for (let i = 1; i < WV; i++) if (wvT0[i] < wvT0[v]) v = i;
     }
     wvChimed[v] = 0;
-    wvX[v] = x; wvY[v] = y;
+    const l = Math.hypot(dx, dy, dz) || 1;
+    wvX[v] = dx / l; wvY[v] = dy / l; wvZ[v] = dz / l;
     wvT0[v] = performance.now();
     wvAmp[v] = amp;
     wvHue[v] = foldT(performance.now() * 0.000021);
@@ -1382,12 +1426,13 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     const now = performance.now();
     // a quick touch ON the body burns it (the visit scars the casting); a hold that fed
     // the core is ABSORBED (the heart drinks the wave); anywhere else, the room rings
-    if (hCharge < 0.22 && bodyN && coreBurn(hpX, hpY, now)) return;
+    presDirInto(PD);
+    if (hCharge < 0.22 && bodyN && coreBurn(PD[0], PD[1], PD[2], now)) return;
     if (hFed) {
       coreFlare = Math.min(2, coreFlare + 0.5);
       return;
     }
-    hfSpawnWave(hpX, hpY, 0.55 + 0.9 * hCharge);
+    hfSpawnWave(PD[0], PD[1], PD[2], 0.55 + 0.9 * hCharge);
   };
   const onFieldLeave = () => {
     hpOn = false;
@@ -1615,11 +1660,11 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
       // reduced motion it presents the composed press-state instead — cleared on keyup)
       if (k === ' ' && !e.repeat && roomState === 'in' && hf) {
         if (reduce) {
-          hpX = hf.cX; hpY = hf.cY;
+          hpX = hf.sX; hpY = hf.sY;
           hRmPress = 1;
           hfDraw(performance.now(), true);
         } else {
-          hfSpawnWave(hf.cX, hf.cY, 0.9); // the wave rings from the room's heart
+          hfSpawnWave(hDirWx, hDirWy, hDirWz, 0.9); // rings from the heart pole
         }
       }
     }

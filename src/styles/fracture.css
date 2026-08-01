@@ -493,7 +493,7 @@
   overscroll-behavior: contain;
   /* the words keep the LOWER band — the core owns the upper heart (body.js seats it at
      ~29% of the window; this padding keeps the column clear of the body's grown reach) */
-  padding: clamp(240px, 50vh, 560px) 24px 24px;
+  padding: clamp(250px, 54vh, 620px) 24px 24px;
   text-align: center;
 }
 .hollow__col {
