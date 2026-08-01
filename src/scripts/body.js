@@ -523,7 +523,7 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
       mwy[i] = axz * ux2 - axx * uz2;
       mwz[i] = axx * uy2 - axy * ux2;
       mph[i] = f2 * 6.283;
-      msp[i] = (0.00004 + f * 0.00006) * (f3 < 0.5 ? 1 : -1); // rad/ms, both directions
+      msp[i] = (0.000025 + f * 0.000035) * (f3 < 0.5 ? 1 : -1); // rad/ms, calm, both ways
       msh[i] = 1.1 + f * 0.55; // shell radius, ×R0
       mtw[i] = 0.0008 + f2 * 0.0009;
       msz[i] = 5 + f * 6; // px-ish at scale 1
@@ -566,8 +566,10 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     // the organism's seat: upper centre, the words keep the lower band; its radius fits
     // the narrower of the window's halves — one body, dominant but never cropped
     hf.sX = hf.cX;
-    hf.sY = hf.cY - hf.aY * 0.44;
-    hf.R0 = Math.min(hf.aX * 0.76, hf.aY * 0.48);
+    hf.sY = hf.cY - hf.aY * 0.34;
+    // imposing: the body fills the frame's upper reach and may exceed it — its scale is
+    // felt; the words keep the lower band and read on its quiet lower limb
+    hf.R0 = Math.min(hf.aX * 1.02, hf.aY * 0.7);
     hf.act.fill(1); // facing is per-frame now — no viewport cull exists on a sphere
     hf.eact.fill(1);
   };
@@ -605,15 +607,15 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     if (!hf) return;
     const g2 = hf.hg, sc = hf.scale;
     const al = still ? 1 : sstep((now - hfT0) / 2000); // the room WAKES over first breaths
-    const br = still ? 1 : 1 + 0.22 * Math.sin(now * 0.00106); // the global breath (~5.9s)
+    const br = still ? 1 : 1 + 0.15 * Math.sin(now * 0.00058); // the global breath (~10.8s)
     const wt = still ? 0 : now;
     const R0 = hf.R0;
     // — the rotation: slow turn + gentle axis precession + a lean toward the hand —
-    const ax0 = 0.3 + 0.1 * Math.sin(wt * 0.00006);
-    const ay0 = -0.25 + 0.1 * Math.cos(wt * 0.00005);
+    const ax0 = 0.3 + 0.1 * Math.sin(wt * 0.000025);
+    const ay0 = -0.25 + 0.1 * Math.cos(wt * 0.00002);
     let l = Math.hypot(ax0, ay0, 0.92);
     const axx = ax0 / l, axy = ay0 / l, axz = 0.92 / l;
-    const th = wt * 0.00035 + 0.55; // ~1 revolution / 3 minutes
+    const th = wt * 0.00012 + 0.55; // geologic — ~1 revolution / 9 minutes
     const ct = Math.cos(th), st = Math.sin(th), omc = 1 - ct;
     const m00 = ct + axx * axx * omc, m01 = axx * axy * omc - axz * st, m02 = axx * axz * omc + axy * st;
     const m10 = axy * axx * omc + axz * st, m11 = ct + axy * axy * omc, m12 = axy * axz * omc - axx * st;
@@ -632,16 +634,23 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     hDirWx = a00 * hf.h0x + a01 * hf.h0y + a02 * hf.h0z;
     hDirWy = a10 * hf.h0x + a11 * hf.h0y + a12 * hf.h0z;
     hDirWz = a20 * hf.h0x + a21 * hf.h0y + a22 * hf.h0z;
-    // — the metaball lobes: three soft swells travelling the surface —
-    let lx1 = Math.sin(wt * 0.00011 + 1.2), ly1 = Math.cos(wt * 0.00009 + 0.4), lz1 = Math.sin(wt * 0.00007 + 2.6);
-    let lx2 = Math.cos(wt * 0.00008 + 4.0), ly2 = Math.sin(wt * 0.00012 + 1.9), lz2 = Math.cos(wt * 0.00006 + 0.7);
-    let lx3 = Math.sin(wt * 0.00006 + 3.3), ly3 = Math.sin(wt * 0.0001 + 5.1), lz3 = Math.cos(wt * 0.00011 + 1.5);
+    // — the metaball lobes: slow deep swells + one broad asymmetric rise + one DENT —
+    //   the mass evolves over tens of seconds; its sphere-nature is felt, not diagrammed
+    let lx1 = Math.sin(wt * 0.00004 + 1.2), ly1 = Math.cos(wt * 0.000034 + 0.4), lz1 = Math.sin(wt * 0.000027 + 2.6);
+    let lx2 = Math.cos(wt * 0.00003 + 4.0), ly2 = Math.sin(wt * 0.000045 + 1.9), lz2 = Math.cos(wt * 0.000023 + 0.7);
+    let lx3 = Math.sin(wt * 0.000022 + 3.3), ly3 = Math.sin(wt * 0.000038 + 5.1), lz3 = Math.cos(wt * 0.000042 + 1.5);
+    let lx4 = Math.sin(wt * 0.000016 + 0.9), ly4 = Math.cos(wt * 0.000019 + 3.6), lz4 = Math.sin(wt * 0.000013 + 5.4);
+    let lx5 = Math.cos(wt * 0.000026 + 2.2), ly5 = Math.sin(wt * 0.000017 + 4.4), lz5 = Math.cos(wt * 0.000031 + 1.1);
     l = Math.hypot(lx1, ly1, lz1) || 1; lx1 /= l; ly1 /= l; lz1 /= l;
     l = Math.hypot(lx2, ly2, lz2) || 1; lx2 /= l; ly2 /= l; lz2 /= l;
     l = Math.hypot(lx3, ly3, lz3) || 1; lx3 /= l; ly3 /= l; lz3 /= l;
-    const A1 = 0.085 * (0.6 + 0.4 * Math.sin(wt * 0.00013));
-    const A2 = 0.07 * (0.6 + 0.4 * Math.cos(wt * 0.00017));
-    const A3 = 0.06;
+    l = Math.hypot(lx4, ly4, lz4) || 1; lx4 /= l; ly4 /= l; lz4 /= l;
+    l = Math.hypot(lx5, ly5, lz5) || 1; lx5 /= l; ly5 /= l; lz5 /= l;
+    const A1 = 0.15 * (0.55 + 0.45 * Math.sin(wt * 0.00005));
+    const A2 = 0.12 * (0.55 + 0.45 * Math.cos(wt * 0.000065));
+    const A3 = 0.1;
+    const A4 = 0.17 * (0.5 + 0.5 * Math.sin(wt * 0.00003 + 2)); // the broad rise
+    const A5 = -0.11; // the dent — the mass remembers it is not a diagram
     // — the hand's surface direction (damped screen point → sphere) —
     presDirInto(PD);
     const presDx = PD[0], presDy = PD[1], presDz = PD[2];
@@ -689,7 +698,7 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     const presIk = (0.85 + 1.3 * hCharge) * presI * al;
     const bumpK = 0.06 * (1 + 1.1 * hCharge) * (still ? hRmPress : Math.max(presI, 0.001));
     const kP = 1 / (3.4 * R0);
-    const shim = wt * 0.0012;
+    const shim = wt * 0.0007;
     // per-wave invariants — waves live in ANGULAR (1−dot) space on the surface
     for (let v = 0; v < wvN; v++) {
       const age = (now - wvT0[v]) / 1700;
@@ -703,13 +712,18 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
       const nx = a00 * bx0 + a01 * by0 + a02 * bz0;
       const ny = a10 * bx0 + a11 * by0 + a12 * bz0;
       const nz = a20 * bx0 + a21 * by0 + a22 * bz0;
-      let rr = 1 + (still ? 0 : 0.016 * Math.sin(wt * 0.00045));
+      let rr = 1 + (still ? 0 : 0.012 * Math.sin(wt * 0.00028));
       let d = nx * lx1 + ny * ly1 + nz * lz1;
       if (d > 0) { d *= d; rr += A1 * d * d; }
       d = nx * lx2 + ny * ly2 + nz * lz2;
       if (d > 0) { d *= d; rr += A2 * d * d; }
       d = nx * lx3 + ny * ly3 + nz * lz3;
-      if (d > 0) { d *= d; rr += A3 * d * d; }
+      if (d > 0) { d *= d; d *= d; rr += A3 * d * d; } // sharper knob
+      d = nx * lx4 + ny * ly4 + nz * lz4;
+      if (d > 0) { rr += A4 * d * d; } // broad
+      d = nx * lx5 + ny * ly5 + nz * lz5;
+      if (d > 0) { d *= d; rr += A5 * d * d; } // the dent
+      if (rr > 1.32) rr = 1.32; else if (rr < 0.8) rr = 0.8;
       if (!still) rr += hf.vamp[i] * Math.sin(shim + hf.vph[i]);
       if (bumpK > 0.002) {
         const pd = nx * presDx + ny * presDy + nz * presDz;
@@ -764,8 +778,8 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
         }
       }
       // the luminous air — aurora patches sliding over the surface
-      const ambN = Math.sin(nx * 3.1 + wt * 0.00016 + 1.2) *
-        Math.sin(ny * 2.7 - wt * 0.00012 + 0.5);
+      const ambN = Math.sin(nx * 3.1 + wt * 0.0001 + 1.2) *
+        Math.sin(ny * 2.7 - wt * 0.00007 + 0.5);
       let amb = (0.032 + 0.1 * (0.5 + 0.5 * ambN)) * br * al;
       if (pl > 0.02) amb *= Math.max(0.12, 1 - pl * 1.5); // the air stays out of the body
       const ca2 = candyAt(foldT(nx * 0.3 + ny * 0.22 + wt * 0.000018));
@@ -896,7 +910,7 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     // — the seams. Four natures now: far side (skipped), the SILHOUETTE (the thin-film
     //   rim — the sphere's living outline), a seam of the body/frontier, or the field's.
     const ringAge = now - coreRingT0;
-    const circT = still ? 1.6 : now * 0.0016;
+    const circT = still ? 1.6 : now * 0.001;
     const flowAmp = (0.22 + 0.5 * hCharge) * al * br;
     const flowR = bodyR + 0.5; // angular
     for (let e = 0; e < hf.NE; e++) {
@@ -906,18 +920,20 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
       const a = hf.ea[e], b = hf.eb[e];
       if (f1 !== f2v) {
         // THE SILHOUETTE — the rim where the surface turns away: the thin-film spectrum
-        // (the hero blob's own vocabulary) rides this living polyline
+        // (the hero blob's own vocabulary) rides this living polyline; it hushes under
+        // the words like every other light
         const hue = foldT(((hf.vpx[a] - hf.ox) / sc) * 0.0016 +
-          ((hf.vpy[a] - hf.oy) / sc) * 0.0012 + wt * 0.00007);
+          ((hf.vpy[a] - hf.oy) / sc) * 0.0012 + wt * 0.00004);
         const ir = iridAt(hue);
+        const shh = hushAt((hf.vpx[a] - hf.ox) / sc, (hf.vpy[a] - hf.oy) / sc);
         g2.beginPath();
         g2.moveTo(hf.vpx[a], hf.vpy[a]);
         g2.lineTo(hf.vpx[b], hf.vpy[b]);
-        g2.globalAlpha = 0.5 * br * al * hf.ej[e];
+        g2.globalAlpha = 0.5 * br * al * hf.ej[e] * shh;
         g2.lineWidth = hf.ew[e] * sc * 1.4;
         g2.strokeStyle = 'rgb(' + (ir[0] | 0) + ',' + (ir[1] | 0) + ',' + (ir[2] | 0) + ')';
         g2.stroke();
-        g2.globalAlpha = Math.min(1, 0.85 * br) * al;
+        g2.globalAlpha = Math.min(1, 0.85 * br) * al * shh;
         g2.lineWidth = hf.coreW;
         g2.strokeStyle = 'rgb(' + ((ir[0] + (255 - ir[0]) * 0.5) | 0) + ',' +
           ((ir[1] + (255 - ir[1]) * 0.5) | 0) + ',' + ((ir[2] + (255 - ir[2]) * 0.5) | 0) + ')';
@@ -950,9 +966,10 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
           if (heat > 0) a2 += heat * 0.9;
         }
         a2 *= hf.ej[e] * al;
-        // the body's light obeys the limb too
+        // the body's light obeys the limb — and the hush beneath the words
         const zf = (hf.vfz[a] + hf.vfz[b]) * 0.5;
         a2 *= zf <= 0 ? 0.2 : 0.3 + 0.7 * (zf * 1.9 < 1 ? zf * 1.9 : 1);
+        if (hHon) a2 *= hushAt((hf.vpx[a] - hf.ox) / sc, (hf.vpy[a] - hf.oy) / sc);
         if (a2 < 0.02) continue;
         g2.beginPath();
         g2.moveTo(hf.vpx[a], hf.vpy[a]);
@@ -1067,13 +1084,14 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     if (!hfOn) return;
     const dt = Math.min(50, Math.max(1, now - hfLast));
     hfLast = now;
-    // the hand, damped — presence glides, the lean settles, the charge swells and decays
-    const kp = Math.min(1, dt / 170);
+    // the hand — NEAR-INSTANT: the light must feel attached to the cursor (a long
+    // damping constant here reads as lag); only the lean keeps a soft settle
+    const kp = Math.min(1, dt / 55);
     hpX += (hpTX - hpX) * kp;
     hpY += (hpTY - hpY) * kp;
-    hpI += ((hpOn ? 1 : 0) - hpI) * Math.min(1, dt / 260);
-    hLeanX += (hLeanTX - hLeanX) * Math.min(1, dt / 300);
-    hLeanY += (hLeanTY - hLeanY) * Math.min(1, dt / 300);
+    hpI += ((hpOn ? 1 : 0) - hpI) * Math.min(1, dt / 140);
+    hLeanX += (hLeanTX - hLeanX) * Math.min(1, dt / 220);
+    hLeanY += (hLeanTY - hLeanY) * Math.min(1, dt / 220);
     hCharge = hCharging ? Math.min(1, hCharge + dt / 1100) : Math.max(0, hCharge - dt / 450);
     hGather += ((hCharging ? 0.30 * hCharge : 0) - hGather) * Math.min(1, dt / 320);
     // the dust orbits — each mote advances along its own tilted shell
@@ -1487,6 +1505,13 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
   const setKeyLive = (on) => {
     if (!keyBtn || on === keyLive) return;
     keyLive = on;
+    if (on && !hf) {
+      // pre-build the organism at idle — entry must never pay the parse under the click
+      (window.requestIdleCallback || ((f) => setTimeout(f, 120)))(() => {
+        buildField();
+        hfResize();
+      });
+    }
     keyBtn.classList.toggle('facet-key--live', on);
     keyBtn.tabIndex = on ? 0 : -1;
     if (!on) {
