@@ -563,12 +563,96 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
       msz[i] = 5 + f * 6; // px-ish at scale 1
       mhue[i] = i % 3;
     }
+    // — THE KIN (v6.1): the room's company — three small distant bodies of the mass's
+    //   own species, drifting in the deep BEHIND the protagonist. One shared low-res
+    //   mesh (#hollow-kin-geo — icosphere ×1, 42 verts / 80 faces, the slot-in
+    //   convention, docs/generators/hollow-kin.mjs seed 7); each instance wears it at
+    //   its own window-fraction home, scale, drift, spin and hue. SUBORDINATION IS LAW:
+    //   deeper tones, ~1/6 the protagonist's light, coloured halo only (the white-hot
+    //   core is the protagonist's privilege), slower clocks, painted FIRST so the mass
+    //   occludes them (depth by occlusion), veiled/hushed/feather-masked like all light. —
+    let hk = null;
+    const kgeoEl = document.getElementById('hollow-kin-geo');
+    if (kgeoEl) {
+      const kraw = (kgeoEl.getAttribute('data-verts') || '').trim().split(/\s+/).map(Number);
+      const kpolys = kgeoEl.querySelectorAll('polygon');
+      const KT = kpolys.length, KNV = (kraw.length / 3) | 0;
+      if (KT && KNV) {
+        const kx0 = new Float32Array(KNV), ky0 = new Float32Array(KNV), kz0 = new Float32Array(KNV);
+        for (let i = 0; i < KNV; i++) {
+          kx0[i] = kraw[i * 3]; ky0[i] = kraw[i * 3 + 1]; kz0[i] = kraw[i * 3 + 2];
+        }
+        const kti = new Uint16Array(KT * 3);
+        const ktone = new Array(KT);
+        for (let i = 0; i < KT; i++) {
+          const pg = kpolys[i];
+          const ix = (pg.getAttribute('data-i') || '0 0 0').split(' ');
+          kti[i * 3] = +ix[0]; kti[i * 3 + 1] = +ix[1]; kti[i * 3 + 2] = +ix[2];
+          const d = (pg.getAttribute('data-d') || '5 5 8').split(' ');
+          ktone[i] = 'rgb(' + d[0] + ',' + d[1] + ',' + d[2] + ')';
+        }
+        const kEdge = new Map();
+        const keaA = [], kebA = [], ket1A = [], ket2A = [];
+        for (let i = 0; i < KT; i++) {
+          for (let e = 0; e < 3; e++) {
+            const a = kti[i * 3 + e], b = kti[i * 3 + ((e + 1) % 3)];
+            const kk = a < b ? a * 65536 + b : b * 65536 + a;
+            let ei = kEdge.get(kk);
+            if (ei === undefined) {
+              ei = keaA.length;
+              kEdge.set(kk, ei);
+              keaA.push(a < b ? a : b);
+              kebA.push(a < b ? b : a);
+              ket1A.push(i);
+              ket2A.push(-1);
+            } else {
+              ket2A[ei] = i;
+            }
+          }
+        }
+        // per-edge character — even inside a kin's lit pool some seams stay dark
+        // (light as weather, never an even micro-wireframe)
+        const kej = new Float32Array(keaA.length);
+        for (let i = 0; i < kej.length; i++) {
+          const fr = Math.sin(i * 12.9898 + 4.7) * 43758.5453;
+          kej[i] = 0.3 + 0.9 * (fr - Math.floor(fr));
+        }
+        hk = {
+          T: KT, NV: KNV, x0: kx0, y0: ky0, z0: kz0, ti: kti, tone: ktone,
+          NE: keaA.length, kej,
+          ea: Uint16Array.from(keaA), eb: Uint16Array.from(kebA),
+          et1: Int16Array.from(ket1A), et2: Int16Array.from(ket2A),
+          px: new Float32Array(KNV), py: new Float32Array(KNV),
+          vv: new Float32Array(KNV),
+          lr: new Float32Array(KNV), lg: new Float32Array(KNV), lb: new Float32Array(KNV),
+          front: new Uint8Array(KT),
+          // homes in WINDOW fractions; pux/puy are the PORTRAIT homes — a phone's mass
+          // fills the width, so its kin keep to the clear top corners (the third stays
+          // deep on the flank, emerging when the swell recedes; never simply empty)
+          kin: [
+            { ux: -0.72, uy: -0.56, pux: -0.75, puy: -0.88, f: 0.17, I: 0.19,
+              ax: 0.5, ay: 0.7, az: 0.5, sp: 0.00006, ph: 1.1, dxp: 0.4, dyp: 2.2,
+              la: 0.2, lb2: -0.14, hp: 0.05, hs: 0.000011 },
+            { ux: 0.8, uy: -0.42, pux: 0.75, puy: -0.9, f: 0.13, I: 0.15,
+              ax: -0.6, ay: 0.5, az: 0.62, sp: -0.00005, ph: 3.8, dxp: 2.9, dyp: 0.7,
+              la: 0.16, lb2: -0.11, hp: 0.6, hs: 0.000009 },
+            { ux: -0.56, uy: 0.3, pux: -0.82, puy: -0.45, f: 0.1, I: 0.115,
+              ax: 0.2, ay: -0.75, az: 0.63, sp: 0.000045, ph: 5.2, dxp: 4.4, dyp: 3.4,
+              la: 0.14, lb2: -0.1, hp: 0.85, hs: 0.000013 },
+          ],
+        };
+        for (const kn of hk.kin) {
+          const ln = Math.hypot(kn.ax, kn.ay, kn.az) || 1;
+          kn.ax /= ln; kn.ay /= ln; kn.az /= ln;
+        }
+      }
+    }
     const act = new Uint8Array(T), eact = new Uint8Array(NE);
     const tFront = new Uint8Array(T); // per-frame facing (screen-space winding)
     // the sparks — transient seam ignitions riding the ambient light (decayed per frame)
     const esprk = new Float32Array(NE);
     hf = {
-      esprk, tFront,
+      esprk, tFront, hk,
       hg, T, NV, NE, ti, tfillL, n0x, n0y, n0z, vph, vamp, vpx, vpy, vV, vVm, tArea,
       vlr, vlg, vlb, ea, eb: ebb, ew, ej, wisps, wx, wy, wz, pspr, ispr,
       NM, mux, muy, muz, mwx, mwy, mwz, mph, msp, msh, mtw, msz, mhue, mspr, act, eact,
@@ -629,6 +713,175 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
   const foldT = (u) => {
     u = u - Math.floor(u / 2) * 2;
     return u > 1 ? 2 - u : u;
+  };
+
+  // ── the kin — the deep's company, one frame (called FIRST from hfDraw: everything
+  //    else paints over them; the mass occludes them as it swells — depth by occlusion).
+  //    Their laws are the mass's own at a whisper: angular veil (extinction before their
+  //    little limb), dispersion in the dissolve, hush near the words, the feather at the
+  //    frame; light is one wandering hue pool + late wave-kinship (the room's rings reach
+  //    the deep ~half a second after the room) + a faint graze when a presence's glow
+  //    drifts near. Coloured halo only — no white core, no wash: they never compete. ────
+  const hkDraw = (g2, now, still, wt, al, br, sc) => {
+    const hk = hf.hk;
+    if (!hk) return;
+    const mn = hf.aX < hf.aY ? hf.aX : hf.aY;
+    g2.lineCap = 'round';
+    const portrait = hf.aX < hf.aY * 0.72; // the phone's mass fills the width
+    for (let ki = 0; ki < hk.kin.length; ki++) {
+      const kn = hk.kin[ki];
+      // the seat — window-fraction home + slow deep drift (frozen composed under RM)
+      const hux = portrait ? kn.pux : kn.ux, huy = portrait ? kn.puy : kn.uy;
+      const kx = hf.cX + hux * hf.aX + 0.05 * hf.aX * Math.sin(wt * 0.0000137 + kn.dxp);
+      const ky = hf.cY + huy * hf.aY + 0.04 * hf.aY * Math.sin(wt * 0.0000101 + kn.dyp);
+      const Rk = kn.f * mn;
+      // late kinship — the room's waves reach the deep after the room has heard them
+      let flash = 0;
+      if (!still) {
+        for (let v = 0; v < wvN; v++) {
+          const ka = (now - wvT0[v] - 480 - ki * 260) / 1900;
+          if (ka > 0 && ka < 1) flash += Math.sin(3.14159 * ka) * wvAmp[v] * 0.3;
+        }
+        if (flash > 0.5) flash = 0.5;
+      }
+      // the pool — one dim hue wandering the little body, FRONT-BIASED (the visitor's
+      // side is never left black-on-black for long; the far side stays the dark's)
+      const pph = still ? kn.ph : wt * 0.00004 + kn.ph;
+      let pdx = Math.sin(pph), pdy = Math.sin(pph * 0.63 + 1.3) * 0.7;
+      let pdz = 0.35 + 0.65 * (0.5 + 0.5 * Math.cos(pph * 0.81));
+      let ln = Math.hypot(pdx, pdy, pdz) || 1;
+      pdx /= ln; pdy /= ln; pdz /= ln;
+      const pc2 = candyAt(foldT(kn.hp + wt * kn.hs));
+      const pr2 = pc2[0] / 255, pg3 = pc2[1] / 255, pb2 = pc2[2] / 255;
+      // a presence grazing the deep — its glow tints the near kin faintly
+      let gzr = 0, gzg = 0, gzb = 0;
+      for (let k2 = 0; k2 < 3; k2++) {
+        if (hf.wz[k2] < -0.05) continue;
+        const dxp = hf.sX + hf.wx[k2] * hf.R0 * 1.06 - kx;
+        const dyp = hf.sY + hf.wy[k2] * hf.R0 * 1.06 - ky;
+        const dd2 = Math.hypot(dxp, dyp);
+        const gr2 = hf.R0 * 0.85;
+        if (dd2 < gr2) {
+          const q = (1 - dd2 / gr2) * (1 - dd2 / gr2) * 0.5;
+          const wk2 = hf.wisps[k2];
+          gzr += q * wk2.wr; gzg += q * wk2.wg; gzb += q * wk2.wb;
+        }
+      }
+      // the kin's own geologic spin + two slow lobes — evolving like its kind, slower
+      const th2 = (still ? 0 : wt * kn.sp) + kn.ph;
+      const ct2 = Math.cos(th2), st2 = Math.sin(th2), om2 = 1 - ct2;
+      const x2 = kn.ax, y2 = kn.ay, z2 = kn.az;
+      const b00 = ct2 + x2 * x2 * om2, b01 = x2 * y2 * om2 - z2 * st2;
+      const b02 = x2 * z2 * om2 + y2 * st2;
+      const b10 = y2 * x2 * om2 + z2 * st2, b11 = ct2 + y2 * y2 * om2;
+      const b12 = y2 * z2 * om2 - x2 * st2;
+      const b20 = z2 * x2 * om2 - y2 * st2, b21 = z2 * y2 * om2 + x2 * st2;
+      const b22 = ct2 + z2 * z2 * om2;
+      let l1x = Math.sin(wt * 0.000021 + kn.dxp), l1y = Math.cos(wt * 0.000017 + kn.dyp);
+      let l1z = Math.sin(wt * 0.000013 + kn.ph);
+      ln = Math.hypot(l1x, l1y, l1z) || 1;
+      l1x /= ln; l1y /= ln; l1z /= ln;
+      let l2x = Math.cos(wt * 0.000015 + kn.dyp), l2y = Math.sin(wt * 0.000019 + kn.ph);
+      let l2z = Math.cos(wt * 0.000023 + kn.dxp);
+      ln = Math.hypot(l2x, l2y, l2z) || 1;
+      l2x /= ln; l2y /= ln; l2z /= ln;
+      const kI = kn.I * (1 + flash * 2.2) * al * br;
+      for (let i = 0; i < hk.NV; i++) {
+        const nx = b00 * hk.x0[i] + b01 * hk.y0[i] + b02 * hk.z0[i];
+        const ny = b10 * hk.x0[i] + b11 * hk.y0[i] + b12 * hk.z0[i];
+        const nz = b20 * hk.x0[i] + b21 * hk.y0[i] + b22 * hk.z0[i];
+        let rr = 1;
+        let dq = nx * l1x + ny * l1y + nz * l1z;
+        if (dq > 0) { dq *= dq; rr += kn.la * dq * dq; }
+        dq = nx * l2x + ny * l2y + nz * l2z;
+        if (dq > 0) { rr += kn.lb2 * dq * dq; }
+        if (rr > 1.3) rr = 1.3; else if (rr < 0.78) rr = 0.78;
+        hk.px[i] = (kx + nx * Rk * rr) * sc + hf.ox;
+        hk.py[i] = (ky + ny * Rk * rr) * sc + hf.oy;
+        // the kin's veil — extinction before its little limb, lightly warped
+        let vv = (nz - (0.34 + 0.1 * Math.sin(nx * 2.5 + ny * 2.1 + wt * 0.00003 + kn.ph))) / 0.38;
+        vv = vv < 0 ? 0 : vv > 1 ? 1 : vv;
+        vv = vv * vv * (3 - 2 * vv);
+        hk.vv[i] = vv;
+        let lr2 = 0, lg2 = 0, lb3 = 0;
+        const pd2 = nx * pdx + ny * pdy + nz * pdz;
+        let q2 = 1 - (1 - pd2) / 0.4;
+        if (q2 > 0) {
+          const s3 = kI * q2 * q2;
+          lr2 = s3 * pr2; lg2 = s3 * pg3; lb3 = s3 * pb2;
+        }
+        if (flash > 0.01) {
+          lr2 += flash * 0.16 * pr2; lg2 += flash * 0.16 * pg3; lb3 += flash * 0.16 * pb2;
+        }
+        if (gzr + gzg + gzb > 0.002) {
+          lr2 += gzr * 0.12 * al; lg2 += gzg * 0.12 * al; lb3 += gzb * 0.12 * al;
+        }
+        // the kin's dissolve refracts too — the family's thin-film, at a whisper
+        if (vv < 0.98) {
+          const mx2 = lr2 > lg2 ? (lr2 > lb3 ? lr2 : lb3) : (lg2 > lb3 ? lg2 : lb3);
+          if (mx2 > 0.003) {
+            const ir2 = iridAt(foldT(nx * 0.3 + ny * 0.25 + wt * 0.00004 + kn.hp));
+            const mk2 = 0.7 * (1 - vv);
+            lr2 += (mx2 * (ir2[0] / 255) - lr2) * mk2;
+            lg2 += (mx2 * (ir2[1] / 255) - lg2) * mk2;
+            lb3 += (mx2 * (ir2[2] / 255) - lb3) * mk2;
+          }
+        }
+        const lf2 = (0.5 + 0.5 * (nz < 0 ? 0 : nz)) * vv;
+        hk.lr[i] = lr2 * lf2; hk.lg[i] = lg2 * lf2; hk.lb[i] = lb3 * lf2;
+      }
+      // facing + fills — alpha-sunk against the pure void (the mosaic dissolves; the
+      // kin paint before everything, so the ground beneath them is always the void)
+      g2.globalCompositeOperation = 'source-over';
+      for (let t = 0; t < hk.T; t++) {
+        const a = hk.ti[t * 3], b3 = hk.ti[t * 3 + 1], c3 = hk.ti[t * 3 + 2];
+        const cr2 = (hk.px[b3] - hk.px[a]) * (hk.py[c3] - hk.py[a]) -
+          (hk.py[b3] - hk.py[a]) * (hk.px[c3] - hk.px[a]);
+        if (cr2 <= 0) { hk.front[t] = 0; continue; }
+        hk.front[t] = 1;
+        const vmA = (hk.vv[a] + hk.vv[b3] + hk.vv[c3]) * 0.3333;
+        if (vmA < 0.03) continue;
+        g2.globalAlpha = vmA;
+        g2.fillStyle = hk.tone[t];
+        g2.beginPath();
+        g2.moveTo(hk.px[a], hk.py[a]);
+        g2.lineTo(hk.px[b3], hk.py[b3]);
+        g2.lineTo(hk.px[c3], hk.py[c3]);
+        g2.closePath();
+        g2.fill();
+      }
+      g2.globalAlpha = 1;
+      // seams — coloured halo ONLY (the white-hot core is the protagonist's privilege)
+      g2.globalCompositeOperation = 'lighter';
+      for (let e = 0; e < hk.NE; e++) {
+        const q1 = hk.et1[e], q2e = hk.et2[e];
+        if (!hk.front[q1] || q2e < 0 || !hk.front[q2e]) continue;
+        const a = hk.ea[e], b3 = hk.eb[e];
+        const r3 = (hk.lr[a] + hk.lr[b3]) * 0.5;
+        const g3 = (hk.lg[a] + hk.lg[b3]) * 0.5;
+        const b4 = (hk.lb[a] + hk.lb[b3]) * 0.5;
+        const m3 = r3 > g3 ? (r3 > b4 ? r3 : b4) : (g3 > b4 ? g3 : b4);
+        if (m3 < 0.02) continue;
+        const hsh = hushAt((hk.px[a] - hf.ox) / sc, (hk.py[a] - hf.oy) / sc);
+        // per-edge character × the kinship flash (the room's ring, heard late, is
+        // allowed to be SEEN — briefly, still far beneath the protagonist)
+        let a3 = m3 * 1.5 * hsh * hk.kej[e] * (1 + 2.5 * flash);
+        if (a3 > 0.24) a3 = 0.24;
+        if (a3 < 0.015) continue;
+        const inv2 = 255 / m3;
+        g2.globalAlpha = a3;
+        g2.lineWidth = Math.max(1, 1.7 * sc);
+        g2.strokeStyle = 'rgb(' + ((r3 * inv2) | 0) + ',' + ((g3 * inv2) | 0) + ',' +
+          ((b4 * inv2) | 0) + ')';
+        g2.beginPath();
+        g2.moveTo(hk.px[a], hk.py[a]);
+        g2.lineTo(hk.px[b3], hk.py[b3]);
+        g2.stroke();
+      }
+      g2.globalCompositeOperation = 'source-over';
+      g2.globalAlpha = 1;
+    }
+    g2.lineWidth = 1;
   };
 
   // ── one frame of the MASS — still=true paints the composed reduced-motion state ──────────
@@ -928,6 +1181,8 @@ if (band && fcanvas && fgeo && fcanvas.getContext) {
     g2.globalAlpha = 1;
     g2.fillStyle = '#020202';
     g2.fillRect(0, 0, fieldCanvas.width, fieldCanvas.height);
+    // the kin first — the deep's company; everything after paints over them
+    hkDraw(g2, now, still, wt, al, br, sc);
     g2.globalCompositeOperation = 'lighter';
     // dust + presences BEHIND the limb (z < 0), dimmed — the body occludes them
     for (let i = 0; i < hf.NM; i++) {
