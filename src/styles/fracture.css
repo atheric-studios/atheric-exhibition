@@ -584,34 +584,24 @@
 }
 .hollow__line em {
   font-style: italic;
+  color: #ffab4d; /* the attention clause never cools — it is the burning part */
+  filter: drop-shadow(0 0 14px rgba(255, 158, 46, 0.3));
 }
-.hollow__line--i em { color: #ffab4d; filter: drop-shadow(0 0 14px rgba(255, 158, 46, 0.3)); }
-.hollow__line--ii em { color: #8fa3ff; filter: drop-shadow(0 0 14px rgba(95, 123, 255, 0.34)); }
-/* — the words are CAST (stage 2, 2026-08-01): each inscription arrives the way a core cell
-     is born — molten in its station's candy, cooling to ink over the cell's own lifespan —
-     while its closing em NEVER cools (the display's thesis, performed by the type). One-shot
-     colour/text-shadow keyframes on the line only (paint-local, the ledeCool grammar); the
-     base state is the composed ink, so no-JS and reduced motion stand fully formed. — */
-.hollow--in .hollow__line--i { animation: hvCastI 2.4s var(--ease) 1.5s both; }
-.hollow--in .hollow__line--ii { animation: hvCastII 2.4s var(--ease) 1.75s both; }
-@keyframes hvCastI {
+/* — ONE line survives (the deep pass): it arrives CAST, the way a cell of the body is
+     born — molten candy cooling to ink over a cell's own lifespan — while the em never
+     cools. One-shot colour/text-shadow keyframes (paint-local, the ledeCool grammar);
+     the base state is composed ink, so no-JS and reduced motion stand fully formed. — */
+.hollow--in .hollow__line { animation: hvCast 2.4s var(--ease) 1.5s both; }
+@keyframes hvCast {
   from { color: #ffab4d; text-shadow: 0 0 18px rgba(255, 158, 46, 0.5); }
   to { color: var(--ink-dim); text-shadow: 0 0 0 rgba(255, 158, 46, 0); }
 }
-@keyframes hvCastII {
-  from { color: #8fa3ff; text-shadow: 0 0 18px rgba(95, 123, 255, 0.55); }
-  to { color: var(--ink-dim); text-shadow: 0 0 0 rgba(95, 123, 255, 0); }
-}
 /* — and the words LIVE with the body: when the lattice rings or chimes (body.js adds
-     .hollow--chime for a breath), the ems flare — the type answers the core — */
-.hollow--chime .hollow__line--i em { animation: hvFlareI 1.3s var(--ease); }
-.hollow--chime .hollow__line--ii em { animation: hvFlareII 1.3s var(--ease); }
+     .hollow--chime for a breath), the burning clauses flare — the type answers the core — */
+.hollow--chime .hollow__line em { animation: hvFlare 1.3s var(--ease); }
 .hollow--chime .hollow__display em { animation: hvEmber 11s ease-in-out infinite, hvFlareD 1.3s var(--ease); }
-@keyframes hvFlareI {
+@keyframes hvFlare {
   30% { color: #ffd29a; filter: drop-shadow(0 0 22px rgba(255, 158, 46, 0.66)); }
-}
-@keyframes hvFlareII {
-  30% { color: #bcc8ff; filter: drop-shadow(0 0 22px rgba(95, 123, 255, 0.7)); }
 }
 @keyframes hvFlareD {
   30% { filter: drop-shadow(0 0 26px rgba(255, 46, 136, 0.75)); }
@@ -832,10 +822,8 @@
     transform: none;
   }
   .hollow--in .hollow__display em,
-  .hollow--in .hollow__line--i,
-  .hollow--in .hollow__line--ii,
-  .hollow--chime .hollow__line--i em,
-  .hollow--chime .hollow__line--ii em,
+  .hollow--in .hollow__line,
+  .hollow--chime .hollow__line em,
   .hollow--chime .hollow__display em,
   .hollow--in .hollow__mark-orbit,
   .hollow--in .hollow__mark-punctum,
